@@ -88,6 +88,15 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .nm .tag{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--muted);vertical-align:1px}
 .stk{font-size:12px;font-weight:800;color:var(--brass);font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center;gap:4px;margin-top:3px}
 .stk .coin{width:11px;height:11px}
+.dchip{position:absolute;top:-9px;left:-9px;width:21px;height:21px;border-radius:50%;background:var(--brass);color:var(--ink);font:800 11px/21px var(--font-body);text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.55),inset 0 0 0 2px #f3d28a;z-index:4}
+.stk.neg{color:#f08a91}
+.deckinfo{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.03em}
+.tb{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(220,171,74,.3)}
+.tb .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.tbrow{display:flex;flex-wrap:wrap;gap:14px}
+.tbp{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12.5px;font-weight:700}
+.tbp small{font-size:11px;color:var(--muted);font-weight:600}
+.tbc{--cw:30px;display:flex;gap:3px}
 .firstbtn{position:absolute;top:-9px;right:-9px;min-width:24px;height:21px;padding:0 5px;border-radius:999px;background:var(--ivory);color:var(--ink);font:800 10px/21px var(--font-body);text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.55);z-index:4}
 .seat.turn .plate{border-color:var(--brass);box-shadow:0 0 0 2px var(--brass),0 0 24px rgba(220,171,74,.55)}
 .seat.fold .minis,.seat.fold .plate,.seat.out .plate,.seat.out .minis{opacity:.45}
@@ -202,6 +211,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
     <div id="center">
       <div class="phase" id="phase">Knock</div>
       <div class="pot" id="pot" hidden></div>
+      <div class="deckinfo" id="deckinfo"></div>
       <div class="below" id="below"></div>
     </div>
     <div id="seats"></div>
@@ -255,11 +265,17 @@ const BAD_CH = new RegExp('[' + [[0, 31], [127, 159], [173, 173], [8203, 8204], 
   .map(([a, b]) => { const u = n => String.fromCharCode(92) + 'u' + n.toString(16).padStart(4, '0'); return a === b ? u(a) : u(a) + '-' + u(b); }).join('') + ']', 'g');
 function cleanName(n){ return String(n || '').replace(BAD_CH, '').replace(/\s+/g, ' ').trim().slice(0, 12); }
 
-let S = null, deck = [], holes = {}, nextHandAt = 0, bank = {};
+let S = null, deck = [], holes = {}, nextHandAt = 0, bank = {}, deckId = 0;
 
 function freshState(code, hid){
-  return { v:1, code:code || '', hid:hid || '', cfg:{ st:1000, ante:50, cap:0, tm:30 }, pause:0,
-    hand:0, ph:'waiting', pot:0, fresh:1, bt:-1, first:-1, tn:-1, q:0, seats:new Array(MAX_SEATS).fill(null), res:null, note:'' };
+  return { v:1, code:code || '', hid:hid || '', cfg:{ st:1000, ante:50, tm:30 }, pause:0,
+    hand:0, round:0, ph:'waiting', pot:0, due:1, fresh:1, bt:-1, first:-1, tn:-1, q:0, left:0, roundEnd:0,
+    seats:new Array(MAX_SEATS).fill(null), res:null, note:'' };
+}
+/* One shuffled deck is dealt hand after hand. A new deck (and a new dealer) only comes when it can't give everyone two cards. */
+function shuffleNew(exclude){
+  const ex = new Set(exclude || []);
+  deck = newDeck().filter(c => !ex.has(c)); deckId++;
 }
 function newSeat(cid, name, bot){
   let s0 = S.cfg.st;
@@ -278,11 +294,14 @@ function startHand(){
   S.res = null; S.tn = -1; S.q++;
   if (elig.length < 2 || S.pause) { elig.forEach(i => { S.seats[i].st = 'wait'; }); S.ph = 'waiting'; return false; }
   S.hand++; S.note = '';
-  S.bt = nextIn(elig, S.bt);
-  S.fresh = S.pot === 0 ? 1 : 0;
+  if (S.roundEnd || S.bt < 0 || deck.length < 2 * elig.length) {
+    S.round = (S.round || 0) + 1; S.bt = nextIn(elig, S.bt); S.roundEnd = 0; shuffleNew();
+  }
+  S.fresh = S.due === 0 ? 0 : 1;
   if (S.fresh) elig.forEach(i => { const x = S.seats[i]; x.s -= ante; x.t = ante; S.pot += ante; });
-  deck = newDeck(); holes = {};
+  holes = {};
   for (let r = 0; r < 2; r++) { let j = S.bt; for (let k = 0; k < elig.length; k++) { j = nextIn(elig, j); const c = S.seats[j].c; (holes[c] = holes[c] || []).push(deck.pop()); } }
+  S.left = deck.length;
   S.ph = 'deciding'; S.first = nextIn(elig, S.bt); S.tn = S.first;
   return true;
 }
@@ -307,25 +326,35 @@ function resolve(){
   for (let k = 0; k < MAX_SEATS; k++) { const j = (S.first + k) % MAX_SEATS; const x = S.seats[j]; if (x && x.st === 'knock') order.push(j); }
   const potNow = S.pot;
   S.seats.forEach(x => { if (x) x.t = 0; });
-  if (!order.length) S.res = { k:'none', pot:potNow, w:[], l:[] };
+  if (!order.length) { S.res = { k:'none', pot:potNow, w:[], l:[] }; S.due = 1; }
   else if (order.length === 1) {
     const i = order[0]; S.seats[i].s += potNow; S.pot = 0;
-    S.res = { k:'lone', pot:potNow, w:[{ i, amt:potNow }], l:[] };
+    S.res = { k:'lone', pot:potNow, w:[{ i, amt:potNow }], l:[] }; S.due = 1;
   } else {
     const sc = {};
     order.forEach(i => { const x = S.seats[i]; const h = holes[x.c] || []; sc[i] = score2(h); x.sh = h.join(''); x.hn = name2(sc[i]); });
     let best = null, w = [];
     for (const i of order) { const c = best ? cmp2(sc[i], best) : 1; if (c > 0) { best = sc[i]; w = [i]; } else if (c === 0) w.push(i); }
-    const losers = order.filter(i => !w.includes(i));
-    const share = Math.floor(potNow / w.length); let rem = potNow - share * w.length;
-    const wl = w.map(i => { const amt = share + (rem > 0 ? 1 : 0); if (rem > 0) rem--; S.seats[i].s += amt; return { i, amt }; });
-    S.pot = 0;
-    const due = S.cfg.cap > 0 ? Math.min(potNow, S.cfg.cap) : potNow;
-    const ll = losers.map(i => { const x = S.seats[i]; const pay = Math.min(due, x.s); x.s -= pay; S.pot += pay; return { i, amt:pay, short:pay < due ? 1 : 0 }; });
-    S.res = { k:'show', pot:potNow, w:wl, l:ll, due, best:name2(best) };
+    /* Tied for best: only the tied players get two new cards each, until one hand is higher. */
+    const tb = []; const inPlay = Object.values(holes).flat();
+    while (w.length > 1 && tb.length < 25) {
+      if (deck.length < 2 * w.length) { shuffleNew(inPlay); S.roundEnd = 1; }
+      const draws = w.map(i => { const h = [deck.pop(), deck.pop()]; inPlay.push(...h); return { i, c:h.join(''), sc:score2(h) }; });
+      tb.push(draws.map(d => ({ i:d.i, c:d.c, hn:name2(d.sc) })));
+      let b2 = null, w2 = [];
+      for (const d of draws) { const c = b2 ? cmp2(d.sc, b2) : 1; if (c > 0) { b2 = d.sc; w2 = [d.i]; } else if (c === 0) w2.push(d.i); }
+      w = w2;
+    }
+    const winner = w[0];
+    S.seats[winner].s += potNow; S.pot = 0;
+    /* Every knocker who loses puts up the whole pot, even if it takes them below zero. */
+    const ll = order.filter(i => i !== winner).map(i => { const x = S.seats[i]; x.s -= potNow; S.pot += potNow; return { i, amt:potNow, owe:x.s < 0 ? -x.s : 0 }; });
+    S.res = { k:'show', pot:potNow, w:[{ i:winner, amt:potNow }], l:ll, best:name2(best), tie:tb.length ? 1 : 0, tb };
+    S.due = 0;
   }
+  S.left = deck.length;
   S.ph = 'done'; S.q++;
-  nextHandAt = Date.now() + (order.length >= 2 ? 9000 : 4500);
+  nextHandAt = Date.now() + (order.length >= 2 ? (S.res.tie ? 13000 : 9000) : 4500);
 }
 function foldLeavers(){
   if (S.ph !== 'deciding') return;
@@ -342,7 +371,7 @@ function voidHand(){
     x.t = 0; x.a = ''; x.sh = null; x.hn = null; x.st = x.s >= S.cfg.ante ? 'wait' : 'out';
   });
   S.ph = 'waiting'; S.tn = -1; S.res = null; S.q++;
-  S.note = mid ? 'The last hand was called off when the dealer reconnected. Antes were returned.' : '';
+  S.note = mid ? 'The last hand was called off when the host reconnected. Antes were returned.' : '';
 }
 function botDecide(i){
   const x = S.seats[i]; const sc = score2(holes[x.c] || ['2c', '3d']);
@@ -412,7 +441,7 @@ function loadSaved(){
   try { const o = JSON.parse(store.get('knock_host') || 'null'); if (o && o.cid === myCid && typeof o.code === 'string' && validState(o.S) && Date.now() - (o.at || 0) < 3 * 86400000) return o; } catch (e) {}
   return null;
 }
-function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, at:Date.now() })); }
+function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, deck, at:Date.now() })); }
 function startTable(){
   if (!myName) return;
   if (!hasPeerLib()) { toast('This page did not load fully. Reload and try again.'); return; }
@@ -423,6 +452,9 @@ function startTable(){
 }
 function resumeHost(saved){
   role = 'host'; S = saved.S; bank = saved.bank || {}; code = saved.code;
+  deck = Array.isArray(saved.deck) && saved.deck.every(validCard) ? saved.deck : []; deckId++;
+  if (S.due === undefined) S.due = 1;
+  delete S.cfg.cap;
   voidHand(); S.hid = myCid;
   me.sit = S.seats.some(x => x && x.c === myCid);
   startHosting(); keepAwake(); hostTick();
@@ -560,7 +592,6 @@ function setCfg(field, val){
   const v = +val;
   if (field === 'ante' && v >= 50) S.cfg.ante = v;
   else if (field === 'start' && v > 0) S.cfg.st = v;
-  else if (field === 'cap' && v >= 0) S.cfg.cap = v;
   else if (field === 'timer' && v >= 0) S.cfg.tm = v;
   else if (field === 'pause') S.pause = v ? 1 : 0;
   hostTick();
@@ -641,7 +672,7 @@ function standUp(){
   if (role === 'host') hostTick(); else send({ t:'sit', sit:false });
   scheduleRender();
 }
-function askTokens(){ if (send({ t:'ask' })) toast('Asked the dealer for more tokens'); }
+function askTokens(){ if (send({ t:'ask' })) toast('Asked the host for more tokens'); }
 function copyLink(){
   const link = inviteLink();
   const done = () => toast('Link copied');
@@ -724,8 +755,9 @@ function seatView(s, i, x, isMine){
   const pill = label ? `<div class="${pc}">${esc(label)}</div>` : '<div class="tagpill empty" aria-hidden="true"></div>';
   const won = r && r.win ? `<span class="won">+${fmtT(r.amt)}</span>` : '';
   const first = s.ph === 'deciding' && s.first === i ? '<span class="firstbtn" title="Goes first this hand">1st</span>' : '';
-  const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">dealer</span>' : '');
-  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${first}<div class="nm">${esc(x.n || 'Player')}${tag}</div><div class="stk"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}` };
+  const dchip = s.round && s.bt === i ? '<span class="dchip" title="Dealing this deck">D</span>' : '';
+  const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
+  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${dchip}${first}<div class="nm">${esc(x.n || 'Player')}${tag}</div><div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}` };
 }
 function renderSeats(s){
   const seatsEl = $('#seats'); const seen = new Set();
@@ -753,14 +785,16 @@ function nameOf(s, i, myIdx){ const x = s.seats[i]; return i === myIdx ? 'You' :
 function joinNames(list){ return list.length <= 1 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1]; }
 function resultText(s, myIdx){
   const r = s.res; if (!r) return '';
-  if (r.k === 'none') return `Nobody knocked. The <em>${fmtT(r.pot)}</em> pot stays and the cards get dealt again, no ante.`;
-  if (r.k === 'lone') { const w = r.w[0]; const you = w.i === myIdx; return `${nameOf(s, w.i, myIdx)} knocked alone and ${you ? 'take' : 'takes'} <em>${fmtT(w.amt)}</em>. New pot next hand: everyone antes ${fmtT(s.cfg.ante)}.`; }
-  const ws = r.w.map(w => w.i);
-  let out = ws.length === 1
-    ? `${nameOf(s, ws[0], myIdx)} ${ws[0] === myIdx ? 'win' : 'wins'} <em>${fmtT(r.w[0].amt)}</em> with ${esc(r.best || '')}.`
-    : `${joinNames(ws.map(i => nameOf(s, i, myIdx)))} tie with ${esc(r.best || '')} and split <em>${fmtT(r.pot)}</em>.`;
-  if (r.l && r.l.length) out += ' ' + r.l.map(l => `${nameOf(s, l.i, myIdx)} ${l.i === myIdx ? 'pay' : 'pays'} <em>${fmtT(l.amt)}</em>${l.short ? ' (all they had)' : ''}`).join(', ') + ' for the next pot. No ante next hand.';
-  else out += ` New pot next hand: everyone antes ${fmtT(s.cfg.ante)}.`;
+  const ante = fmtT(s.cfg.ante);
+  if (r.k === 'none') return `Nobody knocked. The <em>${fmtT(r.pot)}</em> pot stays, and everyone antes ${ante} again for the next deal.`;
+  if (r.k === 'lone') { const w = r.w[0]; const you = w.i === myIdx; return `${nameOf(s, w.i, myIdx)} knocked alone and ${you ? 'take' : 'takes'} <em>${fmtT(w.amt)}</em>. New pot next hand: everyone antes ${ante}.`; }
+  const w = r.w[0]; let out = '';
+  if (r.tie && Array.isArray(r.tb) && r.tb.length) {
+    const tied = r.tb[0].map(d => nameOf(s, d.i, myIdx)); const last = r.tb[r.tb.length - 1];
+    out += `${joinNames(tied)} tied with ${esc(r.best)}. ${r.tb.length > 1 ? 'After another tie, the' : 'The'} tiebreak cards: ${last.map(d => `${nameOf(s, d.i, myIdx)} ${d.i === myIdx ? 'get' : 'gets'} ${esc(d.hn)}`).join(', ')}. `;
+  }
+  out += `${nameOf(s, w.i, myIdx)} ${w.i === myIdx ? 'win' : 'wins'} <em>${fmtT(w.amt)}</em>${r.tie ? '' : ' with ' + esc(r.best)}.`;
+  if (r.l && r.l.length) out += ' ' + r.l.map(l => { const you = l.i === myIdx; return `${nameOf(s, l.i, myIdx)} ${you ? 'pay' : 'pays'} <em>${fmtT(l.amt)}</em>${l.owe ? ` (${you ? 'you owe' : 'owes'} ${fmtT(l.owe)})` : ''}`; }).join(', ') + ' for the next pot. No ante next hand.';
   return out;
 }
 function renderCenter(s){
@@ -768,7 +802,7 @@ function renderCenter(s){
   const myIdx = s ? mySeatIdx(s) : -1;
   let ph = 'Knock', bl = '';
   if (!s) {
-    if (role === 'player') { ph = 'Table ' + code; bl = netState === 'nohost' ? 'Waiting for the dealer to open the table…' : 'Connecting…'; }
+    if (role === 'player') { ph = 'Table ' + code; bl = netState === 'nohost' ? 'Waiting for the host to open the table…' : 'Connecting…'; }
     else bl = 'Two cards each. Pairs beat everything.';
   } else if (s.ph === 'waiting') {
     ph = 'Waiting for players';
@@ -787,6 +821,8 @@ function renderCenter(s){
   setText(phase, ph);
   if (s) { pot.hidden = false; setHTML(pot, `<span class="coin"></span><span class="lbl">Pot</span>${fmtT(s.pot)}`); }
   else pot.hidden = true;
+  const dl = s && s.round ? s.seats[s.bt] : null;
+  setHTML($('#deckinfo'), s && s.round ? `${dl ? (s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals') : 'Deck'} · ${+s.left || 0} cards left` : '');
   setHTML(below, bl);
 }
 function inviteHTML(){
@@ -801,7 +837,7 @@ function netNotice(){
   }
   if (role === 'player') {
     if (netState === 'live') return '';
-    const msg = { connecting:'Connecting to the dealer…', nohost:`Can't reach table ${esc(code)} yet. The dealer's page needs to be open. Trying again…`, lost:'Lost the dealer. Reconnecting…', offline:'You\'re offline. Trying again…', unsupported:'This browser can\'t connect. Try Chrome or Safari.' }[netState] || 'Connecting…';
+    const msg = { connecting:'Connecting to the host…', nohost:`Can't reach table ${esc(code)} yet. The host's page needs to be open. Trying again…`, lost:'Lost the host. Reconnecting…', offline:'You\'re offline. Trying again…', unsupported:'This browser can\'t connect. Try Chrome or Safari.' }[netState] || 'Connecting…';
     return `<div class="notice${netState === 'nohost' || netState === 'lost' || netState === 'offline' || netState === 'unsupported' ? ' bad' : ''}"><span>${msg}</span></div>`;
   }
   return '';
@@ -816,7 +852,7 @@ function dockHTML(s){
   const nn = netNotice(); if (nn) out.push(nn);
   if (role === 'none') {
     const saved = loadSaved();
-    out.push(`<p class="lead">Two cards each. Pairs beat everything and Aces are high. Knock if you think you hold the best hand. Everyone starts with <b>10.00</b> in tokens.</p>`);
+    out.push(`<p class="lead">Two cards each. Pairs beat everything and Aces are high. Knock if you think you hold the best hand. Start a table to be the host: your phone runs the game and hands out tokens, starting everyone at <b>10.00</b>.</p>`);
     out.push(`<form id="startForm" class="joinrow"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"><button class="btn gold" type="submit">Start a table</button></form>`);
     out.push(`<div class="divider">or join one</div><form id="codeForm" class="joinrow"><label class="sr" for="codeIn">Table code</label><input id="codeIn" maxlength="8" placeholder="Table code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn ghost" type="submit">Join</button></form>`);
     if (saved) out.push(`<button type="button" class="btn ghost wide" data-act="resume">Go back to your table ${esc(saved.code)}</button>`);
@@ -846,21 +882,24 @@ function dockHTML(s){
   const myTurn = s.ph === 'deciding' && s.tn === i && x.st === 'in';
   const pending = myTurn && pendingKey === s.hand + ':' + s.q;
   const asker = role === 'host' ? s.seats.findIndex(y => y && y.ask) : -1;
+  if (s.ph === 'done' && s.res && s.res.tie && Array.isArray(s.res.tb) && s.res.tb.length) {
+    const last = s.res.tb[s.res.tb.length - 1];
+    out.push(`<div class="tb"><span class="lbl">Tiebreak cards</span><div class="tbrow">${last.map(d => `<div class="tbp"><div class="tbc">${(/^([2-9TJQKA][shdc]){2}$/.test(d.c) ? d.c.match(/../g) : []).map(c => cardHTML(c)).join('')}</div><span>${nameOf(s, d.i, i)}</span><small>${esc(d.hn)}</small></div>`).join('')}</div></div>`);
+  }
   if (x.s < s.cfg.ante && !dealt || x.st === 'out') {
-    status = 'You\'re out of tokens.';
+    status = x.s < 0 ? `You owe <em>${fmtT(-x.s)}</em>.` : 'You\'re out of tokens.';
     buttons = role === 'host'
       ? `<button type="button" class="btn gold wide" data-act="give" data-i="${i}">Give yourself ${fmtT(s.cfg.st)}</button>`
-      : (x.ask ? '' : `<button type="button" class="btn gold wide" data-act="ask">Ask the dealer for more tokens</button>`);
-    if (x.ask && role !== 'host') status += ' The dealer has your request.';
+      : (x.ask ? '' : `<button type="button" class="btn gold wide" data-act="ask">Ask the host for more tokens</button>`);
+    if (x.ask && role !== 'host') status += ' The host has your request.';
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
-    status = seated < 2 ? 'Waiting for at least one more player.' : (s.pause ? 'The dealer paused new hands.' : 'Shuffling up the next hand…');
+    status = seated < 2 ? 'Waiting for at least one more player.' : (s.pause ? 'The host paused new hands.' : 'Shuffling up the next hand…');
     if (role === 'host') { if (seated < 2) buttons = inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>'; else if (s.pause) buttons = '<button type="button" class="btn gold wide" data-act="resume-deal">Deal the next hand</button>'; }
   } else if (x.st === 'wait') status = x.away ? 'You were away, so you\'re sitting this hand out.' : 'You\'re in from the next hand.';
   else if (s.ph === 'done') status = resultText(s, i) + ' Next hand in a moment.';
   else if (myTurn) {
-    const due = Math.min(s.cfg.cap > 0 ? Math.min(s.pot, s.cfg.cap) : s.pot, x.s);
-    status = pending ? 'Sending your call…' : `Pot <em>${fmtT(s.pot)}</em>. If you knock and lose, you pay <em>${fmtT(due)}</em>, and that becomes the next pot.`;
+    status = pending ? 'Sending your call…' : `Pot <em>${fmtT(s.pot)}</em>. If you knock and lose, you put up <em>${fmtT(s.pot)}</em> for the next pot.`;
     const dis = pending ? ' disabled' : '';
     buttons = `<div class="actions" style="--n:2"><button type="button" class="btn fold" data-act="fold"${dis}>Fold</button><button type="button" class="btn knock" data-act="knock"${dis}>Knock</button></div>`;
   } else if (x.st === 'knock') status = 'You knocked. Waiting for everyone else to decide…';
@@ -888,17 +927,16 @@ function renderHeader(s){
 }
 function menuHTML(s){
   const host = role === 'host' && S;
-  const cfg = s ? s.cfg : { st:1000, ante:50, cap:0, tm:30 };
+  const cfg = s ? s.cfg : { st:1000, ante:50, tm:30 };
   const sel = (id, opts, val) => `<select id="${id}">${opts.map(([v, t]) => `<option value="${v}"${String(v) === String(val) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   const parts = [`<div class="sheet-head"><h2>Table menu</h2><button type="button" class="iconbtn" data-act="menu-close" aria-label="Close menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>`];
   if (code) parts.push(`<section><h3>Invite</h3>${inviteHTML()}<p class="small muted">Table code <b>${esc(code)}</b>. Anyone with the link can join; no account needed.</p></section>`);
   parts.push(`<section><h3>You</h3><form id="renameForm" class="joinrow"><label class="sr" for="nameEdit">Your name</label><input id="nameEdit" maxlength="12" value="${esc(myName)}" placeholder="Your name" autocomplete="nickname"><button class="btn ghost" type="submit">Save name</button></form>${me.sit && s && mySeatIdx(s) >= 0 ? '<button type="button" class="btn ghost wide" data-act="stand">Leave the table</button>' : ''}</section>`);
   if (host) {
     const players = S.seats.map((x, i) => x ? `<li><span class="who">${esc(x.n)}${x.bot ? ' (bot)' : ''}${x.ask ? ' <span class="asked">asked</span>' : ''}</span><span class="amt">${fmtT(x.s)}</span><button type="button" class="chipbtn" data-act="give" data-i="${i}">+${fmtT(S.cfg.st)}</button></li>` : '').join('');
-    parts.push(`<section><h3>Dealer controls</h3>
+    parts.push(`<section><h3>Host controls</h3>
       <div class="field"><label for="setAnte">Ante each hand</label>${sel('setAnte', [[50,'0.50'],[100,'1.00'],[150,'1.50'],[200,'2.00'],[500,'5.00']], cfg.ante)}</div>
       <div class="field"><label for="setStart">Tokens for new players</label>${sel('setStart', [[1000,'10.00'],[2000,'20.00'],[5000,'50.00'],[10000,'100.00']], cfg.st)}</div>
-      <div class="field"><label for="setCap">Losing knock pays</label>${sel('setCap', [[0,'The whole pot'],[500,'Pot, up to 5.00'],[1000,'Pot, up to 10.00'],[2000,'Pot, up to 20.00']], cfg.cap)}</div>
       <div class="field"><label for="setTimer">Time to decide</label>${sel('setTimer', [[0,'No limit'],[20,'20 seconds'],[30,'30 seconds'],[60,'60 seconds']], cfg.tm)}</div>
       <div class="field"><label for="setPause">New hands</label>${sel('setPause', [[0,'Keep dealing'],[1,'Pause']], S.pause)}</div>
       <p class="small muted">Your phone is running this table, so keep this page open with the screen on. Changes start with the next hand.</p>
@@ -907,17 +945,16 @@ function menuHTML(s){
       <div class="btnrow"><button type="button" class="btn ghost" data-act="addbot">Add a bot</button><button type="button" class="btn ghost" data-act="rmbots">Remove bots</button></div></section>`);
   } else if (s) {
     const dealer = (s.seats.find(x => x && x.c === s.hid) || {}).n;
-    parts.push(`<section><h3>Table settings</h3><p class="small">Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · Losing knock pays ${cfg.cap ? 'the pot, up to ' + fmtT(cfg.cap) : 'the whole pot'} · ${+cfg.tm ? cfg.tm + ' seconds to decide' : 'No time limit'}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the dealer and' : 'The dealer'} can change these and hand out tokens.</p></section>`);
+    parts.push(`<section><h3>Table settings</h3><p class="small">Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds to decide' : 'No time limit'}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
   }
   parts.push(`<section><h3>How to play</h3><ol class="howto">
-    <li>When the pot is empty, everyone puts in the ante (${fmtT(cfg.ante)}). Then everyone gets two cards only they can see.</li>
-    <li>Going around the table, each player chooses <b>Knock</b> or <b>Fold</b>. You can see what the players before you chose.</li>
-    <li>Knock if you think your two cards beat everyone else who knocks.</li>
+    <li>When a new pot starts, everyone puts in the ante (${fmtT(cfg.ante)}). Then the dealer gives everyone two cards that only they can see.</li>
+    <li>Starting with the player to the dealer's left, each player chooses <b>Knock</b> or <b>Fold</b>. You can see what the players before you chose.</li>
     <li>If you're the only one who knocks, you take the pot, and the next hand starts over with everyone anteing.</li>
-    <li>If two or more knock, the best hand takes the pot. Every knocker who loses pays the whole pot amount, and that money is the next pot. Nobody antes for that hand, and players who folded play it for free.</li>
-    <li>If nobody knocks, the same pot stays and the cards are dealt again with no ante.</li>
-    <li>If knockers tie for the best hand, they split the pot and the next hand starts over with antes.</li>
-    <li>The first player to decide moves one seat to the left each hand.</li>
+    <li>If two or more knock, the best hand takes the pot. Every knocker who loses puts up the whole pot amount, even if it puts them below zero, and that money is the next pot. Nobody antes for that hand, and players who folded play it free.</li>
+    <li>If knockers tie for the best hand, only they get two new cards each, and the higher hand wins.</li>
+    <li>If nobody knocks, the pot stays, everyone antes again, and new cards are dealt.</li>
+    <li>The dealer deals from one shuffled deck until there aren't enough cards left to give everyone two. Then the deck is reshuffled and the player to the dealer's left becomes the dealer.</li>
   </ol></section>`);
   const row = (label, cs) => `<li><span>${label}</span><span class="ex">${cs.match(/../g).map(c => cardHTML(c)).join('')}</span></li>`;
   parts.push(`<section><h3>Best to worst</h3><ul class="ranks">
@@ -999,7 +1036,7 @@ function bindUI(){
     const f = e.target;
     if (f.id === 'codeForm') {
       const v = (f.querySelector('input').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (v.length < 4) { toast('Type the table code your dealer sent you'); return; }
+      if (v.length < 4) { toast('Type the table code your host sent you'); return; }
       const nm = cleanName($('#nameIn') && $('#nameIn').value);
       if (nm) { myName = nm; store.set('knock_name', nm); }
       location.hash = v; return;
