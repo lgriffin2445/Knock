@@ -15,6 +15,17 @@ A two-card game for up to 10 friends, played with play tokens. Open the site, ta
 
 **Extras:** cards slide out from the dealer, a big KNOCK! shakes the table, tokens slide from the pot to the winner, and tiebreak cards are dealt and flipped at the tied seats. A recap after each deck shows the biggest pot, most knocks and who's up. Pick an emoji look, tap someone's seat to throw a 🍅 at them, mute sounds in the menu, and the host can switch the room between green felt, red casino, midnight blue and a backyard wood table. Watchers get chairs in the corners. The menu has tonight's leaderboard.
 
+**Lobby:** the front page lists tables that are playing now, with how many are playing and watching. In the menu the host picks who can join:
+- **Open:** anyone taps Join and walks right in.
+- **Private** (the default): people tap Ask to join, and the host taps Let in or Not now.
+- **Hidden:** not listed. Only people with the link or table code can come in.
+
+An invite link or table code always gets people straight in. The host can give the table a name and **Remove** a player, who can't come back to that table.
+
+**Scenes:** midnight blue plays in the night sky with stars, the backyard has grass and string lights, and the red casino has marquee lights.
+
+**Visitors:** the 👀 chip on the front page shows today's visitors. Tap it for the last 7 days, the last 30 days and all time. Counts come from [GoatCounter](https://knockgame.goatcounter.com).
+
 **Table talk:** tap the chat button for emojis, quick lines like "Pay up 💸", or a short message. It pops up over your seat for a few seconds.
 
 The host's phone needs to stay on the page. Phones connect directly using [PeerJS](https://peerjs.com/) (MIT license), included in `index.html`.
