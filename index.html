@@ -259,7 +259,7 @@ let S = null, deck = [], holes = {}, nextHandAt = 0, bank = {};
 
 function freshState(code, hid){
   return { v:1, code:code || '', hid:hid || '', cfg:{ st:1000, ante:50, cap:0, tm:30 }, pause:0,
-    hand:0, ph:'waiting', pot:0, bt:-1, first:-1, tn:-1, q:0, seats:new Array(MAX_SEATS).fill(null), res:null, note:'' };
+    hand:0, ph:'waiting', pot:0, fresh:1, bt:-1, first:-1, tn:-1, q:0, seats:new Array(MAX_SEATS).fill(null), res:null, note:'' };
 }
 function newSeat(cid, name, bot){
   let s0 = S.cfg.st;
@@ -279,7 +279,8 @@ function startHand(){
   if (elig.length < 2 || S.pause) { elig.forEach(i => { S.seats[i].st = 'wait'; }); S.ph = 'waiting'; return false; }
   S.hand++; S.note = '';
   S.bt = nextIn(elig, S.bt);
-  elig.forEach(i => { const x = S.seats[i]; x.s -= ante; x.t = ante; S.pot += ante; });
+  S.fresh = S.pot === 0 ? 1 : 0;
+  if (S.fresh) elig.forEach(i => { const x = S.seats[i]; x.s -= ante; x.t = ante; S.pot += ante; });
   deck = newDeck(); holes = {};
   for (let r = 0; r < 2; r++) { let j = S.bt; for (let k = 0; k < elig.length; k++) { j = nextIn(elig, j); const c = S.seats[j].c; (holes[c] = holes[c] || []).push(deck.pop()); } }
   S.ph = 'deciding'; S.first = nextIn(elig, S.bt); S.tn = S.first;
@@ -752,13 +753,14 @@ function nameOf(s, i, myIdx){ const x = s.seats[i]; return i === myIdx ? 'You' :
 function joinNames(list){ return list.length <= 1 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1]; }
 function resultText(s, myIdx){
   const r = s.res; if (!r) return '';
-  if (r.k === 'none') return `Nobody knocked. The <em>${fmtT(r.pot)}</em> pot rolls over.`;
-  if (r.k === 'lone') { const w = r.w[0]; const you = w.i === myIdx; return `${nameOf(s, w.i, myIdx)} knocked alone and ${you ? 'take' : 'takes'} <em>${fmtT(w.amt)}</em>.`; }
+  if (r.k === 'none') return `Nobody knocked. The <em>${fmtT(r.pot)}</em> pot stays and the cards get dealt again, no ante.`;
+  if (r.k === 'lone') { const w = r.w[0]; const you = w.i === myIdx; return `${nameOf(s, w.i, myIdx)} knocked alone and ${you ? 'take' : 'takes'} <em>${fmtT(w.amt)}</em>. New pot next hand: everyone antes ${fmtT(s.cfg.ante)}.`; }
   const ws = r.w.map(w => w.i);
   let out = ws.length === 1
     ? `${nameOf(s, ws[0], myIdx)} ${ws[0] === myIdx ? 'win' : 'wins'} <em>${fmtT(r.w[0].amt)}</em> with ${esc(r.best || '')}.`
     : `${joinNames(ws.map(i => nameOf(s, i, myIdx)))} tie with ${esc(r.best || '')} and split <em>${fmtT(r.pot)}</em>.`;
-  if (r.l && r.l.length) out += ' ' + r.l.map(l => `${nameOf(s, l.i, myIdx)} ${l.i === myIdx ? 'pay' : 'pays'} <em>${fmtT(l.amt)}</em>${l.short ? ' (all they had)' : ''}`).join(', ') + ' into the next pot.';
+  if (r.l && r.l.length) out += ' ' + r.l.map(l => `${nameOf(s, l.i, myIdx)} ${l.i === myIdx ? 'pay' : 'pays'} <em>${fmtT(l.amt)}</em>${l.short ? ' (all they had)' : ''}`).join(', ') + ' for the next pot. No ante next hand.';
+  else out += ` New pot next hand: everyone antes ${fmtT(s.cfg.ante)}.`;
   return out;
 }
 function renderCenter(s){
@@ -773,7 +775,7 @@ function renderCenter(s){
     const seated = s.seats.filter(Boolean).length;
     bl = `${s.note ? esc(s.note) + '<br>' : ''}${seated} of 10 seats taken${seated < 2 ? ' · 2 needed to deal' : ''}`;
   } else if (s.ph === 'deciding') {
-    ph = 'Hand ' + s.hand;
+    ph = 'Hand ' + s.hand + (s.fresh === 0 ? ' · no ante' : '');
     const t = s.seats[s.tn];
     const kn = s.seats.filter(x => x && x.st === 'knock').length;
     bl = t ? (s.tn === myIdx ? '<b>Your call</b>' : `<b>${esc(t.n)}</b> is deciding`) : '';
@@ -858,7 +860,7 @@ function dockHTML(s){
   else if (s.ph === 'done') status = resultText(s, i) + ' Next hand in a moment.';
   else if (myTurn) {
     const due = Math.min(s.cfg.cap > 0 ? Math.min(s.pot, s.cfg.cap) : s.pot, x.s);
-    status = pending ? 'Sending your call…' : `Pot <em>${fmtT(s.pot)}</em>. If you knock and lose, you pay <em>${fmtT(due)}</em>.`;
+    status = pending ? 'Sending your call…' : `Pot <em>${fmtT(s.pot)}</em>. If you knock and lose, you pay <em>${fmtT(due)}</em>, and that becomes the next pot.`;
     const dis = pending ? ' disabled' : '';
     buttons = `<div class="actions" style="--n:2"><button type="button" class="btn fold" data-act="fold"${dis}>Fold</button><button type="button" class="btn knock" data-act="knock"${dis}>Knock</button></div>`;
   } else if (x.st === 'knock') status = 'You knocked. Waiting for everyone else to decide…';
@@ -908,12 +910,13 @@ function menuHTML(s){
     parts.push(`<section><h3>Table settings</h3><p class="small">Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · Losing knock pays ${cfg.cap ? 'the pot, up to ' + fmtT(cfg.cap) : 'the whole pot'} · ${+cfg.tm ? cfg.tm + ' seconds to decide' : 'No time limit'}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the dealer and' : 'The dealer'} can change these and hand out tokens.</p></section>`);
   }
   parts.push(`<section><h3>How to play</h3><ol class="howto">
-    <li>Everyone puts the ante (${fmtT(cfg.ante)}) in the pot, then gets two cards only they can see.</li>
+    <li>When the pot is empty, everyone puts in the ante (${fmtT(cfg.ante)}). Then everyone gets two cards only they can see.</li>
     <li>Going around the table, each player chooses <b>Knock</b> or <b>Fold</b>. You can see what the players before you chose.</li>
     <li>Knock if you think your two cards beat everyone else who knocks.</li>
-    <li>If you're the only one who knocks, you take the pot.</li>
-    <li>If two or more knock, the best hand takes the pot. Every knocker who loses pays the whole pot amount into the next pot.</li>
-    <li>If nobody knocks, the pot rolls over to the next hand. Ties split the pot.</li>
+    <li>If you're the only one who knocks, you take the pot, and the next hand starts over with everyone anteing.</li>
+    <li>If two or more knock, the best hand takes the pot. Every knocker who loses pays the whole pot amount, and that money is the next pot. Nobody antes for that hand, and players who folded play it for free.</li>
+    <li>If nobody knocks, the same pot stays and the cards are dealt again with no ante.</li>
+    <li>If knockers tie for the best hand, they split the pot and the next hand starts over with antes.</li>
     <li>The first player to decide moves one seat to the left each hand.</li>
   </ol></section>`);
   const row = (label, cs) => `<li><span>${label}</span><span class="ex">${cs.match(/../g).map(c => cardHTML(c)).join('')}</span></li>`;
