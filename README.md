@@ -13,6 +13,8 @@ A two-card game for up to 10 friends, played with play tokens. Open the site, ta
 - New players wait until the deck in play runs out, then sit just to the new dealer's right (last in line).
 - Pairs beat everything (Aces high, down to Twos), then Ace-King, Ace-Queen and down to Three-Two. Suits don't matter.
 
+**Extras:** cards slide out from the dealer, a big KNOCK! shakes the table, tokens slide from the pot to the winner, and tiebreak cards are dealt and flipped at the tied seats. A recap after each deck shows the biggest pot, most knocks and who's up. Pick an emoji look, tap someone's seat to throw a 🍅 at them, mute sounds in the menu, and the host can switch the room between green felt, red casino, midnight blue and a backyard wood table. Watchers get chairs in the corners. The menu has tonight's leaderboard.
+
 **Table talk:** tap the chat button for emojis, quick lines like "Pay up 💸", or a short message. It pops up over your seat for a few seconds.
 
 The host's phone needs to stay on the page. Phones connect directly using [PeerJS](https://peerjs.com/) (MIT license), included in `index.html`.
