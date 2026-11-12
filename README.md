@@ -11,6 +11,8 @@ A two-card game for up to 10 friends, played with play tokens. Open the site, ta
 - Nobody knocks: the pot stays, everyone antes again, and new cards are dealt.
 - The dealer deals from one shuffled deck until there aren't enough cards for everyone to get two. Then it's reshuffled and the player to the dealer's left deals, starting with the player on their left.
 - New players wait until the deck in play runs out, then sit just to the new dealer's right (last in line).
+- At each deck break, everyone taps **Keep playing** or **I'm out**. Anyone who doesn't answer before the countdown ends sits out the next deck and pays nothing. You can also tap **Sit out** any time; it starts with the next hand. Sitting out keeps your seat and tokens, and **Deal me back in** puts you back the next time a fresh pot starts (everyone antes).
+- Leaving doesn't get anyone out of paying: a knocker who leaves before the showdown is still in it, and if they lose they still put up the pot.
 - Pairs beat everything (Aces high, down to Twos), then Ace-King, Ace-Queen and down to Three-Two. Suits don't matter.
 
 **Extras:** cards slide out from the dealer, a big KNOCK! shakes the table, tokens slide from the pot to the winner, and tiebreak cards are dealt and flipped at the tied seats. A recap after each deck shows the biggest pot, most knocks and who's up. Pick an emoji look, tap someone's seat to throw a 🍅 at them, mute sounds in the menu, and the host can switch the room between green felt, red casino, midnight blue and a backyard wood table. Watchers get chairs in the corners. The menu has tonight's leaderboard.
@@ -24,7 +26,7 @@ An invite link or table code always gets people straight in. The host can give t
 
 **Scenes:** midnight blue plays in the night sky with stars, the backyard has grass and string lights, and the red casino has marquee lights.
 
-**Visitors:** the 👀 chip on the front page shows today's visitors. Tap it for the last 7 days, the last 30 days and all time. Counts come from [GoatCounter](https://knockgame.goatcounter.com).
+**Visitors:** the 👀 chip on the front page shows today's visitors, updated live. Tap it for this week, this month and all time. Each phone or computer counts once per day, week and month. Live counts use the free [Abacus](https://abacus.jasoncameron.dev) counter; [GoatCounter](https://knockgame.goatcounter.com) keeps the full visitor log and is the backup.
 
 **Table talk:** tap the chat button for emojis, quick lines like "Pay up 💸", or a short message. It pops up over your seat for a few seconds.
 

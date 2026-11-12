@@ -418,16 +418,37 @@ function newSeat(cid, name, bot){
   let s0 = S.cfg.st;
   if (Object.prototype.hasOwnProperty.call(bank, cid)) { s0 = bank[cid]; delete bank[cid]; }
   else stat(cid).in += s0;
-  return { c:cid, n:cleanName(name) || 'Player', s:s0, t:0, st:'wait', a:'', sh:null, hn:null, g:0, ask:0, away:0, nw:1, rdy:bot ? 1 : 0, av:bot ? '🤖' : '', bot:bot ? 1 : 0 };
+  return { c:cid, n:cleanName(name) || 'Player', s:s0, t:0, st:'wait', a:'', sh:null, hn:null, g:0, ask:0, away:0, nw:1, rdy:bot ? 1 : 0, av:bot ? '🤖' : '', bot:bot ? 1 : 0, so:0, kp:0, back:0 };
 }
 function nextIn(list, from){ for (const j of list) if (j > from) return j; return list[0]; }
 function removeGone(){
   S.seats = S.seats.map(x => { if (x && x.g) { if (!x.bot) bank[x.c] = x.s; return null; } return x; });
 }
+/* Sitting out: the player keeps their seat and tokens, isn't dealt in and pays no ante.
+   Asking to come back takes effect the next time a fresh pot starts (everyone antes). */
+const seatOf = cid => S.seats.find(y => y && y.c === cid) || null;
+function setSitOut(cid, v){
+  const x = seatOf(cid); if (!x) return false;
+  if (v) { x.so = 1; x.back = 0; if (S.ph === 'recap') x.kp = -1; }
+  else if (x.so) { x.back = 1; if (S.ph === 'recap') x.kp = 1; }
+  return true;
+}
+/* Deck break: everyone answers Keep playing or I'm out. Anyone who doesn't answer sits out and pays nothing. */
+function setKeep(cid, v){ const x = seatOf(cid); if (!x || S.ph !== 'recap') return false; x.kp = v ? 1 : -1; return true; }
+function endRecap(){
+  S.seats.forEach(x => {
+    if (!x) return;
+    if (x.so) { if (x.kp === 1) x.back = 1; else if (x.kp === -1) x.back = 0; }
+    else if (x.kp === -1 || (x.kp !== 1 && !x.nw && !x.bot && x.s >= S.cfg.ante)) { x.so = 1; x.back = 0; }
+    x.kp = 0;
+  });
+}
 function startHand(){
+  if (S.ph === 'recap') endRecap();
   removeGone();
   const ante = S.cfg.ante;
-  S.seats.forEach(x => { if (!x) return; x.t = 0; x.a = ''; x.sh = null; x.hn = null; x.st = x.s < ante ? 'out' : (x.away ? 'wait' : 'in'); });
+  if (S.due !== 0) S.seats.forEach(x => { if (x && x.so && x.back) { x.so = 0; x.back = 0; } });
+  S.seats.forEach(x => { if (!x) return; x.t = 0; x.a = ''; x.sh = null; x.hn = null; x.st = x.so ? 'wait' : x.s < ante ? 'out' : (x.away ? 'wait' : 'in'); });
   let elig = []; S.seats.forEach((x, i) => { if (x && x.st === 'in') elig.push(i); });
   S.res = null; S.tn = -1; S.q++;
   if (elig.length < 2 || S.pause) {
@@ -444,7 +465,8 @@ function startHand(){
   if (newDeck && S.round > 0 && !S.recapShown && S.dk && S.dk.hands > 0) {
     const nd = nextIn(regulars.length ? regulars : elig, S.bt);
     S.recapShown = 1; S.recap = buildRecap(S.seats[nd] ? S.seats[nd].n : '');
-    S.ph = 'recap'; S.tn = -1; nextHandAt = Date.now() + 11000;
+    S.ph = 'recap'; S.tn = -1; nextHandAt = Date.now() + 25000; S.recapAt = Date.now(); S.cd = 25;
+    S.seats.forEach(x => { if (x) x.kp = x.so ? 0 : (x.bot || x.nw) ? 1 : 0; });
     return true;
   }
   if (!newDeck) { elig.forEach(i => { if (S.seats[i].nw) S.seats[i].st = 'wait'; }); elig = regulars; }
@@ -718,6 +740,8 @@ function onClientMsg(c, d){
     case 'name': { const nm = cleanName(d.name); if (nm) { p.n = nm; hostTick(); } break; }
     case 'sit': { p.sit = !!d.sit; const nm = cleanName(d.name); if (nm) p.n = nm; hostTick(); break; }
     case 'ready': { const x = S.seats.find(y => y && y.c === p.cid); if (x) { x.rdy = d.v ? 1 : 0; hostTick(); } break; }
+    case 'keep': { if (setKeep(p.cid, !!d.v)) hostTick(); break; }
+    case 'sitout': { if (setSitOut(p.cid, !!d.v)) hostTick(); break; }
     case 'ask': { const x = S.seats.find(y => y && y.c === p.cid); if (x && !x.ask) { x.ask = 1; toast(`${x.n} is asking for more tokens`); hostTick(); } break; }
   }
 }
@@ -823,10 +847,16 @@ function hostTick(){
   for (const p of pres.values()) if (p.conn && p.conn.open && p.n && !S.seats.some(x => x && x.c === p.cid)) aud.push({ c:p.cid, n:p.n, av:AV_LIST.includes(p.av) ? p.av : '' });
   S.aud = aud.slice(0, 30);
   S.seats.forEach(x => { if (!x) return; const st = stat(x.c); st.n = x.n; st.av = x.av || ''; st.s = x.s; });
-  if (S.ph === 'recap') S.cd = Math.max(0, Math.ceil((nextHandAt - now) / 1000));
+  if (S.ph === 'recap') {
+    /* once everyone who can play has answered, don't make them wait out the whole countdown */
+    const need = S.seats.filter(x => x && !x.bot && !x.nw && !x.g && !x.away && x.s >= S.cfg.ante && !(x.so && !x.kp));
+    const soon = Math.max(now + 3000, (S.recapAt || now) + 8000);
+    if (need.length && need.every(x => x.kp) && nextHandAt > soon) nextHandAt = soon;
+    S.cd = Math.max(0, Math.ceil((nextHandAt - now) / 1000));
+  }
   if ((S.ph === 'done' || S.ph === 'recap') && now >= nextHandAt) startHand();
   else if (S.ph === 'waiting') {
-    const players = S.seats.filter(x => x && !x.g && !x.away && x.s >= S.cfg.ante);
+    const players = S.seats.filter(x => x && !x.g && !x.away && !x.so && x.s >= S.cfg.ante);
     if (players.length < 2 && S.live) { S.live = 0; S.seats.forEach(x => { if (x && !x.bot) x.rdy = 0; }); }
     const go = players.length >= 2 && !S.pause && (S.live || S.go || players.every(x => x.bot || x.rdy));
     if (go) {
@@ -948,22 +978,47 @@ function gcCount(q){
     .then(r => r.status === 404 ? { count:'0' } : r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)))
     .then(j => String(j && j.count != null ? j.count : '0').replace(/[^\d,.   ]/g, '').trim() || '0');
 }
+/* Live counts: each device bumps a day, week, month and all-time counter once per period, so the numbers
+   go up the moment someone opens the site. GoatCounter keeps the full log and is the backup if this fails. */
+const LIVE = 'https://abacus.jasoncameron.dev', LIVE_NS = 'knock-lgriffin2445';
+let visCounted = false;
+function periodKeys(){
+  const d = new Date(), mon = new Date(d); mon.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  const day = ymd(d).replace(/-/g, '');
+  return { today:'d' + day, week:'w' + ymd(mon).replace(/-/g, ''), month:'m' + day.slice(0, 6), all:'total' };
+}
+function liveCall(kind, key){
+  return fetch(`${LIVE}/${kind}/${LIVE_NS}/${key}`, { cache:'no-store' })
+    .then(r => r.status === 404 ? { value:0 } : r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)))
+    .then(j => { const v = +(j && j.value); if (!isFinite(v)) throw new Error('bad count'); return Math.max(0, Math.floor(v)); });
+}
+const fmtCount = v => Number(v).toLocaleString('en-US');
+const countable = () => location.protocol !== 'file:' && !/^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
+function countVisit(){
+  if (!countable()) { visCounted = true; return; }
+  const k = periodKeys(); let seen = {};
+  try { seen = JSON.parse(store.get('knock_seen') || '{}') || {}; } catch (e) { seen = {}; }
+  const jobs = Object.keys(k).filter(p => seen[p] !== k[p]).map(p => liveCall('hit', k[p]).then(v => { seen[p] = k[p]; vis[p] = fmtCount(v); }));
+  Promise.allSettled(jobs).then(() => { store.set('knock_seen', JSON.stringify(seen)); visCounted = true; vis.at = 0; vis.fullAt = 0; if (role === 'none') loadVisitors(false); });
+  setTimeout(() => { visCounted = true; }, 8000);
+}
+const GC_Q = { today:() => '?start=' + ymd(new Date()), week:() => '?start=week', month:() => '?start=month', all:() => '' };
+function readCount(p){ return liveCall('get', periodKeys()[p]).then(fmtCount, () => gcCount(GC_Q[p]())); }
 function loadVisitors(full){
   const now = Date.now();
-  if (vis.busy || location.protocol === 'file:') return;
+  if (vis.busy || !visCounted || location.protocol === 'file:') return;
   if (!full && now - vis.at < 60000) return;
-  if (full && now - vis.fullAt < 60000) return;
+  if (full && now - vis.fullAt < 30000) return;
   vis.busy = 1;
-  const jobs = [gcCount('?start=' + ymd(new Date())).then(v => { vis.today = v; })];
-  if (full) jobs.push(gcCount('?start=week').then(v => { vis.week = v; }), gcCount('?start=month').then(v => { vis.month = v; }), gcCount('').then(v => { vis.all = v; }));
-  Promise.all(jobs).then(() => { vis.err = 0; if (full) vis.fullAt = Date.now(); }, () => { vis.err = 1; })
+  const ps = full ? ['today', 'week', 'month', 'all'] : ['today'];
+  Promise.all(ps.map(p => readCount(p).then(v => { vis[p] = v; }))).then(() => { vis.err = 0; if (full) vis.fullAt = Date.now(); }, () => { vis.err = 1; })
     .finally(() => { vis.busy = 0; vis.at = Date.now(); scheduleRender(); });
 }
 function visitorsHTML(){
   const row = (v, t) => `<li><b>${v == null ? '…' : esc(v)}</b><span>${t}</span></li>`;
   return `<div class="sheet-head"><h2>Visitors</h2><button type="button" class="iconbtn" data-act="menu-close" aria-label="Close"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
-  <section><ul class="visrows">${row(vis.today, 'Today')}${row(vis.week, 'Last 7 days')}${row(vis.month, 'Last 30 days')}${row(vis.all, 'All time')}</ul>
-  ${vis.err ? '<p class="small muted">Couldn\'t load the counts right now. An ad blocker can stop them. Try again in a bit.</p>' : '<p class="small muted">People who opened the Knock site. Someone who reloads or comes back later the same day usually counts once. The numbers can lag a little behind.</p>'}
+  <section><ul class="visrows">${row(vis.today, 'Today')}${row(vis.week, 'This week')}${row(vis.month, 'This month')}${row(vis.all, 'All time')}</ul>
+  ${vis.err ? '<p class="small muted">Couldn\'t load the counts right now. An ad blocker can stop them. Try again in a bit.</p>' : '<p class="small muted">People who opened the Knock site, counted the moment they open it. Each phone or computer counts once a day, once a week and once a month, even if it reloads. Counting started November 12, 2026.</p>'}
   <p class="small"><a href="${GC}" target="_blank" rel="noopener">Open the full visitor log</a> <span class="muted">(needs your GoatCounter login)</span></p></section>`;
 }
 
@@ -1151,6 +1206,17 @@ function standUp(){
 function setReady(v){
   if (role === 'host') { const x = S && S.seats.find(y => y && y.c === myCid); if (x) { x.rdy = v ? 1 : 0; hostTick(); } }
   else send({ t:'ready', v:!!v });
+  scheduleRender();
+}
+function keepPlaying(v){
+  if (role === 'host') { if (S && setKeep(myCid, v)) hostTick(); }
+  else send({ t:'keep', v:!!v });
+  scheduleRender();
+}
+function sitOut(v){
+  if (role === 'host') { if (S && setSitOut(myCid, v)) hostTick(); }
+  else send({ t:'sitout', v:!!v });
+  if (v) toast('Sitting out. You keep your seat and tokens.');
   scheduleRender();
 }
 function startNow(){ if (role === 'host' && S) { S.go = 1; hostTick(); } }
@@ -1592,10 +1658,11 @@ function seatView(s, i, x, isMine){
   if (s.ph === 'done' && r) { label = (r.win ? 'Wins ' : 'Pays ') + fmtT(r.amt); pc += r.win ? ' win' : ' pay'; }
   else if (s.ph === 'recap' && s.recap && s.recap.big && s.recap.big.c === x.c) { label = '🏆 Biggest pot'; pc += ' knock'; }
   else if (s.ph === 'recap' && s.recap && s.recap.kn && s.recap.kn.c === x.c) { label = '🔥 Most knocks'; pc += ' knock'; }
-  else if (s.ph === 'recap') label = '';
+  else if (s.ph === 'recap') { label = x.so ? (x.kp === 1 ? 'Coming back' : 'Sitting out') : x.kp === 1 ? 'Playing on' : x.kp === -1 ? 'Sitting out' : x.s >= s.cfg.ante ? 'Deciding…' : ''; if (!x.so && x.kp === 1) pc += ' knock'; }
   else if (x.st === 'knock') { label = 'Knocked'; pc += ' knock'; }
   else if (x.st === 'fold') { label = x.a === 'Left' ? 'Left' : 'Folded'; pc += ' fold'; }
   else if (x.st === 'out') label = x.ask ? 'Wants tokens' : 'Out of tokens';
+  else if (x.so && x.st === 'wait') label = x.back ? 'Back next pot' : 'Sitting out';
   else if (s.ph === 'waiting' && !s.live && x.st === 'wait' && !x.away) { label = x.rdy || x.bot ? 'Ready' : 'Not ready'; if (x.rdy || x.bot) pc += ' knock'; }
   else if (x.st === 'wait') label = x.away ? 'Away' : (x.nw && s.round ? 'Next deck' : 'Next hand');
   else if (turn) label = 'Deciding…';
@@ -1669,7 +1736,7 @@ function renderCenter(s){
     else bl = 'Two cards each. Pairs beat everything.';
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
-    const players = s.seats.filter(y => y && !y.g && !y.away && y.s >= s.cfg.ante);
+    const players = s.seats.filter(y => y && !y.g && !y.away && !y.so && y.s >= s.cfg.ante);
     const nReady = players.filter(y => y.bot || y.rdy).length;
     if (s.cd) { ph = 'Get ready'; bl = `First deal in <em>${+s.cd}</em>…`; }
     else if (!s.live && players.length >= 2) { ph = 'Ready check'; bl = `<b>${nReady}</b> of ${players.length} ready`; }
@@ -1776,7 +1843,7 @@ function dockHTML(s){
   else if (showCards) { const anim = holeAnim(s.hand); cards = hole.map((c, k) => cardHTML(c, { cls:[anim ? 'deal' : '', x.st === 'fold' ? 'dim' : ''].join(' ').trim(), delay:anim ? k * 140 : 0 })).join(''); }
   else if (dealt && s.ph === 'deciding') cards = '<div class="card back"></div><div class="card back"></div>';
   else cards = '<div class="card slot"></div><div class="card slot"></div>';
-  const title = showCards ? name2(score2(hole)) : (x.st === 'out' ? 'Out of tokens' : 'Seated');
+  const title = showCards ? name2(score2(hole)) : (x.so && !dealt ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated');
   out.push(`<div class="me-row"><div class="mycards">${cards}</div><div class="me-info"><div class="me-hand">${esc(title)}</div><div class="me-sub">Your tokens <b>${fmtT(holding() && holdStacks && holdStacks.has(x.c) ? holdStacks.get(x.c) : x.s)}</b>${s.ph === 'deciding' && x.t ? ` · ante ${fmtT(x.t)} in` : ''}</div></div></div>`);
   let status = '', buttons = '';
   const myTurn = s.ph === 'deciding' && s.tn === i && x.st === 'in';
@@ -1792,9 +1859,17 @@ function dockHTML(s){
       ? `<button type="button" class="btn gold wide" data-act="give" data-i="${i}">Give yourself ${fmtT(s.cfg.st)}</button>`
       : (x.ask ? '' : `<button type="button" class="btn gold wide" data-act="ask">Ask the host for more tokens</button>`);
     if (x.ask && role !== 'host') status += ' The host has your request.';
+  } else if (x.so && s.ph !== 'recap' && !dealt) {
+    if (x.back) {
+      status = 'You\'re coming back. You\'ll be dealt in the next time a new pot starts and everyone antes.';
+      buttons = '<button type="button" class="btn ghost wide" data-act="sitout" data-v="1">Stay out</button>';
+    } else {
+      status = 'You\'re sitting out. You keep your seat and your tokens, and you don\'t pay any antes.';
+      buttons = '<button type="button" class="btn gold wide" data-act="sitout" data-v="0">Deal me back in</button>';
+    }
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
-    const players = s.seats.filter(y => y && !y.g && !y.away && y.s >= s.cfg.ante);
+    const players = s.seats.filter(y => y && !y.g && !y.away && !y.so && y.s >= s.cfg.ante);
     if (s.pause) {
       status = 'The host paused new hands.';
       if (role === 'host') buttons = '<button type="button" class="btn gold wide" data-act="resume-deal">Deal the next hand</button>';
@@ -1813,8 +1888,16 @@ function dockHTML(s){
       if (role === 'host' && seated < 2) buttons += inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>';
     }
   } else if (s.ph === 'recap') {
-    status = `That deck's done. Next deck in <em>${+s.cd || 0}</em> seconds${s.recap && s.recap.next ? `, with ${esc(cleanName(s.recap.next))} dealing` : ''}.`;
-    if (role === 'host') buttons = '<button type="button" class="btn ghost wide" data-act="nextdeck">Deal the next deck now</button>';
+    const cdn = Math.max(1, +s.cd || 0), cd = `<em>${cdn}</em> second${cdn === 1 ? '' : 's'}`, by = s.recap && s.recap.next ? `, with ${esc(cleanName(s.recap.next))} dealing` : '';
+    const two = (a, b) => `<div class="actions" style="--n:2">${a}${b}</div>`;
+    if (x.so) {
+      if (x.kp === 1) { status = `You're coming back. You'll be dealt in the next time a new pot starts. Next deck in ${cd}${by}.`; buttons = '<button type="button" class="btn ghost wide" data-act="keep" data-v="0">Stay out</button>'; }
+      else { status = `That deck's done. You're sitting out. Next deck in ${cd}${by}.`; buttons = '<button type="button" class="btn gold wide" data-act="keep" data-v="1">Deal me back in</button>'; }
+    } else if (x.kp === 1) { status = `You're in for the next deck. It starts in ${cd}${by}.`; buttons = '<button type="button" class="btn ghost wide" data-act="keep" data-v="0">Actually, I\'m out</button>'; }
+    else if (x.kp === -1) { status = 'You\'re sitting out the next deck. You keep your seat and your tokens, and you won\'t pay the ante.'; buttons = '<button type="button" class="btn gold wide" data-act="keep" data-v="1">Keep playing</button>'; }
+    else if (x.s < s.cfg.ante) status = `That deck's done. Next deck in ${cd}${by}.`;
+    else { status = `That deck's done. Keep playing? Next deck in ${cd}${by}. If you don't answer, you sit out and don't pay.`; buttons = two('<button type="button" class="btn ghost" data-act="keep" data-v="0">I\'m out</button>', '<button type="button" class="btn gold" data-act="keep" data-v="1">Keep playing</button>'); }
+    if (role === 'host') buttons += '<button type="button" class="chipbtn" data-act="nextdeck" style="margin-top:8px">Deal the next deck now</button>';
   } else if (x.st === 'wait') {
     if (x.away) status = 'You were away, so you\'re sitting this hand out.';
     else if (x.nw && s.round) {
@@ -1834,6 +1917,7 @@ function dockHTML(s){
   if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
   if (status) out.push(`<p class="status">${status}</p>`);
   if (buttons) out.push(buttons);
+  if (!x.so && !myTurn && s.live && s.ph !== 'recap' && x.st !== 'out') out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>${dealt && s.ph === 'deciding' ? ' from the next hand' : ''}. You keep your seat and tokens.</p>`);
   return out.join('');
 }
 function nameForm(){
@@ -1970,6 +2054,7 @@ function loop(){
   const now = Date.now();
   if (role === 'none' && now - lastScanAt > 15000) scanLobby();
   if (role === 'none' && document.visibilityState === 'visible') loadVisitors(false);
+  if (sheetMode === 'visitors') loadVisitors(true);
   if (role === 'host') hostTick();
   else if (role === 'player') {
     if (conn && conn.open) {
@@ -2012,6 +2097,8 @@ function bindUI(){
       case 'rmbots': removeBots(); break;
       case 'resume-deal': setCfg('pause', 0); break;
       case 'ready': setReady(b.dataset.v === '1'); break;
+      case 'keep': keepPlaying(b.dataset.v === '1'); break;
+      case 'sitout': sitOut(b.dataset.v === '1'); break;
       case 'startnow': startNow(); break;
       case 'lobbyjoin': askToJoin(+b.dataset.slot); break;
       case 'lobbycancel': cancelAsk(); break;
@@ -2070,7 +2157,7 @@ function bindUI(){
   if (window.ResizeObserver) new ResizeObserver(layout).observe($('#stage'));
 }
 function boot(){
-  bindUI(); layout();
+  bindUI(); layout(); countVisit();
   if (code) {
     const saved = loadSaved();
     if (saved && saved.code === code) resumeHost(saved);
