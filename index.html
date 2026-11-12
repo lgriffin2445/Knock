@@ -59,6 +59,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 #center{position:absolute;transform:translate(-50%,-50%);z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;pointer-events:none;width:max-content;max-width:200px}
 .phase{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(243,234,216,.66);font-weight:800}
 .pot{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-card);font-size:30px;line-height:1;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.34);padding:6px 16px 6px 8px;border-radius:999px}
+.pot[hidden]{display:none}
 .pot .lbl{font-family:var(--font-body);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .below{font-size:12.5px;line-height:1.4;color:rgba(243,234,216,.82);text-wrap:balance}
 .below b{color:var(--ivory)}
@@ -729,7 +730,7 @@ function connectClient(){
     const openTo = setTimeout(() => {
       if (peer !== p || p.open) return;
       netState = 'noservice'; try { p.destroy(); } catch (e) {} peer = null; retryLater(4000); scheduleRender();
-    }, 12000);
+    }, 20000);
     p.on('open', () => { clearTimeout(openTo); if (peer === p) openConn(); });
     p.on('disconnected', () => {
       if (peer !== p || p.destroyed) return;
