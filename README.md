@@ -2,6 +2,7 @@
 
 A two-card game for up to 10 friends, played with play tokens. Open the site, tap **Start a table**, and share the link. Friends join from the link with just a name, and can take a seat or just watch from the audience. The person who starts the table is the **host**: their phone runs the game and hands out tokens (10.00 each to start).
 
+- The first hand deals once everyone seated taps **I'm ready** (the host can tap **Start now**). After that, hands keep coming.
 - When a new pot starts, everyone antes 0.50. The dealer gives everyone two cards only they can see.
 - The player who gets cards first decides first, then it goes around the table: **Knock** or **Fold**. Who gets cards first moves one seat left every deal.
 - One knocker takes the pot; the next hand starts over with antes.
