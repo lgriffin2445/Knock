@@ -147,6 +147,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .joinrow input{flex:1;min-width:0;min-height:50px;border-radius:14px;border:1px solid rgba(243,234,216,.22);background:rgba(0,0,0,.32);padding:0 14px;font-size:16px}
 .joinrow input::placeholder{color:rgba(243,234,216,.45)}
 #codeIn{text-transform:uppercase;letter-spacing:.14em}
+.tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.4;color:var(--ivory)}
 .joinform{display:flex;flex-direction:column;gap:8px}
 .joinform input{min-height:50px;border-radius:14px;border:1px solid rgba(243,234,216,.22);background:rgba(0,0,0,.32);padding:0 14px;font-size:16px}
 .joinform input::placeholder{color:rgba(243,234,216,.45)}
@@ -468,7 +469,7 @@ const params = new URLSearchParams(location.search);
 const ps = params.get('ps');
 let code = (location.hash || '').replace('#', '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
 
-let role = 'none', peer = null, conn = null, netState = 'idle', retryTimer = null;
+let role = 'none', peer = null, conn = null, netState = 'idle', retryTimer = null, tryingSince = 0;
 const pres = new Map();
 let view = { s:null, hole:null }, lastHostMsg = 0, lastPing = 0;
 let awaySince = new Map(), lastPub = '', lastTurnKey = '', turnClock = 0, botTimer = null, botKey = '', waitStartAt = 0;
@@ -724,7 +725,12 @@ function connectClient(){
     let p;
     try { p = new Peer(undefined, peerOpts()); } catch (e) { netState = 'unsupported'; scheduleRender(); return; }
     peer = p;
-    p.on('open', () => { if (peer === p) openConn(); });
+    if (!tryingSince) tryingSince = Date.now();
+    const openTo = setTimeout(() => {
+      if (peer !== p || p.open) return;
+      netState = 'noservice'; try { p.destroy(); } catch (e) {} peer = null; retryLater(4000); scheduleRender();
+    }, 12000);
+    p.on('open', () => { clearTimeout(openTo); if (peer === p) openConn(); });
     p.on('disconnected', () => {
       if (peer !== p || p.destroyed) return;
       setTimeout(() => { if (peer === p && !p.destroyed && p.disconnected) { try { p.reconnect(); } catch (e) {} } }, 2000);
@@ -745,12 +751,20 @@ function dropConn(){ if (conn) { const c = conn; conn = null; try { c.close(); }
 function openConn(){
   if (conn) return;
   netState = 'connecting'; scheduleRender();
+  if (!tryingSince) tryingSince = Date.now();
   const c = peer.connect(PEER_PREFIX + code, { reliable:true, serialization:'json' });
   conn = c;
-  const to = setTimeout(() => { if (conn === c && !c.open) { dropConn(); netState = 'nohost'; retryLater(3000); scheduleRender(); } }, 15000);
-  c.on('open', () => { clearTimeout(to); if (conn !== c) return; netState = 'live'; lastHostMsg = Date.now(); sendHello(); scheduleRender(); });
+  const answered = () => { const pc = c.peerConnection; return !!(pc && pc.remoteDescription); };
+  const giveUp = why => { clearTimeout(to); if (conn !== c || c.open) return; dropConn(); netState = why; retryLater(why === 'nolink' ? 5000 : 3000); scheduleRender(); };
+  const to = setTimeout(() => giveUp(answered() ? 'nolink' : 'noanswer'), 15000);
+  const watchIce = () => {
+    const pc = c.peerConnection; if (!pc) return setTimeout(watchIce, 300);
+    pc.addEventListener('iceconnectionstatechange', () => { if (pc.iceConnectionState === 'failed') giveUp('nolink'); });
+  };
+  watchIce();
+  c.on('open', () => { clearTimeout(to); if (conn !== c) return; netState = 'live'; tryingSince = 0; lastHostMsg = Date.now(); sendHello(); scheduleRender(); });
   c.on('data', d => { if (conn === c) onHostMsg(d); });
-  const lost = () => { clearTimeout(to); if (conn !== c) return; conn = null; netState = 'lost'; scheduleRender(); retryLater(2000); };
+  const lost = () => { clearTimeout(to); if (conn !== c) return; const wasOpen = c.open || netState === 'live'; conn = null; netState = wasOpen ? 'lost' : (answered() ? 'nolink' : 'noanswer'); if (!tryingSince) tryingSince = Date.now(); scheduleRender(); retryLater(2000); };
   c.on('close', lost); c.on('error', lost);
 }
 function send(m){ if (conn && conn.open) { try { conn.send(m); return true; } catch (e) {} } return false; }
@@ -963,7 +977,7 @@ function renderCenter(s){
 }
 function inviteHTML(){
   return `<div class="invite"><span class="lbl">Invite friends with this link</span><code>${esc(inviteLink())}</code>
-    <div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="copy">Copy link</button><button type="button" class="btn gold" data-act="share">Share…</button></div></div>`;
+    <div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="copy">Copy link</button><button type="button" class="btn gold" data-act="share">Share…</button></div>${role === 'host' ? '<p class="small muted">Use Share… so you stay on this page. While your screen is locked or you\'re in another app, friends can\'t join.</p>' : ''}</div>`;
 }
 function netNotice(){
   if (role === 'host') {
@@ -973,8 +987,24 @@ function netNotice(){
   }
   if (role === 'player') {
     if (netState === 'live') return '';
-    const msg = { connecting:'Connecting to the host…', nohost:`Can't reach table ${esc(code)} yet. The host's page needs to be open. Trying again…`, lost:'Lost the host. Reconnecting…', offline:'You\'re offline. Trying again…', unsupported:'This browser can\'t connect. Try Chrome or Safari.' }[netState] || 'Connecting…';
-    return `<div class="notice${netState === 'nohost' || netState === 'lost' || netState === 'offline' || netState === 'unsupported' ? ' bad' : ''}"><span>${msg}</span></div>`;
+    const msg = {
+      connecting:'Connecting to the host…',
+      nohost:`Table ${esc(code)} isn't open right now. The host needs Knock open on their screen. Trying again…`,
+      noanswer:'The host\'s phone isn\'t answering. Their screen may be locked, or they switched to another app. Trying again…',
+      nolink:'Found the table, but your phone couldn\'t link up with the host\'s. This usually happens on cell data. Trying again…',
+      noservice:'Can\'t reach the connection service. Check your internet. Trying again…',
+      lost:'Lost the host. Reconnecting…', offline:'You\'re offline. Trying again…',
+      unsupported:'This browser can\'t connect. Open the link in Safari or Chrome.'
+    }[netState] || 'Connecting…';
+    let help = '';
+    if (tryingSince && Date.now() - tryingSince > 20000 && netState !== 'unsupported') {
+      help = `<ul class="tips">
+        <li><b>Host:</b> keep Knock open with the screen on. If the host's phone locks or they switch apps, nobody can join until they come back.</li>
+        <li>Open the link in <b>Safari or Chrome</b>, not inside Instagram, Facebook, Snapchat or TikTok.</li>
+        <li>On cell data? Switch to <b>Wi-Fi</b> (or turn Wi-Fi off if it's a work or school network), then tap Try again.</li>
+      </ul><button type="button" class="btn ghost wide" data-act="retry">Try again now</button>`;
+    }
+    return `<div class="notice${netState === 'connecting' ? '' : ' bad'}"><span>${msg}</span></div>${help}`;
   }
   return '';
 }
@@ -1210,6 +1240,7 @@ function bindUI(){
       case 'resume-deal': setCfg('pause', 0); break;
       case 'ready': setReady(b.dataset.v === '1'); break;
       case 'startnow': startNow(); break;
+      case 'retry': if (role === 'player') { tryingSince = Date.now(); clearTimeout(retryTimer); dropConn(); if (peer && !peer.open) { try { peer.destroy(); } catch (e) {} peer = null; } netState = 'connecting'; connectClient(); scheduleRender(); } break;
       case 'copy': copyLink(); break;
       case 'share': shareLink(); break;
       case 'resume': { const sv = loadSaved(); if (sv) { history.replaceState(null, '', location.pathname + location.search + '#' + sv.code); resumeHost(sv); } break; }
