@@ -7,6 +7,13 @@
 <meta name="theme-color" content="#15100d">
 <meta name="description" content="Knock: a two-card game for up to 10 friends, played with tokens. Pairs beat everything, Aces are high.">
 <title>Knock</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Knock">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Limelight&family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -234,6 +241,9 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .joinrow input::placeholder{color:rgba(243,234,216,.45)}
 #codeIn{text-transform:uppercase;letter-spacing:.14em}
 .tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.4;color:var(--ivory)}
+.a2hs{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 10px 10px 12px;border-radius:12px;background:rgba(220,171,74,.1);border:1px solid rgba(220,171,74,.3);font-size:13.5px;line-height:1.4}
+.a2hs span{flex:1}
+.iconbtn.sm{width:32px;height:32px;flex:none}
 .rooms{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:32vh;overflow:auto}
 .room{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(243,234,216,.06);border:1px solid rgba(243,234,216,.1)}
 .rinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -1020,6 +1030,20 @@ function visitorsHTML(){
   <section><ul class="visrows">${row(vis.today, 'Today')}${row(vis.week, 'This week')}${row(vis.month, 'This month')}${row(vis.all, 'All time')}</ul>
   ${vis.err ? '<p class="small muted">Couldn\'t load the counts right now. An ad blocker can stop them. Try again in a bit.</p>' : '<p class="small muted">People who opened the Knock site, counted the moment they open it. Each phone or computer counts once a day, once a week and once a month, even if it reloads. Counting started November 12, 2026.</p>'}
   <p class="small"><a href="${GC}" target="_blank" rel="noopener">Open the full visitor log</a> <span class="muted">(needs your GoatCounter login)</span></p></section>`;
+}
+
+/* put Knock on the home screen */
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; scheduleRender(); });
+window.addEventListener('appinstalled', () => { installEvt = null; store.set('knock_a2hs_hide', '1'); toast('Knock is on your home screen'); scheduleRender(); });
+function installHTML(){
+  if (isStandalone() || store.get('knock_a2hs_hide') === '1') return '';
+  const x = '<button type="button" class="iconbtn sm" data-act="a2hs-hide" aria-label="Hide this tip"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
+  if (installEvt) return `<div class="a2hs"><span>📲 Get the Knock app on your phone.</span><button type="button" class="btn gold sm" data-act="a2hs-install">Install</button>${x}</div>`;
+  if (isIOS()) return `<div class="a2hs"><span>📲 <b>Make it an app:</b> in Safari tap <b>Share</b> (it may be under <b>•••</b>), then <b>Add to Home Screen</b>.</span>${x}</div>`;
+  return '';
 }
 
 /* visitors on the front page */
@@ -1809,6 +1833,7 @@ function dockHTML(s){
     out.push(`<p class="lead">Two cards each. Pairs beat everything and Aces are high. Start your own table, or join one that's playing now.</p>`);
     out.push(`<form id="startForm" class="joinrow"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"><button class="btn gold" type="submit">Start a table</button></form>`);
     out.push(lobbyHTML());
+    out.push(installHTML());
     out.push(`<div class="divider">or use a table code</div><form id="codeForm" class="joinrow"><label class="sr" for="codeIn">Table code</label><input id="codeIn" maxlength="8" placeholder="Table code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn ghost" type="submit">Join</button></form>`);
     if (saved) out.push(`<button type="button" class="btn ghost wide" data-act="resume">Go back to your table ${esc(saved.code)}</button>`);
     return out.join('');
@@ -2080,6 +2105,8 @@ function bindUI(){
     switch (b.dataset.act) {
       case 'menu': openMenu(); break;
       case 'visitors': openSheet('visitors'); loadVisitors(true); break;
+      case 'a2hs-hide': store.set('knock_a2hs_hide', '1'); scheduleRender(); break;
+      case 'a2hs-install': if (installEvt) { const e = installEvt; installEvt = null; e.prompt(); e.userChoice.finally(scheduleRender); } break;
       case 'chat': openSheet('chat'); break;
       case 'throw': if (throwTarget) sendThrow(throwTarget, b.dataset.e); closeMenu(); break;
       case 'avatar': openSheet('avatar'); break;

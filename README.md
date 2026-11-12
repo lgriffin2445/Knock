@@ -17,6 +17,8 @@ A two-card game for up to 10 friends, played with play tokens. Open the site, ta
 
 **Extras:** cards slide out from the dealer, a big KNOCK! shakes the table, tokens slide from the pot to the winner, and tiebreak cards are dealt and flipped at the tied seats. A recap after each deck shows the biggest pot, most knocks and who's up. Pick an emoji look, tap someone's seat to throw a 🍅 at them, mute sounds in the menu, and the host can switch the room between green felt, red casino, midnight blue and a backyard wood table. Watchers get chairs in the corners. The menu has tonight's leaderboard.
 
+**Put it on your home screen:** Knock works like an app. On iPhone, open the link in Safari, tap Share (it may be under •••), then Add to Home Screen. On Android, open it in Chrome and tap Install (or ⋮ then Add to Home screen).
+
 **Lobby:** the front page lists tables that are playing now, with how many are playing and watching. In the menu the host picks who can join:
 - **Open:** anyone taps Join and walks right in.
 - **Private** (the default): people tap Ask to join, and the host taps Let in or Not now.
