@@ -147,6 +147,9 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .joinrow input{flex:1;min-width:0;min-height:50px;border-radius:14px;border:1px solid rgba(243,234,216,.22);background:rgba(0,0,0,.32);padding:0 14px;font-size:16px}
 .joinrow input::placeholder{color:rgba(243,234,216,.45)}
 #codeIn{text-transform:uppercase;letter-spacing:.14em}
+.joinform{display:flex;flex-direction:column;gap:8px}
+.joinform input{min-height:50px;border-radius:14px;border:1px solid rgba(243,234,216,.22);background:rgba(0,0,0,.32);padding:0 14px;font-size:16px}
+.joinform input::placeholder{color:rgba(243,234,216,.45)}
 .linkbtn{background:none;border:0;padding:0;color:var(--brass);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .notice{font-size:13px;line-height:1.35;padding:8px 10px;border-radius:12px;background:rgba(220,171,74,.12);border:1px solid rgba(220,171,74,.38);display:flex;gap:10px;align-items:center;justify-content:space-between}
 .notice.bad{background:rgba(201,53,63,.12);border-color:rgba(201,53,63,.45)}
@@ -233,6 +236,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
       <div class="phase" id="phase">Knock</div>
       <div class="pot" id="pot" hidden></div>
       <div class="deckinfo" id="deckinfo"></div>
+      <div class="deckinfo" id="audinfo"></div>
       <div class="below" id="below"></div>
     </div>
     <div id="seats"></div>
@@ -302,7 +306,7 @@ function shuffleNew(exclude){
 function newSeat(cid, name, bot){
   let s0 = S.cfg.st;
   if (Object.prototype.hasOwnProperty.call(bank, cid)) { s0 = bank[cid]; delete bank[cid]; }
-  return { c:cid, n:cleanName(name) || 'Player', s:s0, t:0, st:'wait', a:'', sh:null, hn:null, g:0, ask:0, away:0, bot:bot ? 1 : 0 };
+  return { c:cid, n:cleanName(name) || 'Player', s:s0, t:0, st:'wait', a:'', sh:null, hn:null, g:0, ask:0, away:0, nw:1, bot:bot ? 1 : 0 };
 }
 function nextIn(list, from){ for (const j of list) if (j > from) return j; return list[0]; }
 function removeGone(){
@@ -312,13 +316,21 @@ function startHand(){
   removeGone();
   const ante = S.cfg.ante;
   S.seats.forEach(x => { if (!x) return; x.t = 0; x.a = ''; x.sh = null; x.hn = null; x.st = x.s < ante ? 'out' : (x.away ? 'wait' : 'in'); });
-  const elig = []; S.seats.forEach((x, i) => { if (x && x.st === 'in') elig.push(i); });
+  let elig = []; S.seats.forEach((x, i) => { if (x && x.st === 'in') elig.push(i); });
   S.res = null; S.tn = -1; S.q++;
   if (elig.length < 2 || S.pause) { elig.forEach(i => { S.seats[i].st = 'wait'; }); S.ph = 'waiting'; return false; }
+  /* New players wait for the next deck. A new deck starts when this one can't give every regular two cards,
+     or when fewer than two regulars are left to play. */
+  const regulars = elig.filter(i => !S.seats[i].nw);
+  const newDeck = !!S.roundEnd || S.bt < 0 || regulars.length < 2 || deck.length < 2 * regulars.length;
+  if (!newDeck) { elig.forEach(i => { if (S.seats[i].nw) S.seats[i].st = 'wait'; }); elig = regulars; }
   S.hand++; S.note = '';
-  let newDeck = false;
-  if (S.roundEnd || S.bt < 0 || deck.length < 2 * elig.length) {
-    S.round = (S.round || 0) + 1; S.bt = nextIn(elig, S.bt); S.roundEnd = 0; shuffleNew(); newDeck = true;
+  if (newDeck) {
+    const nd = seatNewcomers(elig);
+    if (nd !== null) { S.bt = nd; elig = []; S.seats.forEach((x, i) => { if (x && x.st === 'in') elig.push(i); }); }
+    else S.bt = nextIn(elig, S.bt);
+    elig.forEach(i => { S.seats[i].nw = 0; });
+    S.round = (S.round || 0) + 1; S.roundEnd = 0; shuffleNew();
   }
   /* A new dealer deals first to the player on their left; after that, who gets cards first moves one seat left every deal. */
   S.first = newDeck || S.first < 0 ? nextIn(elig, S.bt) : nextIn(elig, S.first);
@@ -329,6 +341,20 @@ function startHand(){
   S.left = deck.length;
   S.ph = 'deciding'; S.tn = S.first;
   return true;
+}
+/* When a new deck starts, the deal passes left as usual, and anyone new sits just to the new dealer's right:
+   last in line to get cards and last to deal. Returns the new dealer's seat, or null when nothing moves. */
+function seatNewcomers(elig){
+  const news = elig.filter(i => S.seats[i].nw);
+  const regs = elig.filter(i => !S.seats[i].nw);
+  if (!news.length || !regs.length || S.bt < 0) return null;
+  const nd = nextIn(regs, S.bt);
+  const newSet = new Set(news);
+  const order = [];
+  for (let k = 0; k < MAX_SEATS; k++) { const j = (nd + k) % MAX_SEATS; if (S.seats[j] && !newSet.has(j)) order.push(S.seats[j]); }
+  news.forEach(i => order.push(S.seats[i]));
+  S.seats = order.concat(new Array(MAX_SEATS - order.length).fill(null));
+  return 0;
 }
 function nextUndecided(from){
   for (let k = 1; k <= MAX_SEATS; k++) { const j = (from + k) % MAX_SEATS; const x = S.seats[j]; if (x && x.st === 'in') return j; }
@@ -472,7 +498,7 @@ function startTable(){
   if (!hasPeerLib()) { toast('This page did not load fully. Reload and try again.'); return; }
   code = rid(6, CODE_CH);
   history.replaceState(null, '', location.pathname + location.search + '#' + code);
-  role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true;
+  role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true; rememberSit(true);
   startHosting(); keepAwake(); hostTick();
 }
 function resumeHost(saved){
@@ -639,6 +665,10 @@ function hostTick(){
       }
     }
   }
+  const aud = [];
+  if (myName && !S.seats.some(x => x && x.c === myCid)) aud.push(myName);
+  for (const p of pres.values()) if (p.conn && p.conn.open && p.n && !S.seats.some(x => x && x.c === p.cid)) aud.push(p.n);
+  S.aud = aud.slice(0, 30);
   if (S.ph === 'done' && now >= nextHandAt) startHand();
   else if (S.ph === 'waiting') {
     const ready = S.seats.filter(x => x && !x.g && !x.away && x.s >= S.cfg.ante).length;
@@ -736,14 +766,20 @@ function act(k){
   scheduleRender();
 }
 function setName(nm){ myName = nm; store.set('knock_name', nm); if (role === 'host') hostTick(); else send({ t:'name', name:nm }); }
+function rememberSit(v){ if (code) store.set('knock_sit_' + code, v ? '1' : '0'); }
+function watchOnly(){
+  me.sit = false; rememberSit(false);
+  if (role === 'host') hostTick(); else send({ t:'sit', sit:false, name:myName });
+  scheduleRender();
+}
 function sitDown(){
   if (!myName) return;
-  me.sit = true;
+  me.sit = true; rememberSit(true);
   if (role === 'host') hostTick(); else send({ t:'sit', sit:true, name:myName });
   scheduleRender();
 }
 function standUp(){
-  me.sit = false;
+  me.sit = false; rememberSit(false);
   if (role === 'host') hostTick(); else send({ t:'sit', sit:false });
   scheduleRender();
 }
@@ -825,7 +861,7 @@ function seatView(s, i, x, isMine){
   else if (x.st === 'knock') { label = 'Knocked'; pc += ' knock'; }
   else if (x.st === 'fold') { label = x.a === 'Left' ? 'Left' : 'Folded'; pc += ' fold'; }
   else if (x.st === 'out') label = x.ask ? 'Wants tokens' : 'Out of tokens';
-  else if (x.st === 'wait') label = x.away ? 'Away' : 'Next hand';
+  else if (x.st === 'wait') label = x.away ? 'Away' : (x.nw && s.round ? 'Next deck' : 'Next hand');
   else if (turn) label = 'Deciding…';
   const pill = label ? `<div class="${pc}">${esc(label)}</div>` : '<div class="tagpill empty" aria-hidden="true"></div>';
   const won = r && r.win ? `<span class="won">+${fmtT(r.amt)}</span>` : '';
@@ -899,6 +935,8 @@ function renderCenter(s){
   if (s) { pot.hidden = false; setHTML(pot, `<span class="coin"></span><span class="lbl">Pot</span>${fmtT(s.pot)}`); }
   else pot.hidden = true;
   const dl = s && s.round ? s.seats[s.bt] : null;
+  const aud = s && Array.isArray(s.aud) ? s.aud.map(n => cleanName(n)).filter(Boolean) : [];
+  setHTML($('#audinfo'), aud.length ? `Watching: ${aud.slice(0, 3).map(esc).join(', ')}${aud.length > 3 ? ` +${aud.length - 3}` : ''}` : '');
   setHTML($('#deckinfo'), s && s.round ? `${dl ? (s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals') : 'Deck'} · ${+s.left || 0} cards left` : '');
   setHTML(below, bl);
 }
@@ -938,11 +976,17 @@ function dockHTML(s){
   const i = s ? mySeatIdx(s) : -1; const x = i >= 0 ? s.seats[i] : null;
   if (!x) {
     const full = s && s.seats.every(Boolean);
-    if (role === 'player' && !s) { if (!myName) out.push(nameForm('Take a seat')); return out.join(''); }
-    if (me.sit && s && !full) { out.push('<p class="lead">Finding you a seat…</p>'); return out.join(''); }
-    if (full) out.push('<p class="lead">All 10 seats are taken. You\'re watching until one opens up.</p>');
-    else if (!myName) out.push(nameForm('Take a seat'));
-    else out.push(`<div class="joinrow"><p class="lead grow">Playing as <b>${esc(myName)}</b> · <button type="button" class="linkbtn" data-act="menu">change</button></p><button type="button" class="btn gold" data-act="sit">Take a seat</button></div>`);
+    if (!myName) {
+      out.push(`<p class="lead">Type your name, then take a seat or just watch from the audience.</p>${nameForm()}`);
+      if (full) out.push('<p class="small muted">All 10 seats are taken right now. You can watch until one opens up.</p>');
+      if (role === 'host') out.push(inviteHTML());
+      return out.join('');
+    }
+    if (!s) return out.join('');
+    if (me.sit && !full) { out.push('<p class="lead">Finding you a seat…</p>'); return out.join(''); }
+    if (full) out.push(`<p class="lead">All 10 seats are taken, so you're in the audience as <b>${esc(myName)}</b>. ${me.sit ? 'You\'ll get the next open seat.' : ''}</p>`);
+    else out.push(`<p class="lead">You're in the audience as <b>${esc(myName)}</b> · <button type="button" class="linkbtn" data-act="menu">change name</button></p><div class="actions" style="--n:1"><button type="button" class="btn gold" data-act="sit">Take a seat</button></div>`);
+    out.push('<p class="small muted">The audience can talk too: tap the chat button at the top.</p>');
     if (role === 'host') out.push(inviteHTML());
     return out.join('');
   }
@@ -973,7 +1017,14 @@ function dockHTML(s){
     const seated = s.seats.filter(Boolean).length;
     status = seated < 2 ? 'Waiting for at least one more player.' : (s.pause ? 'The host paused new hands.' : 'Shuffling up the next hand…');
     if (role === 'host') { if (seated < 2) buttons = inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>'; else if (s.pause) buttons = '<button type="button" class="btn gold wide" data-act="resume-deal">Deal the next hand</button>'; }
-  } else if (x.st === 'wait') status = x.away ? 'You were away, so you\'re sitting this hand out.' : 'You\'re in from the next hand.';
+  } else if (x.st === 'wait') {
+    if (x.away) status = 'You were away, so you\'re sitting this hand out.';
+    else if (x.nw && s.round) {
+      const dealtN = s.seats.filter(y => y && (y.st === 'in' || y.st === 'knock' || y.st === 'fold')).length || 2;
+      const more = Math.floor((+s.left || 0) / (2 * dealtN));
+      status = `New players join when the next deck starts. You're dealt in ${more ? `after about <em>${more}</em> more hand${more === 1 ? '' : 's'}` : 'next hand'} (${+s.left || 0} cards left).`;
+    } else status = 'You\'re in from the next hand.';
+  }
   else if (s.ph === 'done') status = resultText(s, i) + ' Next hand in a moment.';
   else if (myTurn) {
     status = pending ? 'Sending your call…' : `Pot <em>${fmtT(s.pot)}</em>. If you knock and lose, you put up <em>${fmtT(s.pot)}</em> for the next pot.`;
@@ -987,8 +1038,8 @@ function dockHTML(s){
   if (buttons) out.push(buttons);
   return out.join('');
 }
-function nameForm(btn){
-  return `<form id="nameForm" class="joinrow"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname"><button class="btn gold" type="submit">${btn}</button></form>`;
+function nameForm(){
+  return `<form id="nameForm" class="joinform"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname"><div class="actions" style="--n:2"><button class="btn gold" type="submit" value="sit">Take a seat</button><button class="btn ghost" type="submit" value="watch">Just watch</button></div></form>`;
 }
 function renderHeader(s){
   setText($('#sub'), code ? `Table ${code}${s ? ' · Ante ' + fmtT(s.cfg.ante) : ''}` : 'Two cards · pairs win');
@@ -1011,7 +1062,8 @@ function menuHTML(s){
   const sel = (id, opts, val) => `<select id="${id}">${opts.map(([v, t]) => `<option value="${v}"${String(v) === String(val) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   const parts = [`<div class="sheet-head"><h2>Table menu</h2><button type="button" class="iconbtn" data-act="menu-close" aria-label="Close menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>`];
   if (code) parts.push(`<section><h3>Invite</h3>${inviteHTML()}<p class="small muted">Table code <b>${esc(code)}</b>. Anyone with the link can join; no account needed.</p></section>`);
-  parts.push(`<section><h3>You</h3><form id="renameForm" class="joinrow"><label class="sr" for="nameEdit">Your name</label><input id="nameEdit" maxlength="12" value="${esc(myName)}" placeholder="Your name" autocomplete="nickname"><button class="btn ghost" type="submit">Save name</button></form>${me.sit && s && mySeatIdx(s) >= 0 ? '<button type="button" class="btn ghost wide" data-act="stand">Leave the table</button>' : ''}</section>`);
+  parts.push(`<section><h3>You</h3><form id="renameForm" class="joinrow"><label class="sr" for="nameEdit">Your name</label><input id="nameEdit" maxlength="12" value="${esc(myName)}" placeholder="Your name" autocomplete="nickname"><button class="btn ghost" type="submit">Save name</button></form>${me.sit && s && mySeatIdx(s) >= 0 ? '<button type="button" class="btn ghost wide" data-act="stand">Leave your seat and watch</button>' : ''}</section>`);
+  if (s) { const aud = Array.isArray(s.aud) ? s.aud.map(n => cleanName(n)).filter(Boolean) : []; parts.push(`<section><h3>Audience</h3><p class="small">${aud.length ? aud.map(esc).join(', ') : 'No one is watching right now.'}</p><p class="small muted">Anyone with the link can watch and chat without taking a seat.</p></section>`); }
   if (host) {
     const players = S.seats.map((x, i) => x ? `<li><span class="who">${esc(x.n)}${x.bot ? ' (bot)' : ''}${x.ask ? ' <span class="asked">asked</span>' : ''}</span><span class="amt">${fmtT(x.s)}</span><button type="button" class="chipbtn" data-act="give" data-i="${i}">+${fmtT(S.cfg.st)}</button></li>` : '').join('');
     parts.push(`<section><h3>Host controls</h3>
@@ -1034,6 +1086,7 @@ function menuHTML(s){
     <li>If two or more knock, the best hand takes the pot. Every knocker who loses puts up the whole pot amount, even if it puts them below zero, and that money is the next pot. Nobody antes for that hand, and players who folded play it free.</li>
     <li>If knockers tie for the best hand, only they get two new cards each, and the higher hand wins.</li>
     <li>If nobody knocks, the pot stays, everyone antes again, and new cards are dealt.</li>
+    <li>New players wait until the deck in play runs out. When the next deck starts, they sit just to the new dealer's right, so they're last in line.</li>
     <li>The dealer deals from one shuffled deck until there aren't enough cards left to give everyone two. Then the deck is reshuffled, the player to the dealer's left becomes the dealer, and they deal first to the player on their left.</li>
   </ol></section>`);
   const row = (label, cs) => `<li><span>${label}</span><span class="ex">${cs.match(/../g).map(c => cardHTML(c)).join('')}</span></li>`;
@@ -1139,7 +1192,7 @@ function bindUI(){
     const inp = f.querySelector('input'); const nm = cleanName(inp && inp.value);
     if (!nm) { toast('Type your name first'); if (inp) inp.focus(); return; }
     if (f.id === 'startForm') { myName = nm; store.set('knock_name', nm); startTable(); }
-    else if (f.id === 'nameForm') { setName(nm); sitDown(); }
+    else if (f.id === 'nameForm') { setName(nm); if (e.submitter && e.submitter.value === 'watch') watchOnly(); else sitDown(); }
     else if (f.id === 'renameForm') { setName(nm); toast('Name saved'); }
     scheduleRender();
   });
@@ -1163,7 +1216,7 @@ function boot(){
   if (code) {
     const saved = loadSaved();
     if (saved && saved.code === code) resumeHost(saved);
-    else { role = 'player'; if (myName) me.sit = true; connectClient(); }
+    else { role = 'player'; me.sit = !!myName && store.get('knock_sit_' + code) === '1'; connectClient(); }
   }
   render();
   setInterval(loop, 500);
