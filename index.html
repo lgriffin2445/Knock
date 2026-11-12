@@ -137,6 +137,38 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .flycard{position:absolute;--cw:24px}
 .flycoin{position:absolute;width:16px;height:16px}
 .throwfx{position:absolute;font-size:30px;line-height:1}
+.rain{position:absolute;font-size:24px;line-height:1;z-index:8;will-change:transform}
+.knockfx.potfx{font-size:34px;color:#ffe08a;text-shadow:0 3px 0 #000,0 0 24px rgba(255,214,102,.95);animation:potpop 2.2s ease-out both}
+.knockfx.potfx.lvl2{font-size:38px;color:#ffd24a}
+.knockfx.potfx.lvl3{font-size:40px;color:#ff9a3d;text-shadow:0 3px 0 #000,0 0 30px rgba(255,120,40,.95)}
+@keyframes potpop{0%{opacity:0;scale:.2;rotate:-8deg}12%{opacity:1;scale:1.3;rotate:4deg}22%{scale:1;rotate:-2deg}30%{rotate:0deg}85%{opacity:1;scale:1.04}100%{opacity:0;scale:1.1}}
+.knockfx.allknock{white-space:pre-line;text-align:center;line-height:1.05;font-size:32px;color:#fff;text-shadow:0 3px 0 #000,0 0 22px rgba(201,53,63,.9);animation:potpop 1.9s ease-out both}
+.knockfx.quiet{font-family:var(--font-ui, inherit);font-size:20px;font-style:italic;color:rgba(243,234,216,.85);text-shadow:0 2px 6px rgba(0,0,0,.7);animation:quiet 2.2s ease both}
+@keyframes quiet{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.knockfx.stole{font-size:24px;color:#9df0b8;text-shadow:0 3px 0 #000,0 0 16px rgba(80,220,140,.8)}
+.knockfx.ouch{font-size:24px;color:#ffb3b8;text-shadow:0 3px 0 #000,0 0 16px rgba(201,53,63,.9)}
+.knockfx.fire{font-size:24px;color:#ffb35c;text-shadow:0 3px 0 #000,0 0 18px rgba(255,110,30,.95)}
+.tumble{position:absolute;left:0;top:0;width:58px;height:58px;z-index:8;filter:drop-shadow(0 6px 4px rgba(0,0,0,.45))}
+.tumble svg{width:100%;height:100%;display:block}
+.crack{position:absolute;transform:translate(-50%,-50%);z-index:9;width:104px;height:64px;animation:crack 2.1s ease-out both;filter:drop-shadow(0 0 3px rgba(0,0,0,.8))}
+.crack svg{width:100%;height:100%;display:block}
+@keyframes crack{0%{opacity:0;scale:.3}8%{opacity:1;scale:1.08}16%{scale:1}75%{opacity:1}100%{opacity:0}}
+.dimfx{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,0,0,.25), rgba(0,0,0,.72));opacity:0;transition:opacity .6s ease}
+.dimfx.on{opacity:1}
+.pot.big{color:#ffe08a;box-shadow:0 0 0 1.5px rgba(255,214,102,.65),0 0 18px rgba(255,214,102,.45)}
+.pot.mega{animation:potglow 1.1s ease-in-out infinite alternate}
+@keyframes potglow{from{box-shadow:0 0 0 1.5px rgba(255,214,102,.6),0 0 12px rgba(255,170,60,.4)}to{box-shadow:0 0 0 2.5px rgba(255,214,102,.95),0 0 30px rgba(255,140,40,.8)}}
+.pot.boom{animation:potboom .9s ease-out}
+@keyframes potboom{0%{scale:1}25%{scale:1.4}55%{scale:.94}100%{scale:1}}
+.seat.fire .plate{border-color:#ff8a3d;box-shadow:0 0 0 2px rgba(255,120,40,.7),0 0 22px rgba(255,110,30,.7)}
+.flames{position:absolute;left:-14px;top:50%;translate:0 -50%;font-size:21px;line-height:1;animation:flicker .45s ease-in-out infinite alternate;pointer-events:none;z-index:2}
+@keyframes flicker{from{transform:translateY(1px) scale(.95) rotate(-4deg);opacity:.85}to{transform:translateY(-3px) scale(1.12) rotate(4deg);opacity:1}}
+.mycards.pairglow{position:relative;animation:pairglow 1.3s ease-in-out 1s infinite alternate}
+@keyframes pairglow{from{filter:drop-shadow(0 0 2px rgba(246,220,154,.4))}to{filter:drop-shadow(0 0 12px rgba(246,220,154,1))}}
+.mycards.pairglow::after{content:'✨';position:absolute;right:-10px;top:-12px;font-size:18px;animation:twinkle 1.4s ease-in-out 1s infinite both}
+.mycards.aces::before{content:'✨';position:absolute;left:-10px;bottom:-10px;font-size:15px;z-index:1;animation:twinkle 1.4s ease-in-out 1.7s infinite both}
+@keyframes twinkle{0%,100%{opacity:.15;scale:.6}50%{opacity:1;scale:1.15}}
+@media (prefers-reduced-motion: reduce){.rain,.tumble{display:none}.flames,.mycards.pairglow,.pot.mega{animation:none}}
 .splat{position:absolute;transform:translate(-50%,-50%);font-size:34px;line-height:1;animation:splat .9s ease-out both}
 @keyframes splat{0%{scale:1;opacity:1}30%{scale:2.2;opacity:1}100%{scale:2.6;opacity:0}}
 .knockfx{position:absolute;transform:translate(-50%,-50%);font-family:var(--font-display);font-size:36px;color:var(--brass);text-shadow:0 3px 0 #000,0 0 18px rgba(220,171,74,.7);animation:knockpop 1.25s ease-out both;white-space:nowrap;z-index:10}
@@ -556,7 +588,7 @@ function resolve(){
   S.seats.forEach(x => { if (x) x.t = 0; });
   if (!order.length) { S.res = { k:'none', pot:potNow, w:[], l:[] }; S.due = 1; }
   else if (order.length === 1) {
-    const i = order[0]; S.seats[i].s += potNow; S.pot = 0;
+    const i = order[0]; S.seats[i].s += potNow; S.pot = 0; streak(i);
     const ws = stat(S.seats[i].c); ws.w++; ws.best = Math.max(ws.best, potNow); deckWin(i, potNow);
     S.res = { k:'lone', pot:potNow, w:[{ i, amt:potNow }], l:[] }; S.due = 1;
   } else {
@@ -575,17 +607,20 @@ function resolve(){
       w = w2;
     }
     const winner = w[0];
-    S.seats[winner].s += potNow; S.pot = 0;
+    S.seats[winner].s += potNow; S.pot = 0; streak(winner);
     const ws = stat(S.seats[winner].c); ws.w++; ws.best = Math.max(ws.best, potNow); deckWin(winner, potNow);
     /* Every knocker who loses puts up the whole pot, even if it takes them below zero. */
     const ll = order.filter(i => i !== winner).map(i => { const x = S.seats[i]; x.s -= potNow; S.pot += potNow; return { i, amt:potNow, owe:x.s < 0 ? -x.s : 0 }; });
-    S.res = { k:'show', pot:potNow, w:[{ i:winner, amt:potNow }], l:ll, best:name2(best), tie:tb.length ? 1 : 0, tb };
+    const dealtN = S.seats.filter(x => x && (x.st === 'knock' || x.st === 'fold')).length;
+    S.res = { k:'show', pot:potNow, w:[{ i:winner, amt:potNow }], l:ll, best:name2(best), tie:tb.length ? 1 : 0, tb, all:order.length >= 3 && order.length === dealtN ? 1 : 0 };
     S.due = 0;
   }
   S.left = deck.length;
   S.ph = 'done'; S.q++;
-  nextHandAt = Date.now() + (order.length >= 2 ? (S.res.tie ? 13000 : 9000) : 4500);
+  nextHandAt = Date.now() + (order.length >= 2 ? (S.res.tie ? 15000 : S.res.all ? 10500 : 9000) : 4500);
 }
+/* Win streaks: win 3 pots in a row and your seat is on fire until someone else takes a pot. */
+function streak(i){ const n = (S.seats[i].ws || 0) + 1; S.seats.forEach(y => { if (y) y.ws = 0; }); S.seats[i].ws = n; }
 function foldLeavers(){
   if (S.ph !== 'deciding') return;
   S.seats.forEach((x, i) => {
@@ -1263,6 +1298,7 @@ const AV_LIST = ['😎','🤠','🥷','👑','🦁','🐐','🦊','🐸','🤖',
 const THROWS = ['🍅','🥚','💸','🔥','❤️','🎯','🧻','👟'];
 let myAv = AV_LIST.includes(store.get('knock_av')) ? store.get('knock_av') : '';
 const seatIdxPos = new Map(), dealHide = new Map(), chairEls = new Map();
+let pairSeen = '';
 let prevView = null, resultHoldUntil = 0, holdStacks = null, holdPot = null, tbFxEls = [], throwTarget = '';
 const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 const holding = () => Date.now() < resultHoldUntil;
@@ -1313,6 +1349,13 @@ function sfx(kind){
       case 'ding': tone(ctx, t, { f:880, peak:.1, d:.35 }); tone(ctx, t + .09, { f:1320, peak:.08, d:.35 }); break;
       case 'fold': noiseHit(ctx, t, { f:1200, f2:500, q:.6, peak:.06, a:.01, d:.12 }); break;
       case 'pop': tone(ctx, t, { f:620, f2:940, peak:.07, d:.08 }); break;
+      case 'fanfare': [523, 659, 784, 1047].forEach((f, k) => tone(ctx, t + k * .09, { type:'triangle', f, peak:.13, d:.2 })); [523, 659, 784, 1047].forEach(f => tone(ctx, t + .42, { type:'triangle', f, peak:.07, a:.01, d:.7 })); break;
+      case 'cash': noiseHit(ctx, t, { f:5200, q:2, peak:.14, d:.05 }); noiseHit(ctx, t + .07, { f:4200, q:2, peak:.1, d:.04 }); tone(ctx, t + .1, { f:1568, peak:.12, d:.45 }); tone(ctx, t + .1, { f:2093, peak:.09, d:.55 }); break;
+      case 'drum': for (let k = 0; k < 24; k++) noiseHit(ctx, t + k * .052, { type:'lowpass', f:900 + k * 25, peak:.06 + k * .007, d:.045 }); noiseHit(ctx, t + 1.27, { f:6500, q:.5, peak:.22, a:.004, d:.7 }); tone(ctx, t + 1.27, { f:95, f2:48, peak:.45, d:.32 }); break;
+      case 'wind': noiseHit(ctx, t, { f:380, f2:950, q:7, peak:.09, a:.3, d:.6 }); noiseHit(ctx, t + .55, { f:800, f2:320, q:8, peak:.07, a:.25, d:.6 }); break;
+      case 'ouch': tone(ctx, t, { type:'sawtooth', f:330, f2:311, peak:.06, d:.26 }); tone(ctx, t + .3, { type:'sawtooth', f:294, f2:277, peak:.06, d:.26 }); tone(ctx, t + .6, { type:'sawtooth', f:262, f2:185, peak:.07, a:.01, d:.75 }); break;
+      case 'fire': for (let k = 0; k < 12; k++) noiseHit(ctx, t + k * .045 + Math.random() * .03, { type:'highpass', f:2600, peak:.04 + Math.random() * .05, d:.02 }); noiseHit(ctx, t, { type:'lowpass', f:350, f2:1700, peak:.2, a:.08, d:.5 }); break;
+      case 'shimmer': [1760, 2217, 2637, 3520].forEach((f, k) => tone(ctx, t + k * .07, { f, peak:.035, d:.45 })); break;
     }
   } catch (e) {}
 }
@@ -1342,10 +1385,92 @@ function fly(el, from, to, o){
   catch (e) { el.remove(); if (o.done) o.done(); return; }
   a.onfinish = () => { if (!o.keep) el.remove(); if (o.done) o.done(); };
 }
-function textFx(text, p, cls){
+function textFx(text, p, cls, ms){
   const el = document.createElement('div'); el.className = 'knockfx' + (cls ? ' ' + cls : ''); el.textContent = text;
   el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
-  $('#fx').appendChild(el); setTimeout(() => el.remove(), 1300);
+  $('#fx').appendChild(el); setTimeout(() => el.remove(), ms || 1300);
+}
+const clampX = x => Math.max(84, Math.min((G.W || 390) - 84, x));
+function burst(e, p, ms){ const sp = document.createElement('div'); sp.className = 'splat'; sp.textContent = e; sp.style.left = p.x + 'px'; sp.style.top = p.y + 'px'; $('#fx').appendChild(sp); setTimeout(() => sp.remove(), ms || 950); }
+const buzz = pat => { try { if (navigator.vibrate) navigator.vibrate(pat); } catch (e) {} };
+
+/* Big pots: 20.00 is a BIG POT, 50.00 a MEGA POT, 100.00 a MONSTER POT. Money rains on the table. */
+const potLevel = v => v >= 10000 ? 3 : v >= 5000 ? 2 : v >= 2000 ? 1 : 0;
+const POT_FX = [null, ['OMG BIG POT 🤑', 16, ['💵']], ['MEGA POT 💰', 26, ['💵', '💰', '💵']], ['MONSTER POT 🤯', 38, ['💵', '💰', '🤑', '💎']]];
+function moneyRain(n, list){
+  if (RM) return;
+  const W = G.W || 390, H = G.H || 600;
+  for (let k = 0; k < n; k++) {
+    const el = document.createElement('div'); el.className = 'rain'; el.textContent = list[k % list.length];
+    el.style.left = (12 + Math.random() * (W - 24)) + 'px'; el.style.top = '-34px';
+    $('#fx').appendChild(el);
+    const sway = Math.random() * 90 - 45, spin = Math.random() * 540 - 270;
+    try {
+      el.animate([{ transform:'translate(-50%,0) rotate(0deg)', opacity:0 }, { opacity:1, offset:.08 },
+        { transform:`translate(calc(-50% + ${sway}px),${H + 70}px) rotate(${spin}deg)`, opacity:.95 }],
+        { duration:1500 + Math.random() * 1000, delay:Math.random() * 1000, easing:'cubic-bezier(.35,.05,.7,1)', fill:'both' }).onfinish = () => el.remove();
+    } catch (e) { el.remove(); }
+  }
+}
+function bigPotFx(level){
+  const f = POT_FX[level]; if (!f || !G.W) return;
+  textFx(f[0], { x:G.cx, y:G.cy - 84 }, 'potfx lvl' + level, 2300);
+  moneyRain(f[1], f[2]);
+  sfx('fanfare'); setTimeout(() => sfx('cash'), 480);
+  if (level >= 2) { shake(); buzz([30, 50, 30]); }
+  const pe = $('#pot'); pe.classList.remove('boom'); void pe.offsetWidth; pe.classList.add('boom'); setTimeout(() => pe.classList.remove('boom'), 950);
+}
+/* Everybody at the table knocked (3 or more players): fists slam the middle of the table. */
+function allKnockFx(s, t){
+  setTimeout(() => {
+    textFx('EVERYBODY\nKNOCKED!', { x:G.cx, y:G.cy - 84 }, 'allknock', 1900);
+    s.seats.forEach((x, i) => {
+      if (!x || x.st !== 'knock') return; const from = seatIdxPos.get(i); if (!from) return;
+      const el = document.createElement('div'); el.className = 'throwfx'; el.textContent = '✊';
+      fly(el, from, { x:G.cx + (Math.random() * 30 - 15), y:G.cy + 8 }, { dur:380, arc:22, s0:.7, s1:1.35, ease:'cubic-bezier(.5,0,.85,.4)' });
+    });
+    setTimeout(() => { burst('💥', { x:G.cx, y:G.cy + 8 }); shake(); sfx('knock'); buzz([40, 60, 40, 60, 90]); }, 380);
+    setTimeout(() => { shake(); sfx('knock'); }, 780);
+  }, t);
+  return t + 1500;
+}
+/* Nobody knocked: a tumbleweed rolls across the table. */
+const TUMBLE_SVG = '<svg viewBox="0 0 60 60" aria-hidden="true"><g fill="none" stroke="#b8925a" stroke-width="2.3" stroke-linecap="round"><circle cx="30" cy="30" r="23"/><ellipse cx="30" cy="30" rx="23" ry="10" transform="rotate(32 30 30)"/><ellipse cx="30" cy="30" rx="23" ry="10" transform="rotate(-38 30 30)"/><ellipse cx="30" cy="30" rx="10" ry="23" transform="rotate(12 30 30)"/><path d="M10 22Q30 9 50 26M12 40Q28 53 48 38M20 11Q35 30 22 50M40 10Q25 30 42 50"/></g><g fill="none" stroke="#7d5a2f" stroke-width="1.5" stroke-linecap="round"><path d="M7 31Q30 17 53 33M14 15Q30 41 46 47M15 48Q30 25 46 13"/></g></svg>';
+function tumbleweedFx(){
+  if (!G.W) return;
+  textFx('…nobody?', { x:G.cx, y:G.cy - 62 }, 'quiet', 2300);
+  sfx('wind');
+  if (RM) return;
+  const el = document.createElement('div'); el.className = 'tumble'; el.innerHTML = TUMBLE_SVG; $('#fx').appendChild(el);
+  const W = G.W, y = G.cy + 46, hop = [0, -26, 0, -16, 0, -9, 0];
+  const kf = hop.map((h, k) => ({ transform:`translate(${-70 + (W + 140) * k / (hop.length - 1)}px,${y + h - 29}px) rotate(${k * 150}deg)` }));
+  try { el.animate(kf, { duration:2700, easing:'linear', fill:'both' }).onfinish = () => el.remove(); } catch (e) { el.remove(); }
+}
+/* One person knocked alone and took the pot. */
+function stoleFx(from, to, t){
+  setTimeout(() => {
+    const el = document.createElement('div'); el.className = 'throwfx'; el.textContent = '💰';
+    fly(el, from, to, { dur:640, arc:70, rot:-25, s0:.6, sm:1.7, s1:1, done:() => { textFx('STOLE IT!', { x:clampX(to.x), y:to.y - 44 }, 'stole', 1500); burst('💰', to); } });
+    sfx('whoosh'); setTimeout(() => sfx('cash'), 620);
+  }, t);
+}
+/* A pair lost at the showdown. */
+const isPairStr = sh => typeof sh === 'string' && /^([2-9TJQKA])[shdc]\1[shdc]$/.test(sh);
+const CRACK_SVG = '<svg viewBox="0 0 100 60" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M50 30L39 19L31 21L17 7"/><path d="M50 30L62 17L70 19L85 5"/><path d="M50 30L37 40L27 38L12 53"/><path d="M50 30L64 42L76 40L90 55"/><path d="M50 30L47 9"/><path d="M50 30L53 56"/><path d="M39 19L36 10M64 42L70 52M37 40L33 50"/></g></svg>';
+function ouchFx(i, t){
+  setTimeout(() => {
+    const p = seatIdxPos.get(i); if (!p) return;
+    const el = document.createElement('div'); el.className = 'crack'; el.innerHTML = CRACK_SVG; el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+    $('#fx').appendChild(el); setTimeout(() => el.remove(), 2200);
+    textFx('OUCH 😭', { x:clampX(p.x), y:p.y - 62 }, 'ouch', 1600);
+    sfx('ouch');
+  }, t);
+}
+/* Three pots in a row. */
+function fireFx(i, n){
+  const p = seatIdxPos.get(i); if (!p) return;
+  textFx(n >= 5 ? 'UNSTOPPABLE 🔥' : 'ON FIRE 🔥', { x:clampX(p.x), y:p.y - 46 }, 'fire', 1700);
+  burst('🔥', p); sfx('fire');
 }
 function shake(){
   const st = $('#stage'); st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake');
@@ -1390,6 +1515,9 @@ function tiebreakFx(s, r, t0){
   const from = seatIdxPos.get(s.bt) || { x:G.cx, y:16 };
   const c0 = { x:G.cx, y:G.cy };
   let t = t0;
+  const dim = document.createElement('div'); dim.className = 'dimfx'; $('#fx').appendChild(dim); tbFxEls.push(dim);
+  setTimeout(() => { dim.classList.add('on'); textFx('SHOWDOWN…', { x:G.cx, y:G.cy - 70 }, 'big', 1350); sfx('drum'); }, t);
+  t += 1400;
   setTimeout(() => { textFx('TIEBREAK!', { x:G.cx, y:G.cy - 70 }, 'big'); shake(); sfx('knock'); }, t);
   t += 700;
   r.tb.forEach((round, ri) => {
@@ -1417,24 +1545,31 @@ function tiebreakFx(s, r, t0){
   });
   const winner = r.w && r.w[0] ? r.w[0].i : -1;
   setTimeout(() => tbFxEls.forEach(el => { if (el.classList.contains('tbfly')) el.classList.add(+el.dataset.i === winner ? 'win' : 'lose'); }), t - 500);
+  setTimeout(() => dim.classList.remove('on'), t - 300);
   return t;
 }
 /* The pot slides to the winner; losing knockers' payments slide into the new pot. */
 function resultFx(s, knockedNow){
-  const r = s.res; if (!r || r.k === 'none') { resultHoldUntil = 0; return; }
+  const r = s.res; if (!r) { resultHoldUntil = 0; return; }
+  if (r.k === 'none') { resultHoldUntil = 0; setTimeout(tumbleweedFx, 300); return; }
   let t = knockedNow ? 900 : 350;
   const pot = potPt();
+  if (r.all) t = allKnockFx(s, t);
   if (r.k === 'show' && r.tie && Array.isArray(r.tb) && r.tb.length) t = tiebreakFx(s, r, t);
   const w = r.w && r.w[0];
-  if (w) { const to = seatIdxPos.get(w.i); if (to) coinFx(pot, to, 8, t); }
-  (r.l || []).forEach((l, k) => { const from = seatIdxPos.get(l.i); if (from) coinFx(from, pot, 5, t + 1000 + k * 160); });
-  resultHoldUntil = Date.now() + t + 950;
-  setTimeout(scheduleRender, t + 980);
+  if (w) { const to = seatIdxPos.get(w.i); if (to) { coinFx(pot, to, 8, t); if (r.k === 'lone') stoleFx(pot, to, t); } }
+  (r.l || []).forEach((l, k) => {
+    const from = seatIdxPos.get(l.i); if (from) coinFx(from, pot, 5, t + 1000 + k * 160);
+    const x = s.seats[l.i]; if (x && isPairStr(x.sh)) ouchFx(l.i, t + 650 + k * 300);
+  });
+  const extra = r.k === 'lone' ? 500 : 0;
+  resultHoldUntil = Date.now() + t + 950 + extra;
+  setTimeout(scheduleRender, t + 980 + extra);
 }
 function detectFx(s){
   if (!s) { prevView = null; return; }
   const p = prevView;
-  const snap = { code:s.code, hand:s.hand, ph:s.ph, st:s.seats.map(x => x ? x.st : null), c:s.seats.map(x => x ? x.c : null), stacks:new Map(s.seats.filter(Boolean).map(x => [x.c, x.s])), pot:s.pot };
+  const snap = { code:s.code, hand:s.hand, ph:s.ph, st:s.seats.map(x => x ? x.st : null), c:s.seats.map(x => x ? x.c : null), stacks:new Map(s.seats.filter(Boolean).map(x => [x.c, x.s])), pot:s.pot, ws:new Map(s.seats.filter(Boolean).map(x => [x.c, x.ws || 0])) };
   if (p && p.code === s.code) {
     if (s.ph === 'deciding' && p.hand !== s.hand) { clearTb(); dealFx(s); }
     let knocked = false;
@@ -1451,6 +1586,13 @@ function detectFx(s){
       if (big) setTimeout(() => { const sp = document.createElement('div'); sp.className = 'splat'; sp.textContent = '🏆'; sp.style.left = big.x + 'px'; sp.style.top = big.y + 'px'; $('#fx').appendChild(sp); setTimeout(() => sp.remove(), 950); sfx('clink'); }, 500);
     }
     if (s.ph === 'done' && s.res && !(p.ph === 'done' && p.hand === s.hand)) { holdStacks = p.stacks; holdPot = s.res.pot; resultFx(s, knocked); }
+    const afterShow = () => Math.max(300, resultHoldUntil - Date.now() + 150);
+    const lv = potLevel(s.pot);
+    if (lv > potLevel(p.pot)) setTimeout(() => bigPotFx(lv), s.ph === 'deciding' && p.hand !== s.hand ? 1700 : afterShow());
+    s.seats.forEach((x, i) => {
+      const n = x ? x.ws || 0 : 0, was = x && p.ws ? p.ws.get(x.c) || 0 : 0;
+      if (x && n > was && (n === 3 || n === 5)) setTimeout(() => { if (seatIdxPos.get(i)) fireFx(i, n); scheduleRender(); }, afterShow());
+    });
   }
   prevView = snap;
 }
@@ -1667,7 +1809,7 @@ function resFor(s, i){
 function seatView(s, i, x, isMine){
   const turn = s.ph === 'deciding' && s.tn === i;
   const r = resFor(s, i);
-  const cls = ['seat', turn && 'turn', x.st === 'fold' && 'fold', x.st === 'out' && 'out', r && r.win && 'win', isMine && 'mine', x.st === 'wait' && 'waiting', x.away && !isMine && 'away'].filter(Boolean).join(' ');
+  const cls = ['seat', turn && 'turn', x.st === 'fold' && 'fold', x.st === 'out' && 'out', r && r.win && 'win', isMine && 'mine', x.st === 'wait' && 'waiting', x.away && !isMine && 'away', (x.ws || 0) >= 3 && !holding() && 'fire'].filter(Boolean).join(' ');
   const hole = isMine ? curHole() : null;
   const shown = typeof x.sh === 'string' && /^([2-9TJQKA][shdc]){2}$/.test(x.sh) ? [x.sh.slice(0, 2), x.sh.slice(2, 4)] : null;
   const dealt = x.st === 'in' || x.st === 'knock' || x.st === 'fold';
@@ -1697,7 +1839,7 @@ function seatView(s, i, x, isMine){
   const av = AV_LIST.includes(x.av) ? x.av + ' ' : '';
   const dchip = s.round && s.bt === i ? '<span class="dchip" title="Dealing this deck">D</span>' : '';
   const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
-  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${dchip}${first}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div><div class="stk${stack < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(stack)}</div>${timer}</div>${pill}` };
+  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 && !holding() ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}${first}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div><div class="stk${stack < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(stack)}</div>${timer}</div>${pill}` };
 }
 function renderSeats(s){
   const seatsEl = $('#seats'); const seen = new Set();
@@ -1779,7 +1921,11 @@ function renderCenter(s){
     bl = holding() ? (s.res && s.res.tie ? 'Two new cards each for the tied players…' : '') : resultText(s, myIdx);
   }
   setText(phase, ph);
-  if (s) { pot.hidden = false; setHTML(pot, `<span class="coin"></span><span class="lbl">Pot</span>${fmtT(holding() && holdPot != null ? holdPot : s.pot)}`); }
+  if (s) {
+    const pv = holding() && holdPot != null ? holdPot : s.pot, lv = potLevel(pv);
+    pot.hidden = false; setHTML(pot, `<span class="coin"></span><span class="lbl">Pot</span>${fmtT(pv)}`);
+    pot.classList.toggle('big', lv >= 1); pot.classList.toggle('mega', lv >= 2);
+  }
   else pot.hidden = true;
   const dl = s && s.round ? s.seats[s.bt] : null;
   setHTML($('#audinfo'), '');
@@ -1869,7 +2015,9 @@ function dockHTML(s){
   else if (dealt && s.ph === 'deciding') cards = '<div class="card back"></div><div class="card back"></div>';
   else cards = '<div class="card slot"></div><div class="card slot"></div>';
   const title = showCards ? name2(score2(hole)) : (x.so && !dealt ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated');
-  out.push(`<div class="me-row"><div class="mycards">${cards}</div><div class="me-info"><div class="me-hand">${esc(title)}</div><div class="me-sub">Your tokens <b>${fmtT(holding() && holdStacks && holdStacks.has(x.c) ? holdStacks.get(x.c) : x.s)}</b>${s.ph === 'deciding' && x.t ? ` · ante ${fmtT(x.t)} in` : ''}</div></div></div>`);
+  const shownPair = showCards && !((dealHide.get(i) || 0) > Date.now()) && x.st !== 'fold' && hole.length === 2 && hole[0][0] === hole[1][0];
+  if (shownPair && pairSeen !== s.code + s.hand) { pairSeen = s.code + s.hand; setTimeout(() => sfx('shimmer'), 900); }
+  out.push(`<div class="me-row"><div class="mycards${shownPair ? ' pairglow' + (hole[0][0] === 'A' ? ' aces' : '') : ''}">${cards}</div><div class="me-info"><div class="me-hand">${esc(title)}</div><div class="me-sub">Your tokens <b>${fmtT(holding() && holdStacks && holdStacks.has(x.c) ? holdStacks.get(x.c) : x.s)}</b>${s.ph === 'deciding' && x.t ? ` · ante ${fmtT(x.t)} in` : ''}</div></div></div>`);
   let status = '', buttons = '';
   const myTurn = s.ph === 'deciding' && s.tn === i && x.st === 'in';
   const pending = myTurn && pendingKey === s.hand + ':' + s.q;

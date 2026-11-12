@@ -30,6 +30,8 @@ An invite link or table code always gets people straight in. The host can give t
 
 **Visitors:** the 👀 chip on the front page shows today's visitors, updated live. Tap it for this week, this month and all time. Each phone or computer counts once per day, week and month. Live counts use the free [Abacus](https://abacus.jasoncameron.dev) counter; [GoatCounter](https://knockgame.goatcounter.com) keeps the full visitor log and is the backup.
 
+**Big moments:** OMG BIG POT at 20.00 (MEGA at 50.00, MONSTER at 100.00) with money raining down; EVERYBODY KNOCKED when 3 or more players all knock; a tumbleweed when nobody knocks; STOLE IT when one knocker takes the pot alone; OUCH when a pair loses; ON FIRE after 3 pots in a row; lights dim with a drumroll before a tiebreak; and your own cards glow when you're dealt a pair (only you see that one).
+
 **Table talk:** tap the chat button for emojis, quick lines like "Pay up 💸", or a short message. It pops up over your seat for a few seconds.
 
 The host's phone needs to stay on the page. Phones connect directly using [PeerJS](https://peerjs.com/) (MIT license), included in `index.html`.
