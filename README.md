@@ -21,7 +21,7 @@ A two-card game for up to 10 friends, played with play tokens. Open the site, ta
 
 Pick **Start Pitty Pat** on the front page. 2 to 6 players, everyone starts with 20.00 and antes 0.50 into the game pot each hand.
 
-- Fresh deck every hand. The dealer deals 5 cards each, starting on their left; the rest is the pile. The deal passes left every hand, and the player left of the dealer goes first.
+- Fresh deck every hand. The dealer deals 5 cards each, starting on their left; the rest is the pile. The deal passes left every hand, and the player left of the dealer goes first. New players join at the next hand and sit just right of the new dealer, last in line.
 - On your turn, pull a card. If it matches a card in your hand, tap **Pair it**: the pair goes down face up and you throw out any card. If it doesn't, you throw out the card you pulled.
 - Every thrown card is up for grabs for 8 seconds (the host can change this). Tap **Take it** if it matches. If two people tap, the one closest to the thrower's left gets it, and play continues to their left.
 - A match is the same rank. Pairs you're dealt stay hidden, and you can't take a third card for a pair you already hold. Three of a kind takes the fourth for two pairs.

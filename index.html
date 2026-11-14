@@ -835,18 +835,22 @@ function ppStartHand(){
   S.seats.forEach(x => {
     if (!x) return;
     if (x.so && x.back) { x.so = 0; x.back = 0; }
-    x.pr = []; x.dd = []; x.hc = 0; x.sh = null; x.t = 0; x.a = ''; x.nw = 0;
+    x.pr = []; x.dd = []; x.hc = 0; x.sh = null; x.t = 0; x.a = '';
     x.st = x.so ? 'wait' : x.s < ante ? 'out' : (x.away ? 'wait' : 'in');
   });
-  const elig = S.seats.map((x, i) => (x && x.st === 'in' ? i : -1)).filter(i => i >= 0);
+  let elig = S.seats.map((x, i) => (x && x.st === 'in' ? i : -1)).filter(i => i >= 0);
   if (elig.length < 2 || S.pause) {
     S.seats.forEach(x => { if (x && x.st === 'in') x.st = 'wait'; });
     S.ph = 'waiting'; S.tn = -1; S.res = null; if (elig.length < 2) S.live = 0;
     return false;
   }
   S.live = 1; S.hand++; S.q++; S.res = null; S.note = '';
-  S.bt = S.bt < 0 || !S.round ? elig[randInt(elig.length)] : nextIn(elig, S.bt);
+  /* new players sit just right of the new dealer, last in line (same as Knock) */
+  const moved = S.round && S.bt >= 0 ? seatNewcomers(elig) : null;
+  if (moved === 0) { elig = S.seats.map((x, i) => (x && x.st === 'in' ? i : -1)).filter(i => i >= 0); S.bt = 0; }
+  else S.bt = S.bt < 0 || !S.round ? elig[randInt(elig.length)] : nextIn(elig, S.bt);
   S.round = 1;
+  S.seats.forEach(x => { if (x) x.nw = 0; });
   deck = newDeck(); deckId++; ppDisc = []; ppPend = null; ppClaims = new Set(); holes = {};
   elig.forEach(i => { const x = S.seats[i]; x.s -= ante; x.t = ante; S.pot += ante; stat(x.c); });
   ppSideBuyIn(elig);
