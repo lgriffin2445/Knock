@@ -697,10 +697,11 @@ const PP_SEATS = 6, PP_START = 2000, PP_OFFER = 8;
 let ppPend = null, ppDisc = [], ppClaims = new Set(), ppOfferAt = 0;
 const ppIn = x => !!x && x.st === 'in';
 function ppCount(h, r){ let n = 0; for (const c of h || []) if (c[0] === r) n++; return n; }
-/* you can take a card if it makes a pair with a card you hold: one of that rank, or three (the fourth gives two pairs) */
+/* You can take a card if it makes a pair: one of that rank in your hand, three (the fourth gives two pairs),
+   or a dead card of that rank in front of you. A pair you were dealt can't take a third. */
 function ppCanMatch(i, c){
   const x = S.seats[i]; if (!ppIn(x) || !validCard(c)) return false;
-  const n = ppCount(holes[x.c], c[0]); return n === 1 || n === 3;
+  return (ppCount(holes[x.c], c[0]) + ppCount(x.dd, c[0])) % 2 === 1;
 }
 function ppAllPairs(h){ const m = {}; for (const c of h) m[c[0]] = (m[c[0]] || 0) + 1; return Object.values(m).every(n => n % 2 === 0); }
 function ppEv(e){ const pp = S.pp; pp.eid = (pp.eid || 0) + 1; e.id = pp.eid; e.h = S.hand; pp.ev = (pp.ev || []).concat(e).slice(-10); }
@@ -765,7 +766,7 @@ function ppAct(i, a){
   }
   if (a.k === 'pair') {
     if (pp.step !== 'drawn' || !ppPend) return 'bad step';
-    const n = ppCount(h, ppPend[0]); if (n !== 1 && n !== 3) return 'no match';
+    if (!ppCanMatch(i, ppPend)) return 'no match';
     const c = ppPend; ppPend = null;
     ppLay(i, c);
     return '';
@@ -774,8 +775,7 @@ function ppAct(i, a){
     if (pp.step === 'drawn') {
       if (!ppPend || (a.c && a.c !== ppPend)) return 'throw the card you pulled';
       const c = ppPend; ppPend = null;
-      const n = ppCount(h, c[0]);
-      if (n === 1 || n === 3) ppKill(i, c[0], 'slept');
+      if (ppCanMatch(i, c)) ppKill(i, c[0], 'slept');
       ppOffer(i, c);
       return '';
     }
@@ -792,19 +792,22 @@ function ppAct(i, a){
 }
 function ppLay(i, c){
   const x = S.seats[i], h = holes[x.c];
-  const k = h.findIndex(y => y[0] === c[0]);
-  const m = h.splice(k, 1)[0];
+  const kd = x.dd.findIndex(y => y[0] === c[0]);
+  let m, fromDead = false;
+  if (kd >= 0) { m = x.dd.splice(kd, 1)[0]; fromDead = true; }
+  else { const k = h.findIndex(y => y[0] === c[0]); m = h.splice(k, 1)[0]; }
   x.pr.push([m, c]); x.hc = h.length; S.q++;
   S.pp.top = null;
-  ppEv({ k:'pair', i, c:[m, c] });
+  ppEv({ k:'pair', i, c:[m, c], dead:fromDead ? 1 : 0 });
   if (!x.dd.length && ppAllPairs(h)) { ppWin(i); return; }
   S.tn = i; S.pp.step = 'throw'; S.pp.from = -1;
 }
 function ppKill(j, r, why){
   const x = S.seats[j], h = holes[x.c];
+  if (ppCount(h, r) % 2 === 0) return;
   const k = h.findIndex(y => y[0] === r); if (k < 0) return;
   const d = h.splice(k, 1)[0]; x.dd.push(d); x.hc = h.length;
-  ppEv({ k:'dead', i:j, c:d, why, stuck:ppStuck(x) ? 1 : 0 });
+  ppEv({ k:'dead', i:j, c:d, why });
 }
 function ppOffer(i, c){
   const pp = S.pp;
@@ -845,13 +848,28 @@ function ppRefill(){
   deck = ppShuffle(ppDisc); ppDisc = []; S.pp.pile = deck.length; S.pp.disc = 0; S.pp.refills = (S.pp.refills || 0) + 1;
   ppEv({ k:'reshuffle' });
 }
-/* Holding a dead card with every other card already paired up means you can never make another pair,
-   so you can never throw the dead card and can't win. If that's true of everyone still in, the hand ends. */
-function ppStuck(x){ const h = holes[x.c] || []; return x.dd.length > 0 && h.every(c => ppCount(h, c[0]) % 2 === 0); }
+/* Can anyone still make a pair? A player needs a card for one of their unpaired ranks (hand or dead).
+   Cards in the pile, the thrown pile or on offer can come to anyone; cards someone else holds only come
+   out if that player can make a pair and throw. If nobody can ever make a pair again, the hand ends. */
+function ppProgress(){
+  const live = S.seats.map((x, i) => (ppIn(x) ? i : -1)).filter(i => i >= 0);
+  const pool = deck.concat(ppDisc); if (ppPend) pool.push(ppPend); if (S.pp.step === 'offer' && validCard(S.pp.top)) pool.push(S.pp.top);
+  const mine = i => (holes[S.seats[i].c] || []).concat(S.seats[i].dd || []);
+  const odd = i => { const m = {}; for (const c of mine(i)) m[c[0]] = (m[c[0]] || 0) + 1; return Object.keys(m).filter(r => m[r] % 2 === 1); };
+  const has = (cards, r) => cards.some(c => c[0] === r);
+  const P = new Set(); let changed = true;
+  while (changed) {
+    changed = false;
+    for (const i of live) {
+      if (P.has(i)) continue;
+      if (odd(i).some(r => has(pool, r) || [...P].some(j => j !== i && has(mine(j), r)))) { P.add(i); changed = true; }
+    }
+  }
+  return P;
+}
 function ppCheckStuck(){
   if (S.ph !== 'playing') return;
-  const live = S.seats.filter(ppIn);
-  if (live.length && live.every(ppStuck)) ppNoWinner('stuck');
+  if (S.seats.some(ppIn) && !ppProgress().size) ppNoWinner('stuck');
 }
 function ppWin(i){
   const x = S.seats[i], amt = S.pot;
@@ -906,7 +924,7 @@ function ppLoose(h){
 function ppBotMove(i){
   const pp = S.pp, x = S.seats[i];
   if (pp.step === 'pull') return ppAct(i, { k:'pull' });
-  if (pp.step === 'drawn') { const n = ppCount(holes[x.c], ppPend[0]); return ppAct(i, n === 1 || n === 3 ? { k:'pair' } : { k:'throw', c:ppPend }); }
+  if (pp.step === 'drawn') return ppAct(i, ppCanMatch(i, ppPend) ? { k:'pair' } : { k:'throw', c:ppPend });
   if (pp.step === 'throw') return ppAct(i, { k:'throw', c:x.dd.length ? x.dd[0] : ppLoose(holes[x.c]) });
   return '';
 }
@@ -1581,7 +1599,7 @@ function ppMine(){
   if (role === 'host') { const t = S.seats[S.tn]; return { h:(holes[myCid] || []).slice(), p:S.ph === 'playing' && S.pp.step === 'drawn' && t && t.c === myCid ? ppPend : null }; }
   return { h:(view.hole || []).slice(), p:view.pend };
 }
-const ppCanMine = (h, c) => { const n = ppCount(h, c[0]); return n === 1 || n === 3; };
+const ppCanMine = (h, c, dd) => (ppCount(h, c[0]) + ppCount(dd || [], c[0])) % 2 === 1;
 function ppNope(r){
   const m = { 'no match':'That doesn\'t match a card in your hand.', 'dead card first':'Your dead card has to go first.', 'throw the card you pulled':'If it doesn\'t match, you throw the card you pulled.', 'no offer':'Too late, that card is gone.', 'not in your hand':'Pick a card from your hand.' }[r];
   if (m) toast(m);
@@ -1589,10 +1607,10 @@ function ppNope(r){
 function ppMove(k, c){
   const s = cur(); if (!isPP(s) || s.ph !== 'playing' || !s.pp) return;
   const i = mySeatIdx(s); if (i < 0) return;
-  const { h, p } = ppMine();
-  if (k === 'pair' && !(p && ppCanMine(h, p))) { ppNope('no match'); return; }
+  const { h, p } = ppMine(), dd = (s.seats[i] && s.seats[i].dd) || [];
+  if (k === 'pair' && !(p && ppCanMine(h, p, dd))) { ppNope('no match'); return; }
   if (k === 'take') {
-    if (!s.pp.top || !ppCanMine(h, s.pp.top)) { toast('You don\'t have a match for that one.'); return; }
+    if (!s.pp.top || !ppCanMine(h, s.pp.top, dd)) { toast('You don\'t have a match for that one.'); return; }
     ppClaimed = s.pp.oid;
   }
   const msg = { k, c:c || null, q:s.q, o:s.pp.oid };
@@ -1970,7 +1988,7 @@ function ppFx(s, e){
       setTimeout(() => { textFx('GOT IT!', { x:clampX(to.x), y:to.y - 46 }, 'stole', 1200); sfx('cash'); }, 360);
       break;
     }
-    case 'pair': { const p = P(e.i); if (p) { textFx('PAIR!', { x:clampX(p.x), y:p.y - 46 }, 'fire', 1100); sfx('ding'); } break; }
+    case 'pair': { const p = P(e.i); if (p) { textFx(e.dead ? 'BACK FROM THE DEAD!' : 'PAIR!', { x:clampX(p.x), y:p.y - 46 }, 'fire', e.dead ? 1600 : 1100); sfx('ding'); } break; }
     case 'dead': {
       const p = P(e.i); if (!p || !validCard(e.c)) break;
       const slept = e.why === 'slept';
@@ -2374,7 +2392,7 @@ function renderCenter(s){
       else if (pp.step === 'throw') bl = `${nm} made a pair and ${s.tn === myIdx ? 'throw' : 'throws'} a card`;
     } else if (s.ph === 'done' && s.res) {
       if (s.res.k === 'pitty') { const w = s.res.w[0]; ph = 'Pitty Pat!'; bl = `${nameOf(s, w.i, myIdx)} ${w.i === myIdx ? 'win' : 'wins'} <em>${fmtT(w.amt)}</em>. Next hand in a moment.`; }
-      else { ph = 'No winner'; bl = s.res.why === 'stuck' ? `Everyone left was stuck with a dead card. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.` : `The pile ran out. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.`; }
+      else { ph = 'No winner'; bl = s.res.why === 'stuck' ? `Nobody could make another pair. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.` : `The pile ran out. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.`; }
     }
   } else if (s.ph === 'deciding') {
     ph = 'Hand ' + s.hand + (s.fresh === 0 ? ' · no ante' : '');
@@ -2592,7 +2610,7 @@ function ppDockHTML(s, i, x, out){
   if (inHand) {
     const hand = h.map(c => `<button type="button" class="ppcard${ppSel === c ? ' sel' : ''}" data-act="ppsel" data-c="${c}"${throwing && !dead.length ? '' : ' disabled'} aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}">${cardHTML(c)}</button>`).join('') + (p ? `<div class="ppnew">${cardHTML(p)}<span>New</span></div>` : '');
     out.push(`<div class="pphand">${hand || '<span class="small muted">No cards left in your hand.</span>'}</div>`);
-    if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead: throw ${dead.length > 1 ? 'these' : 'it'} the next time you make a pair.</span></div>`);
+    if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead: throw ${dead.length > 1 ? 'these' : 'it'} the next time you make a pair, or match ${dead.length > 1 ? 'them' : 'it'} if one comes up.</span></div>`);
     out.push(`<p class="ppinfo">Pairs down <b>${(x.pr || []).length}</b> · Your tokens <b>${fmtT(x.s)}</b>${x.t ? ` · ante ${fmtT(x.t)} in` : ''}</p>`);
   } else out.push(`<div class="me-row"><div class="me-info"><div class="me-hand">${esc(x.so ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated')}</div><div class="me-sub">Your tokens <b>${fmtT(x.s)}</b></div></div></div>`);
   let status = '', buttons = '';
@@ -2647,7 +2665,6 @@ function ppDockHTML(s, i, x, out){
   } else if (s.ph === 'playing') {
     status = pp.step === 'pull' ? `${tn} is pulling a card…` : pp.step === 'drawn' ? `${tn} is looking at their card…` : `${tn} made a pair and is throwing a card…`;
   }
-  if (inHand && s.ph === 'playing' && dead.length && h.every(c => ppCount(h, c[0]) % 2 === 0)) status += ' <span class="muted">You\'re stuck: your other cards are all paired, so you can\'t make another pair this hand.</span>';
   if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
   if (status) out.push(`<p class="status">${status}</p>`);
   if (buttons) out.push(buttons);
@@ -2721,7 +2738,7 @@ function menuHTML(s){
     <li>On your turn, <b>pull a card</b>. If it matches a card in your hand, tap <b>Pair it</b>: the pair goes down face up, then you throw out any card. If it doesn't match, you throw out the card you pulled.</li>
     <li>Every thrown card is up for grabs for ${+cfg.ow || 8} seconds. If it matches a card in your hand, tap <b>Take it</b>. If two people tap, the one closest to the thrower's left gets it, lays the pair down and throws a card, and play goes on to their left. If nobody takes it, the next player pulls.</li>
     <li>A match is the same rank. Suits don't matter. Pairs you're dealt stay hidden in your hand, and you can't take a third card for a pair you already hold. If you hold three of a kind, the fourth one gives you two pairs.</li>
-    <li><b>Don't sleep.</b> If a thrown card matched yours and you didn't get it, because you didn't tap in time or someone closer beat you, your card goes <b>dead</b>. It's turned face up, and the next time you make a pair, your dead card has to be the card you throw. You can't match your own dead card. Throwing away a card you pulled that matched also counts as sleeping.</li>
+    <li><b>Don't sleep.</b> If a thrown card matched yours and you didn't get it, because you didn't tap in time or someone closer beat you, your card goes <b>dead</b>. It's turned face up, and the next time you make a pair, your dead card has to be the card you throw. If another card of that rank comes up, pulled or thrown, you can still match it with your dead card. Throwing away a card you pulled that matched also counts as sleeping.</li>
     <li>You win the moment every card left in your hand is paired, with no dead cards: <b>Pitty Pat!</b></li>
     <li>If the pile runs out, the thrown cards are shuffled into a new pile. If nobody can win, the pot stays for the next hand.</li>
   </ol></section>`);

@@ -25,7 +25,7 @@ Pick **Start Pitty Pat** on the front page. 2 to 6 players, everyone starts with
 - On your turn, pull a card. If it matches a card in your hand, tap **Pair it**: the pair goes down face up and you throw out any card. If it doesn't, you throw out the card you pulled.
 - Every thrown card is up for grabs for 8 seconds (the host can change this). Tap **Take it** if it matches. If two people tap, the one closest to the thrower's left gets it, and play continues to their left.
 - A match is the same rank. Pairs you're dealt stay hidden, and you can't take a third card for a pair you already hold. Three of a kind takes the fourth for two pairs.
-- **Don't sleep:** if a thrown card matched yours and you didn't get it, your card goes dead. It's turned face up and has to be the next card you throw after you make a pair. You can't match your own dead card.
+- **Don't sleep:** if a thrown card matched yours and you didn't get it, your card goes dead. It's turned face up and has to be the next card you throw after you make a pair. If another card of that rank comes up, pulled or thrown, you can still match it with your dead card.
 - You win when every card left in your hand is paired, with no dead cards: **Pitty Pat!** The winner takes the game pot.
 
 **Put it on your home screen:** Knock works like an app. On iPhone, open the link in Safari, tap Share (it may be under •••), then Add to Home Screen. On Android, open it in Chrome and tap Install (or ⋮ then Add to Home screen).
