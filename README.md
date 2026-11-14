@@ -35,6 +35,7 @@ The host can turn on side pots in the menu (0.25, 0.50 or 1.00 each a hand): **�
 - Flip the switches under your cards before the deal. A side pot rolls over until it's won. Once you're in you pay every hand to stay in; drop out and what you put in stays, and you can't rejoin until it's won and back at zero. New players can only join at zero.
 - **Colors:** a same-color pair (both red or both black) in your first five cards. **Spades:** a spade in your first five cards. Claim in the 10 seconds after the deal (play waits). Only the count of claims is shown. At the end of the hand the highest Colors pair and the highest spade win; ties split; no claims means it rolls over.
 - **Porter:** tap it when you're waiting on one card to go out. The first true claim wins the Porter pot right away. If nobody hits it, it rolls over.
+- A side pot needs 2 or more players paying in. If only one person is in, nobody pays that hand, and the pot stays open for others to join.
 - Nothing is claimed for you: forget to tap and you don't win it.
 
 **Put it on your home screen:** Knock works like an app. On iPhone, open the link in Safari, tap Share (it may be under •••), then Add to Home Screen. On Android, open it in Chrome and tap Install (or ⋮ then Add to Home screen).

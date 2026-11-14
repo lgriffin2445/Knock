@@ -296,6 +296,12 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .btn.claim{position:relative;overflow:hidden;flex:1;min-height:46px;background:linear-gradient(180deg,#f2cb6d,var(--brass));color:var(--ink);font-size:15px}
 .btn.claim.por{background:linear-gradient(180deg,#ffb35c,#e07a1f)}
 .sidenote{margin-top:6px}
+.ppdown{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.ppdown > span:first-child{margin-right:2px}
+.ppdown .ppc{font-size:12px;padding:4px 7px}
+.sideline{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.sideline .in{color:#9fe3bb;font-weight:700}
+.btn.claim.por{flex:0 0 auto;min-height:40px;padding:6px 14px;font-size:14px}
 .startrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .rgame{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);margin-right:4px}
 .me-info{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -742,12 +748,15 @@ function ppSideBuyIn(elig){
   S.side.res = null;
   ppSideCl = { col:new Set(), spd:new Set() };
   S.seats.forEach(x => { if (x) x.sp = {}; });
-  PP_SIDES.forEach(k => { const sp = S.side[k]; sp.in = 0; sp.n = 0; sp.won = 0; sp.price = price; });
+  PP_SIDES.forEach(k => { const sp = S.side[k]; sp.in = 0; sp.n = 0; sp.won = 0; sp.price = price; sp.solo = 0; });
   if (!price) return;
+  /* a side pot needs at least two players paying in. With only one, nobody pays that hand and the pot
+     sits out; and a pot with fewer than two players in it is open for anyone to join. */
   PP_SIDES.forEach(k => {
-    const sp = S.side[k], open = sp.pot === 0 || !sp.m.length, keep = [];
+    const sp = S.side[k], open = sp.pot === 0 || sp.m.length < 2, keep = [];
     sp.m.forEach(cid => { const x = seatOf(cid); if (x && x.st === 'in' && x.sw && x.sw[k] && x.s >= price) keep.push(cid); });
     if (open) elig.forEach(i => { const x = S.seats[i]; if (x.bot) x.sw = { col:1, spd:1, por:1 }; if (x.sw && x.sw[k] && x.s >= price && !keep.includes(x.c)) keep.push(x.c); });
+    if (keep.length < 2) { sp.m = keep; sp.solo = keep.length; return; }
     keep.forEach(cid => { const x = seatOf(cid); x.s -= price; sp.pot += price; x.sp[k] = 1; });
     sp.m = keep; sp.in = keep.length;
   });
@@ -2460,7 +2469,7 @@ function ppSeatView(s, i, x, isMine){
   const dchip = s.round && s.bt === i ? '<span class="dchip" title="Dealer">D</span>' : '';
   const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
   const won = win ? `<span class="won">+${fmtT(s.res.w[0].amt)}</span>` : '';
-  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div><div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${prs || dds ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
+  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div><div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${(prs || dds) && !isMine ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
 }
 function seatView(s, i, x, isMine){
   if (isPP(s)) return ppSeatView(s, i, x, isMine);
@@ -2569,11 +2578,8 @@ function renderCenter(s){
     if (s.ph === 'playing') {
       ph = 'Hand ' + s.hand;
       const nm = t ? (s.tn === myIdx ? 'You' : `<b>${esc(t.n)}</b>`) : '';
-      if (pp.cw) bl = 'Side pot claims are open…';
-      else if (pp.step === 'offer' && validCard(pp.top)) bl = `${nm} threw ${aRank(pp.top)}. Got a match? Take it!`;
-      else if (pp.step === 'pull') bl = s.tn === myIdx ? '<b>Your turn</b>: pull a card' : `${nm} is pulling`;
-      else if (pp.step === 'drawn') bl = `${nm} ${s.tn === myIdx ? 'are' : 'is'} looking at a card`;
-      else if (pp.step === 'throw') bl = `${nm} made a pair and ${s.tn === myIdx ? 'throw' : 'throws'} a card`;
+      if (pp.cw) bl = 'Side pot claims are open';
+      else if (pp.step === 'offer' && validCard(pp.top)) bl = `${nm} threw ${aRank(pp.top)}`;
     } else if (s.ph === 'done' && s.res) {
       if (s.res.k === 'pitty') { const w = s.res.w[0]; ph = 'Pitty Pat!'; bl = `${nameOf(s, w.i, myIdx)} ${w.i === myIdx ? 'win' : 'wins'} <em>${fmtT(w.amt)}</em>.`; }
       else { ph = 'No winner'; bl = s.res.why === 'stuck' ? `Nobody could make another pair. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.` : `The pile ran out. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.`; }
@@ -2612,9 +2618,9 @@ function renderCenter(s){
   if (isPP(s)) {
     const dl = s.round ? s.seats[s.bt] : null;
     if (s.pp && s.pp.cw && ppCwSeen.h !== s.code + s.hand) { ppCwSeen.h = s.code + s.hand; ppCwSeen.at = role === 'host' ? ppClaimEnd - PP_CLAIM_MS : Date.now(); }
-    const sd = s.side, showSide = sd && (+s.cfg.side || PP_SIDES.some(k => sd[k] && sd[k].pot));
-    setHTML($('#audinfo'), showSide ? PP_SIDES.map(k => `${SIDE_ICON[k]} ${fmtT(sd[k] ? sd[k].pot : 0)}`).join(' · ') + (s.ph === 'playing' && (+sd.col.n || +sd.spd.n) ? `<br>${+sd.col.n || 0} claimed Colors · ${+sd.spd.n || 0} claimed Spades` : '') : '');
-    setHTML($('#deckinfo'), dl && (s.ph === 'playing' || s.ph === 'done') ? `${s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals'} · ${+(s.pp && s.pp.pile) || 0} in the pile` : '');
+    void dl;
+    setHTML($('#audinfo'), '');
+    setHTML($('#deckinfo'), '');
     setHTML(below, bl);
     return;
   }
@@ -2787,28 +2793,37 @@ function dockHTML(s){
 }
 function ppSideHTML(s, i, x){
   const price = +s.cfg.side || 0, sd = s.side;
-  if (!price && !(sd && PP_SIDES.some(k => sd[k] && (sd[k].pot || sd[k].in)))) return '';
+  if (!price && !(sd && PP_SIDES.some(k => sd[k] && sd[k].pot))) return '';
   const pp = s.pp || {}, playing = s.ph === 'playing', mine = ppMyClaims();
-  const chips = PP_SIDES.map(k => {
-    const sp = (sd && sd[k]) || { pot:0, m:[] }, on = !!(x.sw && x.sw[k]), inNow = !!(x.sp && x.sp[k]) && x.st === 'in' && (playing || s.ph === 'done');
-    const member = (sp.m || []).includes(myCid), locked = sp.pot > 0 && (sp.m || []).length && !member;
-    let sub;
-    if (inNow && k !== 'por' && mine[k]) sub = 'Claimed ✓';
-    else if (inNow && k === 'por' && sp.won) sub = 'Hit this hand';
-    else if (inNow) sub = on ? 'In this hand' : 'Out after this hand';
-    else if (on && locked) sub = 'Opens when it resets';
-    else if (on) sub = 'In next hand';
-    else sub = locked ? 'Locked till it resets' : 'Tap to join';
-    const n = k !== 'por' && playing && +sp.n ? ` · ${+sp.n} claimed` : '';
-    return `<button type="button" class="side${on ? ' on' : ''}${ppSideArm === k ? ' arm' : ''}" data-act="ppside" data-k="${k}"${!price ? ' disabled' : ''}><span>${SIDE_ICON[k]} ${SIDE_NAME[k]} <b>${fmtT(sp.pot)}</b></span><small>${ppSideArm === k ? 'Tap again to leave' : sub + n}</small></button>`;
-  }).join('');
-  const claims = [];
-  if (playing && pp.cw && x.st === 'in') {
-    const left = Math.max(400, PP_CLAIM_MS - (Date.now() - (ppCwSeen.h === s.code + s.hand ? ppCwSeen.at : Date.now())));
-    ['col', 'spd'].forEach(k => { if (x.sp && x.sp[k] && !mine[k]) claims.push(`<button type="button" class="btn claim" data-act="ppclaim" data-k="${k}">${SIDE_ICON[k]} Claim ${SIDE_NAME[k]}<i class="ppbar" style="animation-duration:${left}ms"></i></button>`); });
+  const inHand = x.st === 'in' && (playing || s.ph === 'done');
+  if (inHand) {
+    const claims = [];
+    if (playing && pp.cw) {
+      const left = Math.max(400, PP_CLAIM_MS - (Date.now() - (ppCwSeen.h === s.code + s.hand ? ppCwSeen.at : Date.now())));
+      ['col', 'spd'].forEach(k => { if (x.sp && x.sp[k] && !mine[k]) claims.push(`<button type="button" class="btn claim" data-act="ppclaim" data-k="${k}">${SIDE_ICON[k]} Claim ${SIDE_NAME[k]}<i class="ppbar" style="animation-duration:${left}ms"></i></button>`); });
+    }
+    if (playing && x.sp && x.sp.por && sd && !sd.por.won) claims.push('<button type="button" class="btn claim por" data-act="ppclaim" data-k="por">🎯 Porter</button>');
+    const bits = PP_SIDES.map(k => {
+      const sp = (sd && sd[k]) || { pot:0 }, me = !!(x.sp && x.sp[k]);
+      const extra = me && k !== 'por' && mine[k] ? ' ✓' : '';
+      const cnt = playing && pp.cw && k !== 'por' && +sp.n ? ` (${+sp.n} claimed)` : '';
+      return `<span class="${me ? 'in' : ''}">${SIDE_ICON[k]} ${fmtT(sp.pot)}${extra}${cnt}</span>`;
+    }).join('');
+    const anyIn = PP_SIDES.some(k => x.sp && x.sp[k]), anyPot = PP_SIDES.some(k => sd && sd[k] && sd[k].pot);
+    if (!claims.length && !anyIn && !anyPot) return '';
+    return `${claims.length ? `<div class="claims">${claims.join('')}</div>` : ''}<p class="sideline">${bits}</p>`;
   }
-  if (playing && x.st === 'in' && x.sp && x.sp.por && sd && !sd.por.won) claims.push('<button type="button" class="btn claim por" data-act="ppclaim" data-k="por">🎯 Porter!</button>');
-  return `<div class="sides">${chips}</div>${claims.length ? `<div class="claims">${claims.join('')}</div>` : ''}<p class="small muted sidenote">${price ? `Side pots are ${fmtT(price)} each a hand. Pick yours before the deal.` : 'The host turned side pots off. Pots with money in them stay until they\'re won.'}</p>`;
+  const chips = PP_SIDES.map(k => {
+    const sp = (sd && sd[k]) || { pot:0, m:[] }, on = !!(x.sw && x.sw[k]);
+    const member = (sp.m || []).includes(myCid), locked = sp.pot > 0 && (sp.m || []).length >= 2 && !member;
+    let sub;
+    if (on && sp.solo && member && (sp.m || []).length === 1) sub = 'Only you: not charged';
+    else if (on && locked) sub = 'Opens when it resets';
+    else if (on) sub = member ? 'You\'re in' : 'In next hand';
+    else sub = locked ? 'Locked till it resets' : 'Tap to join';
+    return `<button type="button" class="side${on ? ' on' : ''}${ppSideArm === k ? ' arm' : ''}" data-act="ppside" data-k="${k}"${!price ? ' disabled' : ''}><span>${SIDE_ICON[k]} ${SIDE_NAME[k]} <b>${fmtT(sp.pot)}</b></span><small>${ppSideArm === k ? 'Tap again to leave' : sub}</small></button>`;
+  }).join('');
+  return `<div class="sides">${chips}</div><p class="small muted sidenote">${price ? `Side pots: ${fmtT(price)} each a hand, picked before the deal. A pot needs 2 or more players.` : 'The host turned side pots off. Pots with money in them stay until they\'re won.'}</p>`;
 }
 const ppCwSeen = { h:'', at:0 };
 function ppSideResultText(s, myIdx){
@@ -2835,8 +2850,9 @@ function ppDockHTML(s, i, x, out){
   if (inHand) {
     const hand = h.map(c => `<button type="button" class="ppcard${ppSel === c ? ' sel' : ''}" data-act="ppsel" data-c="${c}"${throwing && !dead.length ? '' : ' disabled'} aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}">${cardHTML(c)}</button>`).join('') + (p ? `<div class="ppnew">${cardHTML(p)}<span>New</span></div>` : '');
     out.push(`<div class="pphand">${hand || '<span class="small muted">No cards left in your hand.</span>'}</div>`);
-    if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead: throw ${dead.length > 1 ? 'these' : 'it'} the next time you make a pair, or match ${dead.length > 1 ? 'them' : 'it'} if one comes up.</span></div>`);
-    out.push(`<p class="ppinfo">Pairs down <b>${(x.pr || []).length}</b> · Your tokens <b>${fmtT(x.s)}</b>${x.t ? ` · ante ${fmtT(x.t)} in` : ''}</p>`);
+    const prs = (x.pr || []).filter(q => Array.isArray(q) && validCard(q[0]) && validCard(q[1]));
+    if (prs.length) out.push(`<div class="ppdown"><span>Your pairs</span>${prs.map(q => `<span class="ppc">${rankTxt(q[0])}<i>×2</i></span>`).join('')}</div>`);
+    if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead. Throw it after your next pair, or match it if one comes up.</span></div>`);
   } else out.push(`<div class="me-row"><div class="me-info"><div class="me-hand">${esc(x.so ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated')}</div><div class="me-sub">Your tokens <b>${fmtT(x.s)}</b></div></div></div>`);
   let status = '', buttons = '';
   const asker = role === 'host' ? s.seats.findIndex(y => y && y.ask) : -1;
@@ -2873,26 +2889,26 @@ function ppDockHTML(s, i, x, out){
     else if (ppClaimed === pp.oid) status = 'Grabbing it…';
     else {
       const left = Math.max(300, ppOfferSeen.dur - (Date.now() - ppOfferSeen.at));
-      status = `${tn} threw ${aRank(pp.top)}. If it matches a card in your hand, tap fast!`;
+      status = `${tn} threw ${aRank(pp.top)}. Got a match? Tap fast!`;
       buttons = `<button type="button" class="btn take wide" data-act="pptake">Take the ${rankWord(pp.top)}<i class="ppbar" style="animation-duration:${ppOfferSeen.dur}ms"></i></button>`;
       void left;
     }
   } else if (myTurn && pp.step === 'pull' && pp.cw) {
     status = 'You go first. Side pot claims are open for a few seconds, then you pull.';
   } else if (myTurn && pp.step === 'pull') {
-    status = 'Your turn. Pull a card from the pile.';
+    status = 'Your turn. Pull a card.';
     buttons = `<button type="button" class="btn gold wide" data-act="pppull"${pending ? ' disabled' : ''}>Pull a card</button>`;
   } else if (myTurn && pp.step === 'drawn') {
-    status = p ? `You pulled ${aRank(p)}. Does it match a card in your hand?` : 'Pulling…';
+    status = p ? `You pulled ${aRank(p)}. Does it match?` : 'Pulling…';
     buttons = `<div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="ppthrowpend"${pending || !p ? ' disabled' : ''}>Throw it</button><button type="button" class="btn gold" data-act="pppair"${pending || !p ? ' disabled' : ''}>Pair it</button></div>`;
   } else if (throwing) {
     if (dead.length) { status = `Nice pair! Now your dead ${rankWord(dead[0])} has to go.`; buttons = `<button type="button" class="btn gold wide" data-act="ppthrow" data-c="${dead[0]}"${pending ? ' disabled' : ''}>Throw the dead ${rankWord(dead[0])}</button>`; }
     else if (ppSel) { status = `Throw the ${rankWord(ppSel)} of ${SUIT_NAME[ppSel[1]]}?`; buttons = `<button type="button" class="btn gold wide" data-act="ppthrow" data-c="${ppSel}"${pending ? ' disabled' : ''}>Throw the ${rankWord(ppSel)}</button>`; }
-    else status = 'Nice pair! Now tap a card to throw it out.';
+    else status = 'Nice pair! Tap a card to throw out.';
   } else if (s.ph === 'playing' && pp.cw) {
     status = `${tn} goes first once side pot claims close.`;
   } else if (s.ph === 'playing') {
-    status = pp.step === 'pull' ? `${tn} is pulling a card…` : pp.step === 'drawn' ? `${tn} is looking at their card…` : `${tn} made a pair and is throwing a card…`;
+    status = pp.step === 'pull' ? `${tn} is pulling…` : pp.step === 'drawn' ? `${tn} is deciding…` : `${tn} made a pair and is throwing…`;
   }
   if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
   if (s.ph === 'playing' && pp.cw && x.st === 'in') status = '<b>Side pot claims are open.</b> ' + status;
@@ -2900,7 +2916,7 @@ function ppDockHTML(s, i, x, out){
   if (status) out.push(`<p class="status">${status}</p>`);
   if (buttons) out.push(buttons);
   if (x.st !== 'out') out.push(ppSideHTML(s, i, x));
-  if (!x.so && s.live && x.st !== 'out' && !myTurn && !(pp.step === 'offer' && pp.from !== i && s.ph === 'playing')) out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>${inHand && s.ph === 'playing' ? ' from the next hand' : ''}. You keep your seat and tokens.</p>`);
+  if (!x.so && s.live && x.st !== 'out' && !(inHand && s.ph === 'playing')) out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>. You keep your seat and tokens.</p>`);
   return out.join('');
 }
 function nameForm(){
