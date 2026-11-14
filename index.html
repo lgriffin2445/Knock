@@ -1344,6 +1344,7 @@ function onClientMsg(c, d){
 }
 /* ---------- table talk: short messages that pop up over the sender's seat ---------- */
 const QUICK = ['Pay up 💸', 'Scared money don’t make money', 'You bluffing? 👀', 'Lucky 🍀', 'Too easy 😎', 'Run it back', 'Knock knock 👊', 'Nice hand'];
+const QUICK_PP = ['Throw me something good 🙏', 'How you sleep that card? 😴', 'Porter baby! 🎯', 'You slept 😴', 'Wake up! ⏰', 'That\'s dead 💀', 'Who got my card? 🤨', 'Stop holding my card 😤', 'Hurry up and throw ⏳', 'Pitty Pat! 🎉'];
 const EMOJI = ['😂', '🔥', '😤', '🥶', '🤡', '💀', '👀', '🙌'];
 const chatLog = [], chatLast = new Map(), seatPos = new Map();
 let chatUnread = 0, chatSentAt = 0;
@@ -3195,7 +3196,7 @@ function chatHTML(){
   const log = chatLog.slice(-25).reverse().map(m => `<li class="${m.c === myCid ? 'mine' : ''}"><b>${m.c === myCid ? 'You' : esc(m.n)}</b>${esc(m.x)}</li>`).join('');
   return `<div class="sheet-head"><h2>Table talk</h2><button type="button" class="iconbtn" data-act="menu-close" aria-label="Close chat"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
   <div class="emojis">${EMOJI.map(e => `<button type="button" class="emo-btn" data-act="say" data-say="${esc(e)}" aria-label="Send ${esc(e)}">${e}</button>`).join('')}</div>
-  <div class="quick">${QUICK.map(q => `<button type="button" class="chipbtn" data-act="say" data-say="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+  <div class="quick">${(isPP(cur()) ? QUICK_PP : QUICK).map(q => `<button type="button" class="chipbtn" data-act="say" data-say="${esc(q)}">${esc(q)}</button>`).join('')}</div>
   <form id="chatForm" class="joinrow"><label class="sr" for="chatIn">Message</label><input id="chatIn" maxlength="80" placeholder="Say something…" autocomplete="off" enterkeyhint="send"><button class="btn gold" type="submit">Send</button></form>
   <ul class="chatlog">${log || '<li class="muted">No messages yet. What you send pops up over your seat for a few seconds.</li>'}</ul>`;
 }
