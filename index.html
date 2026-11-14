@@ -2810,10 +2810,17 @@ function ppSideHTML(s, i, x){
       return `<span class="${me ? 'in' : ''}">${SIDE_ICON[k]} ${fmtT(sp.pot)}${extra}${cnt}</span>`;
     }).join('');
     const anyIn = PP_SIDES.some(k => x.sp && x.sp[k]), anyPot = PP_SIDES.some(k => sd && sd[k] && sd[k].pot);
-    if (!claims.length && !anyIn && !anyPot) return '';
-    return `${claims.length ? `<div class="claims">${claims.join('')}</div>` : ''}<p class="sideline">${bits}</p>`;
+    if (!price && !claims.length && !anyIn && !anyPot) return '';
+    const solo = PP_SIDES.filter(k => sd && sd[k] && sd[k].solo && (sd[k].m || []).includes(myCid) && x.sw && x.sw[k]);
+    const note = solo.length ? `<p class="small muted">${solo.map(k => SIDE_ICON[k] + ' ' + SIDE_NAME[k]).join(', ')}: you're the only one in, so ${solo.length > 1 ? 'they\'re' : 'it\'s'} not running this hand and you weren't charged. A side pot needs 2 or more players.</p>` : '';
+    const toggle = price ? `<button type="button" class="linkbtn" data-act="ppsideopen">${ppSideOpen ? 'Hide' : 'Pick side pots'}</button>` : '';
+    return `${claims.length ? `<div class="claims">${claims.join('')}</div>` : ''}<p class="sideline">${bits}${toggle}</p>${note}${ppSideOpen && price ? ppSideChips(s, x, price, sd) + '<p class="small muted sidenote">Changes start with the next hand.</p>' : ''}`;
   }
-  const chips = PP_SIDES.map(k => {
+  return `${ppSideChips(s, x, price, sd)}<p class="small muted sidenote">${price ? `Side pots: ${fmtT(price)} each a hand, picked before the deal. A pot needs 2 or more players.` : 'The host turned side pots off. Pots with money in them stay until they\'re won.'}</p>`;
+}
+let ppSideOpen = false;
+function ppSideChips(s, x, price, sd){
+  return '<div class="sides">' + PP_SIDES.map(k => {
     const sp = (sd && sd[k]) || { pot:0, m:[] }, on = !!(x.sw && x.sw[k]);
     const member = (sp.m || []).includes(myCid), locked = sp.pot > 0 && (sp.m || []).length >= 2 && !member;
     let sub;
@@ -2822,8 +2829,7 @@ function ppSideHTML(s, i, x){
     else if (on) sub = member ? 'You\'re in' : 'In next hand';
     else sub = locked ? 'Locked till it resets' : 'Tap to join';
     return `<button type="button" class="side${on ? ' on' : ''}${ppSideArm === k ? ' arm' : ''}" data-act="ppside" data-k="${k}"${!price ? ' disabled' : ''}><span>${SIDE_ICON[k]} ${SIDE_NAME[k]} <b>${fmtT(sp.pot)}</b></span><small>${ppSideArm === k ? 'Tap again to leave' : sub}</small></button>`;
-  }).join('');
-  return `<div class="sides">${chips}</div><p class="small muted sidenote">${price ? `Side pots: ${fmtT(price)} each a hand, picked before the deal. A pot needs 2 or more players.` : 'The host turned side pots off. Pots with money in them stay until they\'re won.'}</p>`;
+  }).join('') + '</div>';
 }
 const ppCwSeen = { h:'', at:0 };
 function ppSideResultText(s, myIdx){
@@ -3038,8 +3044,15 @@ function toast(msg){
   const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2700);
 }
+let lastSideCfg = null;
 function notify(s){
   if (isPP(s)) {
+    const sc = s.code + ':' + (+s.cfg.side || 0);
+    if (lastSideCfg && lastSideCfg !== sc && lastSideCfg.split(':')[0] === s.code) {
+      if (+s.cfg.side) toast(`Side pots are on, ${fmtT(s.cfg.side)} each. ${s.ph === 'playing' ? 'Tap "Pick side pots" under your cards to join from the next hand.' : 'Flip the switches under your cards to join.'}`);
+      else toast('Side pots are off.');
+    }
+    lastSideCfg = sc;
     const i = mySeatIdx(s), pp = s.pp || {};
     const myTurn = i >= 0 && s.ph === 'playing' && s.tn === i && pp.step === 'pull';
     if (myTurn) { const key = s.hand + ':' + s.q; if (notifiedTurn !== key) { notifiedTurn = key; toast('Your turn: pull a card'); sfx('ding'); try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {} } }
@@ -3142,6 +3155,7 @@ function bindUI(){
       case 'ppsel': if (validCard(b.dataset.c)) { ppSel = ppSel === b.dataset.c ? '' : b.dataset.c; sfx('flick'); scheduleRender(); } break;
       case 'pptake': ppMove('take'); break;
       case 'ppside': if (PP_SIDES.includes(b.dataset.k)) ppToggleSide(b.dataset.k); break;
+      case 'ppsideopen': ppSideOpen = !ppSideOpen; scheduleRender(); break;
       case 'ppclaim': if (PP_SIDES.includes(b.dataset.k)) ppClaimSide(b.dataset.k); break;
       case 'lobbyjoin': askToJoin(+b.dataset.slot); break;
       case 'lobbycancel': cancelAsk(); break;
