@@ -1,4 +1,6 @@
-# Knock
+# Quit Playin'!
+
+Card night with family: **Knock** and **Pitty Pat**, played together from one link. Pick a game on the front page.
 
 A two-card game for up to 10 friends, played with play tokens. Open the site, tap **Start a table**, and share the link. Friends join from the link with just a name, and can take a seat or just watch from the audience. The person who starts the table is the **host**: their phone runs the game and hands out tokens (10.00 each to start).
 
