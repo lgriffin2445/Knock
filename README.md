@@ -28,6 +28,15 @@ Pick **Start Pitty Pat** on the front page. 2 to 6 players, everyone starts with
 - **Don't sleep:** if a thrown card matched yours and you didn't get it, your card goes dead. It's turned face up and has to be the next card you throw after you make a pair. If another card of that rank comes up, pulled or thrown, you can still match it with your dead card.
 - You win when every card left in your hand is paired, with no dead cards: **Pitty Pat!** The winner takes the game pot.
 
+### Pitty Pat side pots
+
+The host can turn on side pots in the menu (0.25, 0.50 or 1.00 each a hand): **🎨 Colors**, **♠ Spades** and **🎯 Porter**.
+
+- Flip the switches under your cards before the deal. A side pot rolls over until it's won. Once you're in you pay every hand to stay in; drop out and what you put in stays, and you can't rejoin until it's won and back at zero. New players can only join at zero.
+- **Colors:** a same-color pair (both red or both black) in your first five cards. **Spades:** a spade in your first five cards. Claim in the 10 seconds after the deal (play waits). Only the count of claims is shown. At the end of the hand the highest Colors pair and the highest spade win; ties split; no claims means it rolls over.
+- **Porter:** tap it when you're waiting on one card to go out. The first true claim wins the Porter pot right away. If nobody hits it, it rolls over.
+- Nothing is claimed for you: forget to tap and you don't win it.
+
 **Put it on your home screen:** Knock works like an app. On iPhone, open the link in Safari, tap Share (it may be under •••), then Add to Home Screen. On Android, open it in Chrome and tap Install (or ⋮ then Add to Home screen).
 
 **Lobby:** the front page lists tables that are playing now, with how many are playing and watching. In the menu the host picks who can join:
