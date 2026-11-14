@@ -226,6 +226,15 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 @keyframes twinkle{0%,100%{opacity:.15;scale:.6}50%{opacity:1;scale:1.15}}
 @media (prefers-reduced-motion: reduce){.rain,.tumble{display:none}.flames,.mycards.pairglow,.pot.mega{animation:none}}
 .splat{position:absolute;transform:translate(-50%,-50%);font-size:34px;line-height:1;animation:splat .9s ease-out both}
+.splat.kick{font-size:42px}
+.splat.poo{font-size:40px;animation:poo 1.6s ease-out both}
+@keyframes poo{0%{opacity:0;scale:.4}12%{opacity:1;scale:1.25}22%{scale:.95}30%{scale:1}80%{opacity:1}100%{opacity:0;scale:1.05}}
+.throwfx.flip{font-size:46px;transform:translate(-50%,-50%);z-index:9;animation:flip 1.5s ease-out both;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+@keyframes flip{0%{opacity:0;scale:.2;translate:0 30px}18%{opacity:1;scale:1.25;translate:0 0}28%{scale:.95}36%{scale:1.05}44%{scale:1}82%{opacity:1}100%{opacity:0;translate:0 -14px}}
+.kicked{animation:kicked .7s ease-out}
+@keyframes kicked{0%{translate:0 0;rotate:0deg}15%{translate:-14px 3px;rotate:-9deg}35%{translate:9px -2px;rotate:6deg}55%{translate:-5px 0;rotate:-3deg}75%{translate:2px 0;rotate:1deg}100%{translate:0 0;rotate:0deg}}
+.stinky{animation:stinky .8s ease-out}
+@keyframes stinky{0%,100%{filter:none}30%{filter:sepia(.8) hue-rotate(40deg) saturate(1.6)}}
 @keyframes splat{0%{scale:1;opacity:1}30%{scale:2.2;opacity:1}100%{scale:2.6;opacity:0}}
 .knockfx{position:absolute;transform:translate(-50%,-50%);font-family:var(--font-display);font-size:36px;color:var(--brass);text-shadow:0 3px 0 #000,0 0 18px rgba(220,171,74,.7);animation:knockpop 1.25s ease-out both;white-space:nowrap;z-index:10}
 .knockfx.big{font-size:30px;color:var(--ivory)}
@@ -776,8 +785,8 @@ function botDecide(i){
    left gets it. Anyone else who could have matched it (beaten to it, or asleep) has that card go dead:
    it's turned face up and must be the next card they throw. You win when every card left in your hand
    is in pairs. Pairs you're dealt stay hidden in your hand. */
-const PP_SEATS = 6, PP_START = 2000, PP_OFFER = 8;
-let ppPend = null, ppDisc = [], ppClaims = new Set(), ppOfferAt = 0;
+const PP_SEATS = 6, PP_START = 2000, PP_OFFER = 8, PP_HOLD_MS = 3500;
+let ppPend = null, ppDisc = [], ppClaims = new Set(), ppOfferAt = 0, ppHoldEnd = 0;
 /* Side pots (the host turns them on): Colors, Spades and Porter, each a set price a hand.
    You pick yours before the deal. A side pot rolls over until it's won; once you're in you pay every
    hand to stay in, and you can only join when it's back at zero. Colors and Spades are judged on your
@@ -919,7 +928,9 @@ function ppStartHand(){
   ppDealt = {}; order.forEach(i => { ppDealt[S.seats[i].c] = holes[S.seats[i].c].slice(); });
   const old = S.pp || {};
   const cw = S.side && (S.side.col.in || S.side.spd.in) ? 1 : 0;
-  S.pp = { step:'pull', pile:deck.length, top:null, from:-1, oid:old.oid || 0, eid:old.eid || 0, ev:[], ow:+S.cfg.ow || PP_OFFER, disc:0, cw, cwh:S.hand };
+  /* hold = a few seconds after the deal so everyone notices the new hand before the first pull (the host enforces it) */
+  S.pp = { step:'pull', pile:deck.length, top:null, from:-1, oid:old.oid || 0, eid:old.eid || 0, ev:[], ow:+S.cfg.ow || PP_OFFER, disc:0, cw, cwh:S.hand, hold:1 };
+  ppHoldEnd = Date.now() + PP_HOLD_MS;
   ppClaimEnd = cw ? Date.now() + PP_CLAIM_MS : 0;
   S.ph = 'playing'; S.tn = order[0]; S.first = order[0];
   ppEv({ k:'deal', d:S.bt, order });
@@ -1215,8 +1226,9 @@ function ppHostTick(now){
     });
   });
   if (ppBotSide.size > 200) ppBotSide.clear();
+  if (pp.hold && now >= ppHoldEnd) { pp.hold = 0; S.q++; }
   if (pp.cw && now >= ppClaimEnd) ppCloseClaims();
-  if (pp.cw) return;
+  if (pp.cw || pp.hold) return;
   if (pp.step === 'offer') {
     S.seats.forEach((x, j) => {
       if (!x || !x.bot || j === pp.from || !ppCanMatch(j, pp.top)) return;
@@ -1321,7 +1333,8 @@ function onClientMsg(c, d){
     case 'act': if (d.k === 'knock' || d.k === 'fold') { p.act = { h:+d.h, q:+d.q, k:d.k }; hostTick(); } break;
     case 'pp': {
       const i = S.seats.findIndex(y => y && y.c === p.cid);
-      if (i >= 0 && isPP(S) && ['pull', 'pair', 'throw', 'take'].includes(d.k)) {
+      if (i >= 0 && isPP(S) && d.k === 'pull' && S.pp && S.pp.hold) { try { c.send({ t:'ppno', r:'new hand', k:'pull' }); } catch (e) {} }
+      else if (i >= 0 && isPP(S) && ['pull', 'pair', 'throw', 'take'].includes(d.k)) {
         const r = ppAct(i, { k:d.k, c:validCard(d.c) ? d.c : null, q:d.k === 'take' ? undefined : +d.q, o:+d.o });
         if (r) { try { c.send({ t:'ppno', r, k:d.k }); } catch (e) {} }
         hostTick();
@@ -1846,7 +1859,7 @@ function ppClaimSide(k){
   sfx('pop'); scheduleRender();
 }
 function ppNope(r, k){
-  const side = { 'no colors':'You don\'t have Colors in your first five cards.', 'no spades':'You don\'t have a spade in your first five cards.', 'too late':'Too late. Claims close a few seconds after the deal.', 'not yet':'Not yet. Porter is when you\'re waiting on just one card to go out.', 'taken':'Someone already hit Porter this hand.', 'not in':`You're not in ${SIDE_NAME[k] || 'that side pot'} this hand.`, 'claims open':'Hold on, side pot claims are open for a few more seconds.' }[r];
+  const side = { 'no colors':'You don\'t have Colors in your first five cards.', 'no spades':'You don\'t have a spade in your first five cards.', 'too late':'Too late. Claims close a few seconds after the deal.', 'not yet':'Not yet. Porter is when you\'re waiting on just one card to go out.', 'taken':'Someone already hit Porter this hand.', 'not in':`You're not in ${SIDE_NAME[k] || 'that side pot'} this hand.`, 'claims open':'Hold on, side pot claims are open for a few more seconds.', 'new hand':'Hold on, the new hand is just being dealt.' }[r];
   if (side) { toast(side); return; }
   const m = { 'no match':'That doesn\'t match a card in your hand.', 'dead card first':'Your dead card has to go first.', 'throw the card you pulled':'If it doesn\'t match, you throw the card you pulled.', 'no offer':'Too late, that card is gone.', 'not in your hand':'Pick a card from your hand.' }[r];
   if (m) toast(m);
@@ -1860,6 +1873,7 @@ function ppMove(k, c){
     if (!s.pp.top || !ppCanMine(h, s.pp.top, dd)) { toast('You don\'t have a match for that one.'); return; }
     ppClaimed = s.pp.oid;
   }
+  if (k === 'pull' && s.pp.hold) { ppNope('new hand'); return; }
   const msg = { k, c:c || null, q:s.q, o:s.pp.oid };
   if (k === 'throw') ppSel = '';
   if (role === 'host') { const r = ppAct(i, msg); if (r) { ppNope(r); if (k === 'take') ppClaimed = 0; } hostTick(); }
@@ -1927,7 +1941,7 @@ function shareLink(){
 /* ---------- looks, sounds and table effects ---------- */
 const THEMES = { green:'Classic green', red:'Red casino', blue:'Midnight blue', wood:'Backyard wood' };
 const AV_LIST = ['😎','🤠','🥷','👑','🦁','🐐','🦊','🐸','🤖','👽','🧢','💅','🃏','🐻','🐯','🦄','💰','🔥'];
-const THROWS = ['🍅','🥚','💸','🔥','❤️','🎯','🧻','👟'];
+const THROWS = ['👟','💩','🥚','🍅','🖕🏾','💸','🔥','❤️','🧻','🎯'];
 let myAv = AV_LIST.includes(store.get('knock_av')) ? store.get('knock_av') : '';
 const seatIdxPos = new Map(), dealHide = new Map(), chairEls = new Map();
 let pairSeen = '';
@@ -1974,6 +1988,7 @@ function sfx(kind){
   try {
     switch (kind) {
       case 'flick': noiseHit(ctx, t, { f:3600, q:.7, peak:.12, d:.05 }); break;
+      case 'shuffle': for (let k = 0; k < 14; k++) noiseHit(ctx, t + k * .045 + (k > 6 ? .12 : 0), { f:3000 + (k % 3) * 500, q:.8, peak:.07, d:.035 }); break;
       case 'knock': [0, .15].forEach(o => { tone(ctx, t + o, { f:150, f2:65, peak:.65, a:.002, d:.13 }); noiseHit(ctx, t + o, { type:'lowpass', f:900, peak:.35, d:.04 }); }); break;
       case 'clink': tone(ctx, t, { f:2400 + Math.random() * 500, peak:.07, d:.12 }); tone(ctx, t + .012, { f:3600 + Math.random() * 600, peak:.04, d:.09 }); break;
       case 'whoosh': noiseHit(ctx, t, { f:500, f2:2600, q:.9, peak:.16, a:.05, d:.35 }); break;
@@ -2223,6 +2238,7 @@ function ppFx(s, e){
   const P = i => seatIdxPos.get(i), who = i => { const x = s.seats[i]; return i === mySeatIdx(s) ? 'You' : (x ? esc(x.n) : 'Someone'); };
   switch (e.k) {
     case 'deal': {
+      textFx('NEW HAND', { x:G.cx, y:G.cy - 70 }, 'big', 1600); sfx('shuffle');
       const from = P(e.d) || { x:G.cx, y:G.cy };
       (e.order || []).forEach((i, k) => { const to = P(i); if (!to) return; for (let r = 0; r < 2; r++) setTimeout(() => { flyCard(null, from, to, { dur:300, arc:24, s1:.7 }); if (k === 0) sfx('flick'); }, r * 260 + k * 90); });
       break;
@@ -2316,12 +2332,29 @@ function hostThrow(fromCid, toCid, e){
 }
 function handleFx(d){ if (d && d.k === 'throw' && typeof d.f === 'string' && typeof d.to === 'string' && THROWS.includes(d.e)) throwFx(d.f, d.to, d.e); }
 function sendThrow(toCid, e){ if (role === 'host') hostThrow(myCid, toCid, e); else if (!send({ t:'throw', to:toCid, e })) toast('Not connected to the table right now'); }
+function hitSeat(cid, cls){
+  const t = document.querySelector(`#seats [data-cid="${CSS.escape(cid)}"], #chairs [data-cid="${CSS.escape(cid)}"]`);
+  if (!t || RM) return; t.classList.remove(cls); void t.offsetWidth; t.classList.add(cls); setTimeout(() => t.classList.remove(cls), 800);
+}
 function throwFx(fromCid, toCid, e){
   const from = seatPos.get(fromCid) || { x:G.cx, y:10 }, to = seatPos.get(toCid); if (!to) return;
   const el = document.createElement('div'); el.className = 'throwfx'; el.textContent = e;
-  fly(el, from, to, { dur:650, arc:80, rot:540, s0:.8, s1:1.1, ease:'cubic-bezier(.4,.1,.6,1)', done:() => {
-    const sp = document.createElement('div'); sp.className = 'splat'; sp.textContent = e; sp.style.left = to.x + 'px'; sp.style.top = to.y + 'px';
-    $('#fx').appendChild(sp); setTimeout(() => sp.remove(), 950); sfx('splat');
+  const splat = (txt, cls, ms) => { const sp = document.createElement('div'); sp.className = 'splat' + (cls ? ' ' + cls : ''); sp.textContent = txt; sp.style.left = to.x + 'px'; sp.style.top = to.y + 'px'; $('#fx').appendChild(sp); setTimeout(() => sp.remove(), ms || 950); };
+  if (e === '👟') {
+    /* a kick: the shoe comes in low and fast, spinning, and knocks the seat sideways */
+    fly(el, from, to, { dur:430, arc:26, rot:900, s0:.9, s1:1.25, ease:'cubic-bezier(.5,0,.8,.5)', done:() => {
+      splat('💥', 'kick'); textFx('KICKED!', { x:clampX(to.x), y:to.y - 46 }, 'ouch', 1000); hitSeat(toCid, 'kicked'); sfx('knock');
+    } });
+    sfx('whoosh'); return;
+  }
+  if (e === '🖕🏾') {
+    /* not thrown: it pops up right over them */
+    el.className = 'throwfx flip'; el.style.left = to.x + 'px'; el.style.top = (to.y - 40) + 'px';
+    $('#fx').appendChild(el); setTimeout(() => el.remove(), 1500); sfx('pop'); return;
+  }
+  fly(el, from, to, { dur:650, arc:80, rot:e === '💩' ? 200 : 540, s0:.8, s1:1.1, ease:'cubic-bezier(.4,.1,.6,1)', done:() => {
+    splat(e, e === '💩' ? 'poo' : '', e === '💩' ? 1600 : 950); sfx('splat');
+    if (e === '💩') { hitSeat(toCid, 'stinky'); textFx('EWW 🤢', { x:clampX(to.x), y:to.y - 46 }, 'stole', 1100); }
   } });
   sfx('whoosh');
 }
@@ -2589,8 +2622,8 @@ const ppPairHTML = q => `<span class="ppst" title="Pair of ${RPL[rv(q[0])]}">${c
 const ppDeadHTML = c => `<span class="ppst dead" title="Dead ${rankWord(c)}">${cardHTML(c)}<i aria-hidden="true">💀</i></span>`;
 function ppSeatView(s, i, x, isMine){
   const pp = s.pp || {};
-  const turn = s.ph === 'playing' && s.tn === i && pp.step !== 'offer' && x.st === 'in' && !pp.cw;
-  const upFirst = s.ph === 'playing' && s.tn === i && pp.cw;
+  const turn = s.ph === 'playing' && s.tn === i && pp.step !== 'offer' && x.st === 'in' && !pp.cw && !pp.hold;
+  const upFirst = s.ph === 'playing' && s.tn === i && (pp.cw || pp.hold);
   const thrower = s.ph === 'playing' && pp.step === 'offer' && pp.from === i;
   const win = s.ph === 'done' && s.res && s.res.k === 'pitty' && s.res.w && s.res.w[0] && s.res.w[0].i === i;
   const cls = ['seat', 'pp', turn && 'turn', x.st === 'out' && 'out', win && 'win', isMine && 'mine', (x.st === 'wait' || x.st === 'left') && 'waiting', x.away && !isMine && 'away', (x.ws || 0) >= 3 && 'fire'].filter(Boolean).join(' ');
@@ -2742,7 +2775,8 @@ function renderCenter(s){
     if (s.ph === 'playing') {
       ph = 'Hand ' + s.hand;
       const nm = t ? (s.tn === myIdx ? 'You' : `<b>${esc(t.n)}</b>`) : '';
-      if (pp.cw) bl = 'Side pot claims are open';
+      if (pp.hold) { const d = s.seats[s.bt]; bl = `New hand! ${d ? (s.bt === myIdx ? 'You' : `<b>${esc(d.n)}</b>`) + ' dealt' : ''}`; }
+      else if (pp.cw) bl = 'Side pot claims are open';
       else if (pp.step === 'offer' && validCard(pp.top)) bl = `${nm} threw ${aRank(pp.top)}`;
     } else if (s.ph === 'done' && s.res) {
       if (s.res.k === 'pitty') { const w = s.res.w[0]; ph = 'Pitty Pat!'; bl = `${nameOf(s, w.i, myIdx)} ${w.i === myIdx ? 'win' : 'wins'} <em>${fmtT(w.amt)}</em>.`; }
@@ -3063,6 +3097,10 @@ function ppDockHTML(s, i, x, out){
       buttons = `<button type="button" class="btn take wide" data-act="pptake">Take the ${rankWord(pp.top)}<i class="ppbar" style="animation-duration:${ppOfferSeen.dur}ms"></i></button>`;
       void left;
     }
+  } else if (myTurn && pp.step === 'pull' && pp.hold) {
+    status = '<b>New hand!</b> Look at your cards. You go first in a moment.';
+  } else if (s.ph === 'playing' && pp.hold && x.st === 'in') {
+    status = `<b>New hand!</b> Look at your cards. ${tn} goes first in a moment.`;
   } else if (myTurn && pp.step === 'pull' && pp.cw) {
     status = 'You go first. Side pot claims are open for a few seconds, then you pull.';
   } else if (myTurn && pp.step === 'pull') {
@@ -3221,7 +3259,7 @@ function notify(s){
     }
     lastSideCfg = sc;
     const i = mySeatIdx(s), pp = s.pp || {};
-    const myTurn = i >= 0 && s.ph === 'playing' && s.tn === i && pp.step === 'pull';
+    const myTurn = i >= 0 && s.ph === 'playing' && s.tn === i && pp.step === 'pull' && !pp.hold && !pp.cw;
     if (myTurn) { const key = s.hand + ':' + s.q; if (notifiedTurn !== key) { notifiedTurn = key; toast('Your turn: pull a card'); sfx('ding'); try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {} } }
     const title = myTurn ? 'Your turn · Pitty Pat' : 'Pitty Pat';
     if (document.title !== title) document.title = title;
