@@ -340,8 +340,17 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .pptop .ring{position:absolute;inset:-6px;border-radius:12px;border:3px solid var(--brass);clip-path:inset(0 0 0 0);animation:ppring linear forwards;pointer-events:none}
 @keyframes ppring{from{clip-path:inset(0 0 0 0);opacity:1}to{clip-path:inset(100% 0 0 0);opacity:.4}}
 .pphand{display:flex;gap:5px;flex-wrap:wrap;--cw:44px}
-.ppcard{padding:0;border:0;background:none;border-radius:8px;cursor:pointer;transition:transform .15s ease}
-.ppcard:disabled{cursor:default}
+.ppcard{padding:0;border:0;background:none;border-radius:8px;cursor:grab;transition:transform .15s ease;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.ppcard.dragging{transition:none;z-index:20;position:relative;cursor:grabbing;filter:drop-shadow(0 10px 14px rgba(0,0,0,.6))}
+.ppcard.droptarget .card{box-shadow:0 0 0 3px rgba(243,234,216,.7)}
+.ppcard.dropmatch .card{box-shadow:0 0 0 3px #7fd6a4,0 0 14px rgba(127,214,164,.8)}
+.ppdown.droptarget{outline:2px dashed #7fd6a4;outline-offset:4px;border-radius:10px}
+.ppst.mine{padding:0;border:0;background:none;cursor:pointer;border-radius:6px}
+.ppst.mine .card{box-shadow:0 0 0 2px rgba(127,214,164,.85),0 2px 5px rgba(0,0,0,.45)}
+.ppst.mine i{position:absolute;top:calc(var(--cw)*-.35);right:calc(var(--cw)*-.35);font-size:calc(var(--cw)*.45);font-style:normal;line-height:1}
+.pphint{font-size:12px;color:rgba(243,234,216,.45);font-style:italic}
+.ppdown .linkbtn{margin-left:auto;font-size:12.5px}
+.pplock{margin-top:6px}
 .ppcard.sel{transform:translateY(-10px)}
 .ppcard.sel .card{box-shadow:0 0 0 3px var(--brass),0 6px 14px rgba(0,0,0,.5)}
 .ppnew{display:flex;flex-direction:column;align-items:center;gap:2px;margin-left:6px}
@@ -3043,19 +3052,115 @@ function ppSideResultText(s, myIdx){
   if (r.por) parts.push(`🎯 Porter: nobody hit it, <em>${fmtT(r.por.roll)}</em> rolls over`);
   return parts.join('<br>');
 }
+/* ---------- arranging your own hand (only on your screen) ---------- */
+let ppArr = { key:'', order:[], stacks:[] }, ppDrag = null, ppDragging = false, ppNoClickUntil = 0;
+function ppArrange(s, h){
+  const key = s.code + ':' + s.hand;
+  if (ppArr.key !== key) ppArr = { key, order:[], stacks:[] };
+  const inHand = new Set(h);
+  ppArr.stacks = ppArr.stacks.filter(st => inHand.has(st[0]) && inHand.has(st[1]) && st[0][0] === st[1][0]);
+  const stacked = new Set(ppArr.stacks.flat());
+  ppArr.order = ppArr.order.filter(c => inHand.has(c) && !stacked.has(c));
+  h.forEach(c => { if (!stacked.has(c) && !ppArr.order.includes(c)) ppArr.order.push(c); });
+  return ppArr;
+}
+function ppStack(a, b){
+  if (!a || !b || a === b || a[0] !== b[0]) return false;
+  ppArr.order = ppArr.order.filter(c => c !== a && c !== b);
+  ppArr.stacks.push([b, a]);
+  if (ppSel === a || ppSel === b) ppSel = '';
+  return true;
+}
+function ppStackAll(){
+  let again = true;
+  while (again) {
+    again = false;
+    for (const c of ppArr.order) { const m = ppArr.order.find(d => d !== c && d[0] === c[0]); if (m) { ppStack(c, m); again = true; break; } }
+  }
+}
+function ppUnstack(c){
+  const k = ppArr.stacks.findIndex(st => st.includes(c)); if (k < 0) return;
+  const st = ppArr.stacks.splice(k, 1)[0]; ppArr.order.push(...st);
+}
+function ppDropAt(x, y, skip){
+  const prev = skip.style.visibility; skip.style.visibility = 'hidden';
+  const el = document.elementFromPoint(x, y); skip.style.visibility = prev;
+  if (!el) return null;
+  const card = el.closest('.pphand .ppcard[data-c]'); if (card) return { kind:'card', el:card, c:card.dataset.c };
+  if (el.closest('[data-drop="pairs"]')) return { kind:'pairs' };
+  const hand = el.closest('[data-drop="hand"]'); if (hand) return { kind:'hand', el:hand };
+  return null;
+}
+function ppMarkDrop(t, c){
+  document.querySelectorAll('.droptarget,.dropmatch').forEach(e => e.classList.remove('droptarget', 'dropmatch'));
+  if (!t) return;
+  if (t.kind === 'card') t.el.classList.add(t.c[0] === c[0] ? 'dropmatch' : 'droptarget');
+  else if (t.kind === 'pairs') { const z = document.querySelector('[data-drop="pairs"]'); if (z) z.classList.add('droptarget'); }
+}
+function ppDragDown(e){
+  const card = e.target.closest && e.target.closest('.pphand .ppcard[data-c]');
+  if (!card || (e.button != null && e.button > 0)) return;
+  ppDrag = { el:card, c:card.dataset.c, x0:e.clientX, y0:e.clientY, id:e.pointerId, moved:false };
+}
+function ppDragMove(e){
+  const d = ppDrag; if (!d || e.pointerId !== d.id) return;
+  const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+  if (!d.moved) {
+    if (Math.hypot(dx, dy) < 8) return;
+    d.moved = true; ppDragging = true; d.el.classList.add('dragging');
+    try { d.el.setPointerCapture(d.id); } catch (er) {}
+  }
+  e.preventDefault();
+  d.el.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+  ppMarkDrop(ppDropAt(e.clientX, e.clientY, d.el), d.c);
+}
+function ppDragUp(e){
+  const d = ppDrag; if (!d || (e.pointerId !== d.id && e.type !== 'pointercancel')) return;
+  ppDrag = null;
+  if (!d.moved) return;
+  ppDragging = false; ppNoClickUntil = Date.now() + 450;
+  const t = e.type === 'pointercancel' ? null : ppDropAt(e.clientX, e.clientY, d.el);
+  d.el.style.transform = ''; d.el.classList.remove('dragging'); ppMarkDrop(null);
+  if (t) {
+    store.set('knock_ppdrag', '1');
+    if (t.kind === 'card' && t.c !== d.c && t.c[0] === d.c[0]) { ppStack(d.c, t.c); sfx('ding'); }
+    else if (t.kind === 'pairs') {
+      const m = ppArr.order.find(c => c !== d.c && c[0] === d.c[0]);
+      if (m) { ppStack(d.c, m); sfx('ding'); } else toast('That card has no match in your hand yet.');
+    } else if (t.kind === 'card' && t.c !== d.c) {
+      const r = t.el.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+      const o = ppArr.order.filter(c => c !== d.c); let k = o.indexOf(t.c) + (after ? 1 : 0);
+      o.splice(k, 0, d.c); ppArr.order = o; sfx('flick');
+    } else if (t.kind === 'hand') {
+      const cards = [...t.el.querySelectorAll('.ppcard[data-c]')].filter(el => el !== d.el);
+      const o = ppArr.order.filter(c => c !== d.c);
+      let k = cards.findIndex(el => { const r = el.getBoundingClientRect(); return e.clientX < r.left + r.width / 2; });
+      if (k < 0) k = o.length;
+      o.splice(k, 0, d.c); ppArr.order = o; sfx('flick');
+    }
+  }
+  scheduleRender();
+}
 function ppDockHTML(s, i, x, out){
   const pp = s.pp || {}, { h, p } = ppMine();
   const inHand = x.st === 'in' && (s.ph === 'playing' || s.ph === 'done');
   const myTurn = s.ph === 'playing' && s.tn === i && x.st === 'in' && pp.step !== 'offer';
   const throwing = myTurn && pp.step === 'throw';
   const dead = (x.dd || []).filter(validCard);
-  if (!throwing || !h.includes(ppSel)) ppSel = throwing ? (h.includes(ppSel) ? ppSel : '') : '';
+  const arr = ppArrange(s, h);
+  const stackedSet = new Set(arr.stacks.flat());
+  if (!throwing || !h.includes(ppSel) || stackedSet.has(ppSel)) ppSel = throwing && h.includes(ppSel) && !stackedSet.has(ppSel) ? ppSel : '';
   const pending = !!ppPending && ppPending.split(':')[1] === String(s.q);
   if (inHand) {
-    const hand = h.map(c => `<button type="button" class="ppcard${ppSel === c ? ' sel' : ''}" data-act="ppsel" data-c="${c}"${throwing && !dead.length ? '' : ' disabled'} aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}">${cardHTML(c)}</button>`).join('') + (p ? `<div class="ppnew">${cardHTML(p)}<span>New</span></div>` : '');
-    out.push(`<div class="pphand">${hand || '<span class="small muted">No cards left in your hand.</span>'}</div>`);
+    const canPick = throwing && !dead.length;
+    const hand = arr.order.map(c => `<button type="button" class="ppcard${ppSel === c ? ' sel' : ''}${canPick ? '' : ' nopick'}" data-act="ppsel" data-c="${c}" aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}">${cardHTML(c)}</button>`).join('') + (p ? `<div class="ppnew">${cardHTML(p)}<span>New</span></div>` : '');
+    out.push(`<div class="pphand" data-drop="hand">${hand || (arr.stacks.length ? '<span class="small muted">All your cards are in pairs.</span>' : '<span class="small muted">No cards left in your hand.</span>')}</div>`);
     const prs = (x.pr || []).filter(q => Array.isArray(q) && validCard(q[0]) && validCard(q[1]));
-    if (prs.length) out.push(`<div class="ppdown"><span>Your pairs</span>${prs.map(ppPairHTML).join('')}</div>`);
+    const loose = arr.order.filter(c => arr.order.some(d => d !== c && d[0] === c[0]));
+    const hidden = arr.stacks.map(st => `<button type="button" class="ppst mine" data-act="ppunstack" data-c="${st[0]}" aria-label="Pair of ${RPL[rv(st[0])]} set aside. Only you can see it. Tap to put it back in your hand.">${cardHTML(st[0])}${cardHTML(st[1])}<i aria-hidden="true">🔒</i></button>`).join('');
+    if (s.ph === 'playing' || prs.length || arr.stacks.length) out.push(`<div class="ppdown" data-drop="pairs"><span>Your pairs</span>${prs.map(ppPairHTML).join('')}${hidden}${!prs.length && !arr.stacks.length ? '<span class="pphint">Drop a card on its match to set the pair here</span>' : ''}${loose.length ? '<button type="button" class="linkbtn" data-act="ppstackall">Set my pairs aside</button>' : ''}</div>`);
+    if (arr.stacks.length) out.push('<p class="small muted pplock">🔒 Pairs you set aside are only on your screen. Tap one to put it back in your hand.</p>');
+    else if (s.ph === 'playing' && store.get('knock_ppdrag') !== '1') out.push('<p class="small muted pplock">Tip: drag your cards to put them in any order.</p>');
     if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead. Throw it after your next pair, or match it if one comes up.</span></div>`);
   } else out.push(`<div class="me-row"><div class="me-info"><div class="me-hand">${esc(x.so ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated')}</div><div class="me-sub">Your tokens <b>${fmtT(x.s)}</b></div></div></div>`);
   let status = '', buttons = '';
@@ -3298,7 +3403,7 @@ function render(){
   renderSeats(s);
   renderChairs(s);
   renderCenter(s);
-  setHTML($('#dockInner'), dockHTML(s));
+  if (!ppDragging) setHTML($('#dockInner'), dockHTML(s));
   renderSheet(s);
   notify(s);
 }
@@ -3320,6 +3425,10 @@ function loop(){
   }
 }
 function bindUI(){
+  document.addEventListener('pointerdown', ppDragDown);
+  document.addEventListener('pointermove', ppDragMove, { passive:false });
+  document.addEventListener('pointerup', ppDragUp);
+  document.addEventListener('pointercancel', ppDragUp);
   document.addEventListener('click', e => {
     if (e.target && e.target.id === 'sheetWrap') { closeMenu(); return; }
     const b = e.target.closest && e.target.closest('[data-act]');
@@ -3361,7 +3470,12 @@ function bindUI(){
       case 'pppair': ppMove('pair'); break;
       case 'ppthrowpend': { const { p } = ppMine(); if (p) ppMove('throw', p); break; }
       case 'ppthrow': if (validCard(b.dataset.c)) ppMove('throw', b.dataset.c); break;
-      case 'ppsel': if (validCard(b.dataset.c)) { ppSel = ppSel === b.dataset.c ? '' : b.dataset.c; sfx('flick'); scheduleRender(); } break;
+      case 'ppsel': {
+        if (!validCard(b.dataset.c) || Date.now() < ppNoClickUntil || b.classList.contains('nopick')) break;
+        ppSel = ppSel === b.dataset.c ? '' : b.dataset.c; sfx('flick'); scheduleRender(); break;
+      }
+      case 'ppunstack': if (Date.now() >= ppNoClickUntil) { ppUnstack(b.dataset.c); sfx('flick'); scheduleRender(); } break;
+      case 'ppstackall': ppStackAll(); store.set('knock_ppdrag', '1'); sfx('ding'); scheduleRender(); break;
       case 'pptake': ppMove('take'); break;
       case 'ppside': if (PP_SIDES.includes(b.dataset.k)) ppToggleSide(b.dataset.k); break;
       case 'ppsideopen': ppSideOpen = !ppSideOpen; scheduleRender(); break;

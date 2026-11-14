@@ -29,6 +29,7 @@ Pick **Start Pitty Pat** on the front page. 2 to 6 players, everyone starts with
 - A match is the same rank. Pairs you're dealt stay hidden, and you can't take a third card for a pair you already hold. Three of a kind takes the fourth for two pairs.
 - **Don't sleep:** if a thrown card matched yours and you didn't get it, your card goes dead. It's turned face up and has to be the next card you throw after you make a pair. If another card of that rank comes up, pulled or thrown, you can still match it with your dead card.
 - You win when every card left in your hand is paired, with no dead cards: **Pitty Pat!** The winner takes the game pot.
+- Arrange your own hand: drag cards into any order, and drop a card on its match to set the pair aside in "Your pairs" with a 🔒. Set-aside pairs are only on your screen; tap one to put it back.
 
 ### Pitty Pat side pots
 
