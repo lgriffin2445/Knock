@@ -256,7 +256,13 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .seat.pp .minis{--cw:20px}
 .seat.pp .minis .card{transform:none}
 .seat.pp .minis .card:not(:first-child){margin-left:-12px}
-.ppx{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin-top:4px;max-width:112px}
+.ppx{--cw:21px;display:flex;flex-wrap:wrap;justify-content:center;gap:5px 7px;margin-top:5px;max-width:150px}
+.ppst{position:relative;display:inline-flex;align-items:flex-start;padding-bottom:calc(var(--cw)*.2)}
+.ppst .card{box-shadow:0 1px 0 rgba(0,0,0,.25),0 2px 5px rgba(0,0,0,.45)}
+.ppst .card + .card{margin-left:calc(var(--cw)*-.3);margin-top:calc(var(--cw)*.14)}
+.ppst.dead{padding-bottom:0}
+.ppst.dead .card{box-shadow:0 0 0 2px rgba(201,53,63,.95),0 2px 6px rgba(0,0,0,.5);filter:saturate(.75)}
+.ppst.dead i{position:absolute;top:calc(var(--cw)*-.35);right:calc(var(--cw)*-.4);font-size:calc(var(--cw)*.55);font-style:normal;line-height:1}
 .ppc{font-size:10.5px;font-weight:800;line-height:1;padding:3px 5px;border-radius:6px;background:rgba(243,234,216,.92);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .ppc i{font-style:normal;font-weight:700;opacity:.55;margin-left:1px}
 .ppc.dead{background:#3a0f12;color:#ffb3b8;border:1px solid rgba(201,53,63,.8)}
@@ -298,7 +304,8 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .sidenote{margin-top:6px}
 .ppdown{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .ppdown > span:first-child{margin-right:2px}
-.ppdown .ppc{font-size:12px;padding:4px 7px}
+.ppdown{--cw:30px}
+.ppdown .ppst{margin-right:4px}
 .sideline{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .sideline .in{color:#9fe3bb;font-weight:700}
 .btn.claim.por{flex:0 0 auto;min-height:40px;padding:6px 14px;font-size:14px}
@@ -2439,6 +2446,8 @@ function resFor(s, i){
   const l = (s.res.l || []).find(r => r && r.i === i); if (l) return { win:false, amt:l.amt };
   return null;
 }
+const ppPairHTML = q => `<span class="ppst" title="Pair of ${RPL[rv(q[0])]}">${cardHTML(q[0])}${cardHTML(q[1])}</span>`;
+const ppDeadHTML = c => `<span class="ppst dead" title="Dead ${rankWord(c)}">${cardHTML(c)}<i aria-hidden="true">💀</i></span>`;
 function ppSeatView(s, i, x, isMine){
   const pp = s.pp || {};
   const turn = s.ph === 'playing' && s.tn === i && pp.step !== 'offer' && x.st === 'in' && !pp.cw;
@@ -2450,8 +2459,8 @@ function ppSeatView(s, i, x, isMine){
   const n = Math.max(0, Math.min(6, +x.hc || 0));
   if (win && typeof x.sh === 'string' && /^([2-9TJQKA][shdc]){1,6}$/.test(x.sh)) cards = x.sh.match(/../g).map(c => cardHTML(c)).join('');
   else if (x.st === 'in' && n && (s.ph === 'playing' || s.ph === 'done')) cards = '<div class="card back"></div>'.repeat(n);
-  const prs = (x.pr || []).filter(p => Array.isArray(p) && validCard(p[0])).map(p => `<span class="ppc" title="Pair of ${RPL[rv(p[0])]}">${rankTxt(p[0])}<i>×2</i></span>`).join('');
-  const dds = (x.dd || []).filter(validCard).map(c => `<span class="ppc dead" title="Dead ${rankWord(c)}">💀${rankTxt(c)}</span>`).join('');
+  const prs = (x.pr || []).filter(p => Array.isArray(p) && validCard(p[0]) && validCard(p[1])).map(ppPairHTML).join('');
+  const dds = (x.dd || []).filter(validCard).map(ppDeadHTML).join('');
   let timer = '';
   if (turn && +s.cfg.tm > 0) timer = `<i class="tbar" style="animation-duration:${+s.cfg.tm}s"></i>`;
   let label = '', pc = 'tagpill';
@@ -2857,7 +2866,7 @@ function ppDockHTML(s, i, x, out){
     const hand = h.map(c => `<button type="button" class="ppcard${ppSel === c ? ' sel' : ''}" data-act="ppsel" data-c="${c}"${throwing && !dead.length ? '' : ' disabled'} aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}">${cardHTML(c)}</button>`).join('') + (p ? `<div class="ppnew">${cardHTML(p)}<span>New</span></div>` : '');
     out.push(`<div class="pphand">${hand || '<span class="small muted">No cards left in your hand.</span>'}</div>`);
     const prs = (x.pr || []).filter(q => Array.isArray(q) && validCard(q[0]) && validCard(q[1]));
-    if (prs.length) out.push(`<div class="ppdown"><span>Your pairs</span>${prs.map(q => `<span class="ppc">${rankTxt(q[0])}<i>×2</i></span>`).join('')}</div>`);
+    if (prs.length) out.push(`<div class="ppdown"><span>Your pairs</span>${prs.map(ppPairHTML).join('')}</div>`);
     if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead. Throw it after your next pair, or match it if one comes up.</span></div>`);
   } else out.push(`<div class="me-row"><div class="me-info"><div class="me-hand">${esc(x.so ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated')}</div><div class="me-sub">Your tokens <b>${fmtT(x.s)}</b></div></div></div>`);
   let status = '', buttons = '';
