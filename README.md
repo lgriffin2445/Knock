@@ -17,6 +17,17 @@ A two-card game for up to 10 friends, played with play tokens. Open the site, ta
 
 **Extras:** cards slide out from the dealer, a big KNOCK! shakes the table, tokens slide from the pot to the winner, and tiebreak cards are dealt and flipped at the tied seats. A recap after each deck shows the biggest pot, most knocks and who's up. Pick an emoji look, tap someone's seat to throw a 🍅 at them, mute sounds in the menu, and the host can switch the room between green felt, red casino, midnight blue and a backyard wood table. Watchers get chairs in the corners. The menu has tonight's leaderboard.
 
+## Pitty Pat
+
+Pick **Start Pitty Pat** on the front page. 2 to 6 players, everyone starts with 20.00 and antes 0.50 into the game pot each hand.
+
+- Fresh deck every hand. The dealer deals 5 cards each, starting on their left; the rest is the pile. The deal passes left every hand, and the player left of the dealer goes first.
+- On your turn, pull a card. If it matches a card in your hand, tap **Pair it**: the pair goes down face up and you throw out any card. If it doesn't, you throw out the card you pulled.
+- Every thrown card is up for grabs for 8 seconds (the host can change this). Tap **Take it** if it matches. If two people tap, the one closest to the thrower's left gets it, and play continues to their left.
+- A match is the same rank. Pairs you're dealt stay hidden, and you can't take a third card for a pair you already hold. Three of a kind takes the fourth for two pairs.
+- **Don't sleep:** if a thrown card matched yours and you didn't get it, your card goes dead. It's turned face up and has to be the next card you throw after you make a pair. You can't match your own dead card.
+- You win when every card left in your hand is paired, with no dead cards: **Pitty Pat!** The winner takes the game pot.
+
 **Put it on your home screen:** Knock works like an app. On iPhone, open the link in Safari, tap Share (it may be under •••), then Add to Home Screen. On Android, open it in Chrome and tap Install (or ⋮ then Add to Home screen).
 
 **Lobby:** the front page lists tables that are playing now, with how many are playing and watching. In the menu the host picks who can join:

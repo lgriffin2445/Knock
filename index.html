@@ -137,6 +137,7 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .flycard{position:absolute;--cw:24px}
 .flycoin{position:absolute;width:16px;height:16px}
 .throwfx{position:absolute;font-size:30px;line-height:1}
+.flycard{position:absolute;line-height:0;z-index:8}
 .rain{position:absolute;font-size:24px;line-height:1;z-index:8;will-change:transform}
 .knockfx.potfx{font-size:34px;color:#ffe08a;text-shadow:0 3px 0 #000,0 0 24px rgba(255,214,102,.95);animation:potpop 2.2s ease-out both}
 .knockfx.potfx.lvl2{font-size:38px;color:#ffd24a}
@@ -251,6 +252,39 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .dock-inner{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 .me-row{display:flex;align-items:center;gap:14px}
 .mycards{--cw:48px;display:flex;gap:6px;flex:none}
+/* Pitty Pat */
+.seat.pp .minis{--cw:20px}
+.seat.pp .minis .card{transform:none}
+.seat.pp .minis .card:not(:first-child){margin-left:-12px}
+.ppx{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin-top:4px;max-width:112px}
+.ppc{font-size:10.5px;font-weight:800;line-height:1;padding:3px 5px;border-radius:6px;background:rgba(243,234,216,.92);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.ppc i{font-style:normal;font-weight:700;opacity:.55;margin-left:1px}
+.ppc.dead{background:#3a0f12;color:#ffb3b8;border:1px solid rgba(201,53,63,.8)}
+.ppmid{display:flex;align-items:center;gap:12px;--cw:42px}
+.ppmid[hidden]{display:none}
+.pppile{position:relative}
+.pppile .card.back:nth-child(2){position:absolute;left:3px;top:-3px;z-index:-1}
+.pppile b{position:absolute;right:-8px;bottom:-8px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--ink);border:1px solid var(--brass);color:var(--brass);font-size:11px;display:flex;align-items:center;justify-content:center}
+.pptop{position:relative;width:var(--cw);height:calc(var(--cw)*1.4)}
+.pptop .card.slot{opacity:.5}
+.pptop .ring{position:absolute;inset:-6px;border-radius:12px;border:3px solid var(--brass);clip-path:inset(0 0 0 0);animation:ppring linear forwards;pointer-events:none}
+@keyframes ppring{from{clip-path:inset(0 0 0 0);opacity:1}to{clip-path:inset(100% 0 0 0);opacity:.4}}
+.pphand{display:flex;gap:5px;flex-wrap:wrap;--cw:44px}
+.ppcard{padding:0;border:0;background:none;border-radius:8px;cursor:pointer;transition:transform .15s ease}
+.ppcard:disabled{cursor:default}
+.ppcard.sel{transform:translateY(-10px)}
+.ppcard.sel .card{box-shadow:0 0 0 3px var(--brass),0 6px 14px rgba(0,0,0,.5)}
+.ppnew{display:flex;flex-direction:column;align-items:center;gap:2px;margin-left:6px}
+.ppnew .card{box-shadow:0 0 0 3px #7fd6a4,0 6px 14px rgba(0,0,0,.5)}
+.ppnew span{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7fd6a4}
+.ppdead{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12.5px;color:#ffb3b8;--cw:30px}
+.ppdead .card{box-shadow:0 0 0 2px rgba(201,53,63,.9)}
+.ppinfo{font-size:12.5px;color:var(--muted);margin-top:6px}
+.ppinfo b{color:var(--ivory)}
+.btn.take{position:relative;overflow:hidden;background:linear-gradient(180deg,#8fe0b0,#3fae72);color:#06221a;font-size:19px}
+.ppbar{position:absolute;left:0;bottom:0;height:5px;width:100%;background:rgba(6,34,26,.55);transform-origin:left;animation:tick linear forwards}
+.startrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.rgame{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);margin-right:4px}
 .me-info{display:flex;flex-direction:column;gap:3px;min-width:0}
 .me-hand{font-weight:800;font-size:16px;line-height:1.25}
 .me-sub{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.35}
@@ -281,7 +315,7 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .rinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .rinfo b{font-size:14.5px;overflow-wrap:anywhere}
 .rinfo span{font-size:12px;color:var(--muted);line-height:1.35}
-.rbadge{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ivory);margin-right:3px}
+.rbadge{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ivory);margin-right:7px}
 .rbadge.open{color:#7fd6a4}
 .btn.sm{min-height:40px;padding:6px 14px;font-size:14px;flex:none}
 .plist .chipbtn.warn{border-color:rgba(201,53,63,.6);color:#f1b6ba}
@@ -365,7 +399,7 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 <div id="app">
   <div id="scene" aria-hidden="true"><canvas id="sceneCv"></canvas><div id="sceneFx"></div></div>
   <header class="top">
-    <div class="brand"><b>Knock</b><small id="sub">Two cards · pairs win</small></div>
+    <div class="brand"><b id="brandName">Knock</b><small id="sub">Two cards · pairs win</small></div>
     <div class="hright">
       <button class="pill vis" type="button" id="visBtn" data-act="visitors" aria-label="Site visitors" hidden><span aria-hidden="true">👀</span><span id="visTxt">Visitors</span></button>
       <span class="pill" id="netpill"><span class="dot"></span><span id="netTxt">Not at a table</span></span>
@@ -378,6 +412,7 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
     <div id="center">
       <div class="phase" id="phase">Knock</div>
       <div class="pot" id="pot" hidden></div>
+      <div class="ppmid" id="ppmid" hidden></div>
       <div class="deckinfo" id="deckinfo"></div>
       <div class="deckinfo" id="audinfo"></div>
       <div class="below" id="below"></div>
@@ -649,6 +684,246 @@ function botDecide(i){
   return { k:p > 0.5 ? 'knock' : 'fold' };
 }
 </script>
+<script id="engine-pp">
+/* ===================== Pitty Pat =====================
+   2 to 6 players, 5 cards each from a fresh deck every hand, everyone antes into the game pot.
+   On your turn you pull a card. If it matches a card in your hand you lay the pair down and throw out
+   any card; if it doesn't, you throw out the card you pulled. Every thrown card is offered around the
+   table for a few seconds: anyone who can match it may tap Take it, and the closest to the thrower's
+   left gets it. Anyone else who could have matched it (beaten to it, or asleep) has that card go dead:
+   it's turned face up and must be the next card they throw. You win when every card left in your hand
+   is in pairs. Pairs you're dealt stay hidden in your hand. */
+const PP_SEATS = 6, PP_START = 2000, PP_OFFER = 8;
+let ppPend = null, ppDisc = [], ppClaims = new Set(), ppOfferAt = 0;
+const ppIn = x => !!x && x.st === 'in';
+function ppCount(h, r){ let n = 0; for (const c of h || []) if (c[0] === r) n++; return n; }
+/* you can take a card if it makes a pair with a card you hold: one of that rank, or three (the fourth gives two pairs) */
+function ppCanMatch(i, c){
+  const x = S.seats[i]; if (!ppIn(x) || !validCard(c)) return false;
+  const n = ppCount(holes[x.c], c[0]); return n === 1 || n === 3;
+}
+function ppAllPairs(h){ const m = {}; for (const c of h) m[c[0]] = (m[c[0]] || 0) + 1; return Object.values(m).every(n => n % 2 === 0); }
+function ppEv(e){ const pp = S.pp; pp.eid = (pp.eid || 0) + 1; e.id = pp.eid; e.h = S.hand; pp.ev = (pp.ev || []).concat(e).slice(-10); }
+function ppNext(from){
+  const n = S.seats.length;
+  for (let k = 1; k <= n; k++) { const j = (from + k + n) % n; if (ppIn(S.seats[j])) return j; }
+  return -1;
+}
+function ppShuffle(a){ for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function ppStartHand(){
+  removeGone();
+  const ante = S.cfg.ante;
+  S.seats.forEach(x => {
+    if (!x) return;
+    if (x.so && x.back) { x.so = 0; x.back = 0; }
+    x.pr = []; x.dd = []; x.hc = 0; x.sh = null; x.t = 0; x.a = ''; x.nw = 0;
+    x.st = x.so ? 'wait' : x.s < ante ? 'out' : (x.away ? 'wait' : 'in');
+  });
+  const elig = S.seats.map((x, i) => (x && x.st === 'in' ? i : -1)).filter(i => i >= 0);
+  if (elig.length < 2 || S.pause) {
+    S.seats.forEach(x => { if (x && x.st === 'in') x.st = 'wait'; });
+    S.ph = 'waiting'; S.tn = -1; S.res = null; if (elig.length < 2) S.live = 0;
+    return false;
+  }
+  S.live = 1; S.hand++; S.q++; S.res = null; S.note = '';
+  S.bt = S.bt < 0 || !S.round ? elig[randInt(elig.length)] : nextIn(elig, S.bt);
+  S.round = 1;
+  deck = newDeck(); deckId++; ppDisc = []; ppPend = null; ppClaims = new Set(); holes = {};
+  elig.forEach(i => { const x = S.seats[i]; x.s -= ante; x.t = ante; S.pot += ante; stat(x.c); });
+  const order = []; let j = S.bt;
+  for (let k = 0; k < elig.length; k++) { j = nextIn(elig, j); order.push(j); }
+  order.forEach(i => { holes[S.seats[i].c] = []; });
+  for (let r = 0; r < 5; r++) order.forEach(i => holes[S.seats[i].c].push(deck.pop()));
+  order.forEach(i => { S.seats[i].hc = 5; });
+  const old = S.pp || {};
+  S.pp = { step:'pull', pile:deck.length, top:null, from:-1, oid:old.oid || 0, eid:old.eid || 0, ev:[], ow:+S.cfg.ow || PP_OFFER, disc:0 };
+  S.ph = 'playing'; S.tn = order[0]; S.first = order[0];
+  ppEv({ k:'deal', d:S.bt, order });
+  return true;
+}
+/* a move by seat i: {k:'pull'} {k:'pair'} {k:'throw', c} on your turn, or {k:'take', o:offerId} on a thrown card.
+   Returns '' when it worked, or a short reason when it didn't. */
+function ppAct(i, a){
+  if (!S || S.game !== 'pitty' || S.ph !== 'playing' || !a) return 'not playing';
+  const x = S.seats[i]; if (!ppIn(x)) return 'not in';
+  const pp = S.pp, h = holes[x.c];
+  if (a.k === 'take') {
+    if (pp.step !== 'offer' || a.o !== pp.oid || i === pp.from) return 'no offer';
+    if (!ppCanMatch(i, pp.top)) return 'no match';
+    ppClaims.add(i); ppSettle(false);
+    return '';
+  }
+  if (i !== S.tn) return 'not your turn';
+  if (a.q != null && a.q !== S.q) return 'stale';
+  if (a.k === 'pull') {
+    if (pp.step !== 'pull') return 'bad step';
+    if (!deck.length) ppRefill();
+    if (!deck.length) { ppNoWinner('pile'); return ''; }
+    ppPend = deck.pop(); pp.pile = deck.length; pp.step = 'drawn'; S.q++;
+    ppEv({ k:'pull', i });
+    return '';
+  }
+  if (a.k === 'pair') {
+    if (pp.step !== 'drawn' || !ppPend) return 'bad step';
+    const n = ppCount(h, ppPend[0]); if (n !== 1 && n !== 3) return 'no match';
+    const c = ppPend; ppPend = null;
+    ppLay(i, c);
+    return '';
+  }
+  if (a.k === 'throw') {
+    if (pp.step === 'drawn') {
+      if (!ppPend || (a.c && a.c !== ppPend)) return 'throw the card you pulled';
+      const c = ppPend; ppPend = null;
+      const n = ppCount(h, c[0]);
+      if (n === 1 || n === 3) ppKill(i, c[0], 'slept');
+      ppOffer(i, c);
+      return '';
+    }
+    if (pp.step === 'throw') {
+      let c;
+      if (x.dd.length) { c = x.dd[0]; if (a.c && a.c !== c) return 'dead card first'; x.dd.shift(); }
+      else { const k = h.indexOf(a.c); if (k < 0) return 'not in your hand'; c = h.splice(k, 1)[0]; x.hc = h.length; }
+      ppOffer(i, c);
+      return '';
+    }
+    return 'bad step';
+  }
+  return 'bad move';
+}
+function ppLay(i, c){
+  const x = S.seats[i], h = holes[x.c];
+  const k = h.findIndex(y => y[0] === c[0]);
+  const m = h.splice(k, 1)[0];
+  x.pr.push([m, c]); x.hc = h.length; S.q++;
+  S.pp.top = null;
+  ppEv({ k:'pair', i, c:[m, c] });
+  if (!x.dd.length && ppAllPairs(h)) { ppWin(i); return; }
+  S.tn = i; S.pp.step = 'throw'; S.pp.from = -1;
+}
+function ppKill(j, r, why){
+  const x = S.seats[j], h = holes[x.c];
+  const k = h.findIndex(y => y[0] === r); if (k < 0) return;
+  const d = h.splice(k, 1)[0]; x.dd.push(d); x.hc = h.length;
+  ppEv({ k:'dead', i:j, c:d, why, stuck:ppStuck(x) ? 1 : 0 });
+}
+function ppOffer(i, c){
+  const pp = S.pp;
+  pp.step = 'offer'; pp.top = c; pp.from = i; pp.oid = (pp.oid || 0) + 1; S.tn = i; S.q++;
+  ppClaims = new Set(); ppOfferAt = Date.now();
+  ppEv({ k:'throw', i, c });
+}
+/* Decide who gets a thrown card. Before the time is up we only settle once nobody closer to the
+   thrower's left could still claim it. Everyone else who could have matched it has that card go dead. */
+function ppSettle(timeUp){
+  const pp = S.pp; if (!S || S.ph !== 'playing' || pp.step !== 'offer') return;
+  const c = pp.top, n = S.seats.length; let winner = -1;
+  for (let k = 1; k < n; k++) {
+    const j = (pp.from + k) % n;
+    if (!ppIn(S.seats[j])) continue;
+    if (ppClaims.has(j)) { winner = j; break; }
+    if (!timeUp && ppCanMatch(j, c)) return;
+  }
+  if (winner < 0 && !timeUp) return;
+  let past = false;
+  for (let k = 1; k < n; k++) {
+    const j = (pp.from + k) % n;
+    if (j === winner) { past = true; continue; }
+    if (!ppIn(S.seats[j]) || !ppCanMatch(j, c)) continue;
+    ppKill(j, c[0], past ? 'beat' : 'slept');
+  }
+  ppClaims = new Set();
+  if (winner >= 0) { ppEv({ k:'take', i:winner, f:pp.from, c }); ppLay(winner, c); }
+  else {
+    ppDisc.push(c); pp.disc = ppDisc.length;
+    ppEv({ k:'pass', f:pp.from, c });
+    pp.top = null; S.tn = ppNext(pp.from); pp.step = 'pull'; pp.from = -1; S.q++;
+  }
+  ppCheckStuck();
+}
+function ppRefill(){
+  if (!ppDisc.length || (S.pp.refills || 0) >= 4) return;
+  deck = ppShuffle(ppDisc); ppDisc = []; S.pp.pile = deck.length; S.pp.disc = 0; S.pp.refills = (S.pp.refills || 0) + 1;
+  ppEv({ k:'reshuffle' });
+}
+/* Holding a dead card with every other card already paired up means you can never make another pair,
+   so you can never throw the dead card and can't win. If that's true of everyone still in, the hand ends. */
+function ppStuck(x){ const h = holes[x.c] || []; return x.dd.length > 0 && h.every(c => ppCount(h, c[0]) % 2 === 0); }
+function ppCheckStuck(){
+  if (S.ph !== 'playing') return;
+  const live = S.seats.filter(ppIn);
+  if (live.length && live.every(ppStuck)) ppNoWinner('stuck');
+}
+function ppWin(i){
+  const x = S.seats[i], amt = S.pot;
+  x.s += amt; S.pot = 0;
+  x.sh = (holes[x.c] || []).join('');
+  S.ph = 'done'; S.tn = -1; S.pp.step = 'done'; S.pp.top = null; S.q++;
+  S.res = { k:'pitty', w:[{ i, amt }], l:[] };
+  const st = stat(x.c); st.w++; if (amt > st.best) st.best = amt;
+  streak(i);
+  ppEv({ k:'win', i, amt });
+  nextHandAt = Date.now() + 7000;
+}
+function ppNoWinner(why){
+  S.ph = 'done'; S.tn = -1; S.pp.step = 'done'; S.pp.top = null; S.q++;
+  S.res = { k:'nowin', pot:S.pot, w:[], l:[], why:why || 'pile' };
+  ppEv({ k:'nowin', why:why || 'pile' });
+  nextHandAt = Date.now() + 5000;
+}
+/* players who leave in the middle of a hand are out of it; their cards go to the thrown pile */
+function ppLeavers(){
+  if (!S || S.ph !== 'playing') return;
+  S.seats.forEach((x, i) => {
+    if (!x || !x.g || x.st !== 'in') return;
+    const h = holes[x.c] || [];
+    ppDisc.push(...h, ...(x.dd || [])); holes[x.c] = []; x.dd = []; x.hc = 0; x.st = 'left'; x.a = 'Left';
+    ppClaims.delete(i);
+    if (S.tn === i && S.pp.step !== 'offer') {
+      if (ppPend) { ppDisc.push(ppPend); ppPend = null; }
+      S.tn = ppNext(i); S.pp.step = 'pull'; S.pp.from = -1; S.q++;
+    }
+    S.pp.disc = ppDisc.length;
+    ppEv({ k:'left', i });
+  });
+  const live = S.seats.map((x, i) => (ppIn(x) ? i : -1)).filter(i => i >= 0);
+  if (live.length === 1) ppWin(live[0]);
+  else if (!live.length) ppNoWinner();
+}
+/* the move made for you when your time runs out (or you're away): pull, throw the pulled card, or throw a loose card */
+function ppAuto(i){
+  const x = S.seats[i], pp = S.pp;
+  if (pp.step === 'pull') return ppAct(i, { k:'pull' });
+  if (pp.step === 'drawn') return ppAct(i, { k:'throw', c:ppPend });
+  if (pp.step === 'throw') return ppAct(i, { k:'throw', c:x.dd.length ? x.dd[0] : ppLoose(holes[x.c]) });
+  return '';
+}
+/* a card that isn't part of a pair in your hand (or any card if they're all paired) */
+function ppLoose(h){
+  const singles = h.filter(c => ppCount(h, c[0]) % 2 === 1);
+  const list = singles.length ? singles : h;
+  return list[randInt(list.length)];
+}
+function ppBotMove(i){
+  const pp = S.pp, x = S.seats[i];
+  if (pp.step === 'pull') return ppAct(i, { k:'pull' });
+  if (pp.step === 'drawn') { const n = ppCount(holes[x.c], ppPend[0]); return ppAct(i, n === 1 || n === 3 ? { k:'pair' } : { k:'throw', c:ppPend }); }
+  if (pp.step === 'throw') return ppAct(i, { k:'throw', c:x.dd.length ? x.dd[0] : ppLoose(holes[x.c]) });
+  return '';
+}
+function ppVoidHand(){
+  const mid = S.ph === 'playing';
+  S.seats.forEach(x => {
+    if (!x) return;
+    if (mid) { x.s += x.t; S.pot -= x.t; }
+    x.t = 0; x.pr = []; x.dd = []; x.hc = 0; x.sh = null; x.a = ''; x.st = x.s >= S.cfg.ante ? 'wait' : 'out';
+  });
+  if (S.pot < 0) S.pot = 0;
+  ppPend = null; ppDisc = []; ppClaims = new Set(); holes = {};
+  S.ph = 'waiting'; S.tn = -1; S.res = null; S.q++;
+  if (S.pp) { S.pp.step = 'pull'; S.pp.top = null; S.pp.from = -1; }
+  S.note = mid ? 'The last hand was called off when the host reconnected. Antes were returned.' : '';
+}
+</script>
 
 <script>
 (function(){
@@ -679,7 +954,7 @@ let code = (location.hash || '').replace('#', '').toUpperCase().replace(/[^A-Z0-
 
 let role = 'none', peer = null, conn = null, netState = 'idle', retryTimer = null, tryingSince = 0;
 const pres = new Map();
-let view = { s:null, hole:null }, lastHostMsg = 0, lastPing = 0;
+let view = { s:null, hole:null, pend:null }, lastHostMsg = 0, lastPing = 0;
 let awaySince = new Map(), lastPub = '', lastTurnKey = '', turnClock = 0, botTimer = null, botKey = '', waitStartAt = 0;
 let pendingKey = '', sheetMode = '', notifiedTurn = '', notifiedRes = '', holeAnimAt = { hand:-1, at:0 }, wakeLock = null;
 
@@ -707,13 +982,50 @@ function loadSaved(){
   return null;
 }
 function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, deck, at:Date.now() })); }
-function startTable(){
+/* ---------- Pitty Pat: host side ---------- */
+const isPP = s => !!s && s.game === 'pitty';
+const seatCap = s => (isPP(s) ? PP_SEATS : MAX_SEATS);
+const isFull = s => !!s && s.seats.filter(Boolean).length >= seatCap(s);
+const gameName = s => (isPP(s) ? 'Pitty Pat' : 'Knock');
+function beginHand(){ return isPP(S) ? ppStartHand() : startHand(); }
+let ppBotKey = '', ppBotTimer = null;
+const ppBotClaim = new Map();
+function ppHostTick(now){
+  if (S.ph !== 'playing') return;
+  const pp = S.pp;
+  if (pp.step === 'offer') {
+    S.seats.forEach((x, j) => {
+      if (!x || !x.bot || j === pp.from || !ppCanMatch(j, pp.top)) return;
+      const key = pp.oid + ':' + j;
+      if (!ppBotClaim.has(key)) ppBotClaim.set(key, now + 1100 + randInt(2800) + (randInt(100) < 12 ? 600000 : 0));
+      else if (now >= ppBotClaim.get(key) && S.pp.step === 'offer') { ppBotClaim.delete(key); ppAct(j, { k:'take', o:pp.oid }); }
+    });
+    if (ppBotClaim.size > 60) ppBotClaim.clear();
+    if (S.pp.step === 'offer') ppSettle(now - ppOfferAt >= (+S.pp.ow || PP_OFFER) * 1000);
+    return;
+  }
+  const i = S.tn, x = S.seats[i]; if (!x) return;
+  const key = S.hand + ':' + S.q;
+  if (key !== lastTurnKey) { lastTurnKey = key; turnClock = now; }
+  if (x.bot) {
+    if (ppBotKey !== key) {
+      ppBotKey = key; clearTimeout(ppBotTimer);
+      ppBotTimer = setTimeout(() => { if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i) { ppBotMove(i); hostTick(); } }, 700 + randInt(1100));
+    }
+    return;
+  }
+  const away = awaySince.has(x.c) ? now - awaySince.get(x.c) : 0;
+  if ((S.cfg.tm > 0 && now - turnClock > S.cfg.tm * 1000) || away > 15000) ppAuto(i);
+}
+function startTable(game){
   if (!myName) return;
   if (!hasPeerLib()) { toast('This page did not load fully. Reload and try again.'); return; }
   code = rid(6, CODE_CH);
   history.replaceState(null, '', location.pathname + location.search + '#' + code);
   role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true; rememberSit(true);
   S.cfg.room = 'private'; S.cfg.name = cleanRoom(`${myName}'s table`);
+  if (game === 'pitty') { S.game = 'pitty'; S.cfg.st = PP_START; S.cfg.ow = PP_OFFER; S.pp = { step:'pull', pile:0, top:null, from:-1, oid:0, eid:0, ev:[], ow:PP_OFFER }; }
+  else S.game = 'knock';
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
 }
 function resumeHost(saved){
@@ -721,7 +1033,8 @@ function resumeHost(saved){
   deck = Array.isArray(saved.deck) && saved.deck.every(validCard) ? saved.deck : []; deckId++;
   if (S.due === undefined) S.due = 1;
   delete S.cfg.cap;
-  voidHand(); S.hid = myCid;
+  if (isPP(S)) ppVoidHand(); else voidHand();
+  S.hid = myCid;
   me.sit = S.seats.some(x => x && x.c === myCid);
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
 }
@@ -782,6 +1095,15 @@ function onClientMsg(c, d){
     case 'av': p.av = AV_LIST.includes(d.av) ? d.av : ''; hostTick(); break;
     case 'throw': hostThrow(p.cid, d.to, d.e); break;
     case 'act': if (d.k === 'knock' || d.k === 'fold') { p.act = { h:+d.h, q:+d.q, k:d.k }; hostTick(); } break;
+    case 'pp': {
+      const i = S.seats.findIndex(y => y && y.c === p.cid);
+      if (i >= 0 && isPP(S) && ['pull', 'pair', 'throw', 'take'].includes(d.k)) {
+        const r = ppAct(i, { k:d.k, c:validCard(d.c) ? d.c : null, q:d.k === 'take' ? undefined : +d.q, o:+d.o });
+        if (r) { try { c.send({ t:'ppno', r, k:d.k }); } catch (e) {} }
+        hostTick();
+      }
+      break;
+    }
     case 'name': { const nm = cleanName(d.name); if (nm) { p.n = nm; hostTick(); } break; }
     case 'sit': { p.sit = !!d.sit; const nm = cleanName(d.name); if (nm) p.n = nm; hostTick(); break; }
     case 'ready': { const x = S.seats.find(y => y && y.c === p.cid); if (x) { x.rdy = d.v ? 1 : 0; hostTick(); } break; }
@@ -839,8 +1161,13 @@ function sendChat(text){
 }
 function sendState(p){
   if (!p || !p.conn || !p.conn.open || !S) return;
-  const hole = (S.ph === 'deciding' || S.ph === 'done') && holes[p.cid] ? holes[p.cid] : null;
-  try { p.conn.send({ t:'state', s:S, hole }); } catch (e) {}
+  let hole = null, pend = null;
+  if (isPP(S)) {
+    if ((S.ph === 'playing' || S.ph === 'done') && holes[p.cid]) hole = holes[p.cid];
+    const t = S.seats[S.tn];
+    if (S.ph === 'playing' && S.pp && S.pp.step === 'drawn' && t && t.c === p.cid) pend = ppPend;
+  } else hole = (S.ph === 'deciding' || S.ph === 'done') && holes[p.cid] ? holes[p.cid] : null;
+  try { p.conn.send({ t:'state', s:S, hole, pend }); } catch (e) {}
 }
 function publish(){
   if (role !== 'host' || !S) return;
@@ -859,13 +1186,14 @@ function hostTick(){
     if (here) { awaySince.delete(x.c); x.away = 0; if (p.sit) { x.g = 0; const nm = cleanName(p.n); if (nm) x.n = nm; x.av = AV_LIST.includes(p.av) ? p.av : ''; } else x.g = 1; }
     else { if (!awaySince.has(x.c)) awaySince.set(x.c, now); x.away = now - awaySince.get(x.c) > 8000 ? 1 : 0; if (now - awaySince.get(x.c) > 90000) x.g = 1; }
   });
-  if (S.ph !== 'deciding') removeGone(); else foldLeavers();
+  if (isPP(S)) { if (S.ph !== 'playing') removeGone(); else ppLeavers(); }
+  else if (S.ph !== 'deciding') removeGone(); else foldLeavers();
   const want = [];
   if (me.sit && myName) want.push([myCid, myName]);
   for (const p of pres.values()) if (p.sit && p.n && p.conn && p.conn.open) want.push([p.cid, p.n]);
   for (const [cid, n] of want) {
     if (S.seats.some(x => x && x.c === cid)) continue;
-    const free = S.seats.findIndex(x => !x); if (free < 0) break;
+    const free = S.seats.findIndex((x, k) => !x && k < seatCap(S)); if (free < 0) break;
     S.seats[free] = newSeat(cid, n, false);
   }
   if (S.ph === 'deciding' && S.tn >= 0) {
@@ -887,6 +1215,7 @@ function hostTick(){
       }
     }
   }
+  if (isPP(S)) ppHostTick(now);
   const aud = [];
   if (myName && !S.seats.some(x => x && x.c === myCid)) aud.push({ c:myCid, n:myName, av:myAv });
   for (const p of pres.values()) if (p.conn && p.conn.open && p.n && !S.seats.some(x => x && x.c === p.cid)) aud.push({ c:p.cid, n:p.n, av:AV_LIST.includes(p.av) ? p.av : '' });
@@ -899,7 +1228,7 @@ function hostTick(){
     if (need.length && need.every(x => x.kp) && nextHandAt > soon) nextHandAt = soon;
     S.cd = Math.max(0, Math.ceil((nextHandAt - now) / 1000));
   }
-  if ((S.ph === 'done' || S.ph === 'recap') && now >= nextHandAt) startHand();
+  if ((S.ph === 'done' || S.ph === 'recap') && now >= nextHandAt) beginHand();
   else if (S.ph === 'waiting') {
     const players = S.seats.filter(x => x && !x.g && !x.away && !x.so && x.s >= S.cfg.ante);
     if (players.length < 2 && S.live) { S.live = 0; S.seats.forEach(x => { if (x && !x.bot) x.rdy = 0; }); }
@@ -907,14 +1236,14 @@ function hostTick(){
     if (go) {
       if (!waitStartAt) waitStartAt = now + (S.live ? 2500 : 3000);
       S.cd = S.live ? 0 : Math.max(1, Math.ceil((waitStartAt - now) / 1000));
-      if (now >= waitStartAt) { waitStartAt = 0; S.cd = 0; S.go = 0; startHand(); }
+      if (now >= waitStartAt) { waitStartAt = 0; S.cd = 0; S.go = 0; beginHand(); }
     } else { waitStartAt = 0; S.cd = 0; if (players.length < 2) S.go = 0; }
   }
   publish();
 }
 function addBot(){
   if (role !== 'host' || !S) return;
-  const free = S.seats.findIndex(x => !x); if (free < 0) { toast('All 10 seats are taken'); return; }
+  const free = S.seats.findIndex((x, k) => !x && k < seatCap(S)); if (free < 0) { toast(`All ${seatCap(S)} seats are taken`); return; }
   const used = new Set(S.seats.filter(Boolean).map(x => x.n));
   S.seats[free] = newSeat('bot' + rid(6), BOT_NAMES.find(n => !used.has(n)) || 'Bot', true);
   hostTick();
@@ -935,6 +1264,7 @@ function setCfg(field, val){
   else if (field === 'timer' && v >= 0) S.cfg.tm = v;
   else if (field === 'pause') S.pause = v ? 1 : 0;
   else if (field === 'theme' && THEMES[val]) S.cfg.theme = val;
+  else if (field === 'ow' && [5, 8, 12].includes(v)) S.cfg.ow = v;
   else if (field === 'room' && ['open', 'private', 'hidden'].includes(val)) {
     S.cfg.room = val; startLobbyListing();
     if (val === 'open') [...asks.keys()].forEach(cid => answerAsk(cid, true));
@@ -976,7 +1306,7 @@ function claimSlot(n){
   });
 }
 function roomInfo(){
-  return { t:'info', v:1, name:tableName(), room:roomType(), code:roomType() === 'open' ? S.code : null,
+  return { t:'info', v:1, game:isPP(S) ? 'pitty' : 'knock', name:tableName(), room:roomType(), code:roomType() === 'open' ? S.code : null,
     players:S.seats.filter(Boolean).length, aud:Array.isArray(S.aud) ? S.aud.length : 0, ante:S.cfg.ante, host:myName || '' };
 }
 function onLobbyMsg(c, d){
@@ -1160,7 +1490,8 @@ function lobbyHTML(){
       : asking ? '<button type="button" class="btn ghost sm" data-act="lobbycancel">Cancel</button>'
       : `<button type="button" class="btn ghost sm" data-act="lobbyjoin" data-slot="${slot}">Ask to join</button>`;
     const badge = r.room === 'open' ? '<span class="rbadge open">Open</span>' : '<span class="rbadge">🔒 Private</span>';
-    const meta = asking ? `Waiting for ${esc(cleanName(r.host) || 'the host')} to let you in…` : `${Math.min(10, +r.players || 0)}/10 playing${+r.aud ? ` · ${+r.aud} watching` : ''} · ante ${fmtT(r.ante)}`;
+    const cap = r.game === 'pitty' ? 6 : 10;
+    const meta = asking ? `Waiting for ${esc(cleanName(r.host) || 'the host')} to let you in…` : `<span class="rgame">${r.game === 'pitty' ? 'Pitty Pat' : 'Knock'}</span>${Math.min(cap, +r.players || 0)}/${cap} playing${+r.aud ? ` · ${+r.aud} watching` : ''} · ante ${fmtT(r.ante)}`;
     return `<li class="room"><div class="rinfo"><b>${esc(cleanRoom(r.name) || 'A table')}</b><span>${badge}${meta}</span></div>${btn}</li>`;
   }).join('');
   const head = '<div class="divider">Tables playing now</div>';
@@ -1226,13 +1557,49 @@ function onHostMsg(d){
   lastHostMsg = Date.now();
   if (d.t === 'state' && validState(d.s)) {
     view.s = d.s;
-    view.hole = Array.isArray(d.hole) && d.hole.length === 2 && d.hole.every(validCard) ? d.hole.slice() : null;
+    if (d.s.game === 'pitty') {
+      view.hole = Array.isArray(d.hole) && d.hole.length <= 8 && d.hole.every(validCard) ? d.hole.slice() : null;
+      view.pend = validCard(d.pend) ? d.pend : null;
+    } else { view.hole = Array.isArray(d.hole) && d.hole.length === 2 && d.hole.every(validCard) ? d.hole.slice() : null; view.pend = null; }
     if (mySeatIdx(view.s) >= 0) me.sit = true;
     scheduleRender();
   } else if (d.t === 'chat' && d.m) addChat(d.m);
   else if (d.t === 'fx') handleFx(d);
+  else if (d.t === 'ppno') { ppPending = ''; ppNope(String(d.r || '')); scheduleRender(); }
   else if (d.t === 'kicked') { kicked = true; clearTimeout(retryTimer); dropConn(); netState = 'kicked'; view.s = null; scheduleRender(); }
   else if (d.t === 'chatlog' && Array.isArray(d.list)) d.list.slice(-20).forEach(m => addChat(m, true));
+}
+
+/* ---------- Pitty Pat: your moves ---------- */
+let ppSel = '', ppPending = '', ppClaimed = 0;
+const ppOfferSeen = { oid:-1, at:0, dur:8000 };
+const rankTxt = c => (c[0] === 'T' ? '10' : c[0]);
+const rankWord = c => RNAME[rv(c)];
+const aRank = c => (c[0] === 'A' || c[0] === '8' ? 'an ' : 'a ') + rankWord(c);
+function ppMine(){
+  const s = cur(); if (!isPP(s) || (s.ph !== 'playing' && s.ph !== 'done')) return { h:[], p:null };
+  if (role === 'host') { const t = S.seats[S.tn]; return { h:(holes[myCid] || []).slice(), p:S.ph === 'playing' && S.pp.step === 'drawn' && t && t.c === myCid ? ppPend : null }; }
+  return { h:(view.hole || []).slice(), p:view.pend };
+}
+const ppCanMine = (h, c) => { const n = ppCount(h, c[0]); return n === 1 || n === 3; };
+function ppNope(r){
+  const m = { 'no match':'That doesn\'t match a card in your hand.', 'dead card first':'Your dead card has to go first.', 'throw the card you pulled':'If it doesn\'t match, you throw the card you pulled.', 'no offer':'Too late, that card is gone.', 'not in your hand':'Pick a card from your hand.' }[r];
+  if (m) toast(m);
+}
+function ppMove(k, c){
+  const s = cur(); if (!isPP(s) || s.ph !== 'playing' || !s.pp) return;
+  const i = mySeatIdx(s); if (i < 0) return;
+  const { h, p } = ppMine();
+  if (k === 'pair' && !(p && ppCanMine(h, p))) { ppNope('no match'); return; }
+  if (k === 'take') {
+    if (!s.pp.top || !ppCanMine(h, s.pp.top)) { toast('You don\'t have a match for that one.'); return; }
+    ppClaimed = s.pp.oid;
+  }
+  const msg = { k, c:c || null, q:s.q, o:s.pp.oid };
+  if (k === 'throw') ppSel = '';
+  if (role === 'host') { const r = ppAct(i, msg); if (r) { ppNope(r); if (k === 'take') ppClaimed = 0; } hostTick(); }
+  else { send(Object.assign({ t:'pp' }, msg)); ppPending = k + ':' + (k === 'take' ? 'o' + s.pp.oid : s.q); }
+  sfx('pop'); scheduleRender();
 }
 
 /* ---------- shared actions ---------- */
@@ -1566,8 +1933,66 @@ function resultFx(s, knockedNow){
   resultHoldUntil = Date.now() + t + 950 + extra;
   setTimeout(scheduleRender, t + 980 + extra);
 }
+/* ---------- Pitty Pat effects ---------- */
+let ppSeenEv = { code:'', id:0 };
+function elPt(sel){
+  const st = $('#stage').getBoundingClientRect(), el = $(sel), r = el && el.getBoundingClientRect();
+  return r && r.width ? { x:r.left - st.left + r.width / 2, y:r.top - st.top + r.height / 2 } : { x:G.cx, y:G.cy };
+}
+function flyCard(c, from, to, o){
+  const wrap = document.createElement('div'); wrap.className = 'flycard'; wrap.style.setProperty('--cw', '34px');
+  wrap.innerHTML = c ? cardHTML(c) : '<div class="card back"></div>';
+  fly(wrap, from, to, Object.assign({ dur:420, arc:36, s0:.8, s1:1 }, o || {}));
+}
+function ppDetectFx(s){
+  const pp = s.pp; if (!pp || !Array.isArray(pp.ev)) return;
+  if (ppSeenEv.code !== s.code) { ppSeenEv = { code:s.code, id:+pp.eid || 0 }; return; }
+  const fresh = pp.ev.filter(e => e && e.id > ppSeenEv.id);
+  ppSeenEv.id = Math.max(ppSeenEv.id, +pp.eid || 0);
+  if (fresh.length > 6) fresh.splice(0, fresh.length - 6);
+  let t = 90;
+  fresh.forEach(e => { setTimeout(() => ppFx(cur() || s, e), t); t += e.k === 'deal' ? 900 : e.k === 'dead' ? 450 : 160; });
+}
+function ppFx(s, e){
+  if (!G.W || !s) return;
+  const P = i => seatIdxPos.get(i), who = i => { const x = s.seats[i]; return i === mySeatIdx(s) ? 'You' : (x ? esc(x.n) : 'Someone'); };
+  switch (e.k) {
+    case 'deal': {
+      const from = P(e.d) || { x:G.cx, y:G.cy };
+      (e.order || []).forEach((i, k) => { const to = P(i); if (!to) return; for (let r = 0; r < 2; r++) setTimeout(() => { flyCard(null, from, to, { dur:300, arc:24, s1:.7 }); if (k === 0) sfx('flick'); }, r * 260 + k * 90); });
+      break;
+    }
+    case 'pull': { const to = P(e.i); if (to) { flyCard(null, elPt('#ppPile'), to, { dur:340, arc:26, s1:.7 }); sfx('flick'); } break; }
+    case 'throw': { const from = P(e.i); if (from && validCard(e.c)) { flyCard(e.c, from, elPt('#ppTop'), { dur:420, arc:40, rot:-12 }); sfx('whoosh'); } break; }
+    case 'take': {
+      const to = P(e.i); if (!to) break;
+      if (validCard(e.c)) flyCard(e.c, elPt('#ppTop'), to, { dur:380, arc:30, s1:.8 });
+      setTimeout(() => { textFx('GOT IT!', { x:clampX(to.x), y:to.y - 46 }, 'stole', 1200); sfx('cash'); }, 360);
+      break;
+    }
+    case 'pair': { const p = P(e.i); if (p) { textFx('PAIR!', { x:clampX(p.x), y:p.y - 46 }, 'fire', 1100); sfx('ding'); } break; }
+    case 'dead': {
+      const p = P(e.i); if (!p || !validCard(e.c)) break;
+      const slept = e.why === 'slept';
+      textFx(slept ? '😴 SLEPT!' : '💀 DEAD', { x:clampX(p.x), y:p.y - 50 }, 'ouch', 1600);
+      sfx(slept ? 'wind' : 'ouch');
+      const you = e.i === mySeatIdx(s);
+      toast(slept ? `😴 ${who(e.i)} slept on ${aRank(e.c)}! ${you ? 'Your' : 'Their'} ${rankWord(e.c)} is dead.` : `💀 ${who(e.i)} got beat to ${aRank(e.c)}. ${you ? 'Your' : 'Their'} ${rankWord(e.c)} is dead.`);
+      break;
+    }
+    case 'reshuffle': textFx('RESHUFFLE', { x:G.cx, y:G.cy - 80 }, 'big', 1200); sfx('whoosh'); break;
+    case 'win': {
+      const to = P(e.i); textFx('PITTY PAT!', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2300);
+      moneyRain(20, ['💵', '🎉', '💵', '✨']); sfx('fanfare'); setTimeout(() => sfx('cash'), 480);
+      if (to) coinFx(elPt('#pot'), to, 8, 300);
+      break;
+    }
+    case 'nowin': textFx('NO WINNER', { x:G.cx, y:G.cy - 80 }, 'big', 1400); break;
+  }
+}
 function detectFx(s){
   if (!s) { prevView = null; return; }
+  if (isPP(s)) { prevView = null; ppDetectFx(s); return; }
   const p = prevView;
   const snap = { code:s.code, hand:s.hand, ph:s.ph, st:s.seats.map(x => x ? x.st : null), c:s.seats.map(x => x ? x.c : null), stacks:new Map(s.seats.filter(Boolean).map(x => [x.c, x.s])), pot:s.pot, ws:new Map(s.seats.filter(Boolean).map(x => [x.c, x.ws || 0])) };
   if (p && p.code === s.code) {
@@ -1658,7 +2083,7 @@ function leaderHTML(s){
   const most = rows.reduce((a, b) => (b.kn > (a ? a.kn : 0) ? b : a), null);
   const nm = r => `${r.av ? r.av + ' ' : ''}${esc(r.n)}`;
   const badges = [big && big.best ? `<span class="badge">Biggest pot: ${nm(big)} ${fmtT(big.best)}</span>` : '', most && most.kn ? `<span class="badge">Most knocks: ${nm(most)} (${most.kn})</span>` : ''].join('');
-  return `${badges ? `<div class="badges">${badges}</div>` : ''}<ol class="lb">${rows.slice(0, 12).map((r, k) => `<li><span class="rk">${k + 1}</span><span class="who">${nm(r)}</span><span class="net ${r.net >= 0 ? 'pos' : 'neg'}">${r.net >= 0 ? '+' : '−'}${fmtT(Math.abs(r.net))}</span><small>${r.w} win${r.w === 1 ? '' : 's'} · ${r.kn} knock${r.kn === 1 ? '' : 's'}${r.best ? ' · best pot ' + fmtT(r.best) : ''}</small></li>`).join('')}</ol><p class="small muted">Up or down counts every token the host handed out.</p>`;
+  return `${badges ? `<div class="badges">${badges}</div>` : ''}<ol class="lb">${rows.slice(0, 12).map((r, k) => `<li><span class="rk">${k + 1}</span><span class="who">${nm(r)}</span><span class="net ${r.net >= 0 ? 'pos' : 'neg'}">${r.net >= 0 ? '+' : '−'}${fmtT(Math.abs(r.net))}</span><small>${r.w} win${r.w === 1 ? '' : 's'}${isPP(s) ? '' : ` · ${r.kn} knock${r.kn === 1 ? '' : 's'}`}${r.best ? ' · best pot ' + fmtT(r.best) : ''}</small></li>`).join('')}</ol><p class="small muted">Up or down counts every token the host handed out.</p>`;
 }
 function sheetClose(label){ return `<button type="button" class="iconbtn" data-act="menu-close" aria-label="${label}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`; }
 function throwHTML(){
@@ -1793,8 +2218,8 @@ function layout(){
   const f1 = Math.max(16, Math.min(34, fw * 0.06)), f2 = Math.max(7.5, Math.min(11, fw * 0.017));
   $('#feltPrint').innerHTML =
     `<defs><path id="arcT" d="M ${cx - a} ${cy} A ${a} ${b} 0 0 1 ${cx + a} ${cy}"/><path id="arcB" d="M ${cx - a2} ${cy} A ${a2} ${b2} 0 0 0 ${cx + a2} ${cy}"/></defs>` +
-    `<text class="p1" font-size="${f1}"><textPath href="#arcT" startOffset="50%" text-anchor="middle">KNOCK</textPath></text>` +
-    `<text class="p2" font-size="${f2}"><textPath href="#arcB" startOffset="50%" text-anchor="middle">PAIRS BEAT ALL · ACES HIGH · PLAY TOKENS ONLY</textPath></text>`;
+    `<text class="p1" font-size="${f1}"><textPath href="#arcT" startOffset="50%" text-anchor="middle">${G.game === 'pitty' ? 'PITTY PAT' : 'KNOCK'}</textPath></text>` +
+    `<text class="p2" font-size="${f2}"><textPath href="#arcB" startOffset="50%" text-anchor="middle">${G.game === 'pitty' ? 'PAIR EVERY CARD · DON\'T SLEEP · PLAY TOKENS ONLY' : 'PAIRS BEAT ALL · ACES HIGH · PLAY TOKENS ONLY'}</textPath></text>`;
   for (const el of $('#seats').children) el._h = null;
   paintScene($('#app').dataset.felt || 'green');
   scheduleRender();
@@ -1806,7 +2231,38 @@ function resFor(s, i){
   const l = (s.res.l || []).find(r => r && r.i === i); if (l) return { win:false, amt:l.amt };
   return null;
 }
+function ppSeatView(s, i, x, isMine){
+  const pp = s.pp || {};
+  const turn = s.ph === 'playing' && s.tn === i && pp.step !== 'offer' && x.st === 'in';
+  const thrower = s.ph === 'playing' && pp.step === 'offer' && pp.from === i;
+  const win = s.ph === 'done' && s.res && s.res.k === 'pitty' && s.res.w && s.res.w[0] && s.res.w[0].i === i;
+  const cls = ['seat', 'pp', turn && 'turn', x.st === 'out' && 'out', win && 'win', isMine && 'mine', (x.st === 'wait' || x.st === 'left') && 'waiting', x.away && !isMine && 'away', (x.ws || 0) >= 3 && 'fire'].filter(Boolean).join(' ');
+  let cards = '';
+  const n = Math.max(0, Math.min(6, +x.hc || 0));
+  if (win && typeof x.sh === 'string' && /^([2-9TJQKA][shdc]){1,6}$/.test(x.sh)) cards = x.sh.match(/../g).map(c => cardHTML(c)).join('');
+  else if (x.st === 'in' && n && (s.ph === 'playing' || s.ph === 'done')) cards = '<div class="card back"></div>'.repeat(n);
+  const prs = (x.pr || []).filter(p => Array.isArray(p) && validCard(p[0])).map(p => `<span class="ppc" title="Pair of ${RPL[rv(p[0])]}">${rankTxt(p[0])}<i>×2</i></span>`).join('');
+  const dds = (x.dd || []).filter(validCard).map(c => `<span class="ppc dead" title="Dead ${rankWord(c)}">💀${rankTxt(c)}</span>`).join('');
+  let timer = '';
+  if (turn && +s.cfg.tm > 0) timer = `<i class="tbar" style="animation-duration:${+s.cfg.tm}s"></i>`;
+  let label = '', pc = 'tagpill';
+  if (win) { label = 'PITTY PAT!'; pc += ' win'; }
+  else if (thrower && validCard(pp.top)) label = 'Threw ' + aRank(pp.top);
+  else if (turn) label = pp.step === 'pull' ? 'Pulling…' : pp.step === 'drawn' ? 'Thinking…' : 'Throwing…';
+  else if (x.st === 'left') label = 'Left';
+  else if (x.st === 'out') label = x.ask ? 'Wants tokens' : 'Out of tokens';
+  else if (x.so && x.st === 'wait') label = x.back ? 'Back next hand' : 'Sitting out';
+  else if (s.ph === 'waiting' && !s.live && x.st === 'wait' && !x.away) { label = x.rdy || x.bot ? 'Ready' : 'Not ready'; if (x.rdy || x.bot) pc += ' knock'; }
+  else if (x.st === 'wait') label = x.away ? 'Away' : 'Next hand';
+  const pill = label ? `<div class="${pc}">${esc(label)}</div>` : '<div class="tagpill empty" aria-hidden="true"></div>';
+  const av = AV_LIST.includes(x.av) ? x.av + ' ' : '';
+  const dchip = s.round && s.bt === i ? '<span class="dchip" title="Dealer">D</span>' : '';
+  const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
+  const won = win ? `<span class="won">+${fmtT(s.res.w[0].amt)}</span>` : '';
+  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div><div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${prs || dds ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
+}
 function seatView(s, i, x, isMine){
+  if (isPP(s)) return ppSeatView(s, i, x, isMine);
   const turn = s.ph === 'deciding' && s.tn === i;
   const r = resFor(s, i);
   const cls = ['seat', turn && 'turn', x.st === 'fold' && 'fold', x.st === 'out' && 'out', r && r.win && 'win', isMine && 'mine', x.st === 'wait' && 'waiting', x.away && !isMine && 'away', (x.ws || 0) >= 3 && !holding() && 'fire'].filter(Boolean).join(' ');
@@ -1896,17 +2352,30 @@ function resultText(s, myIdx){
 function renderCenter(s){
   const phase = $('#phase'), pot = $('#pot'), below = $('#below');
   const myIdx = s ? mySeatIdx(s) : -1;
-  let ph = 'Knock', bl = '';
+  let ph = role === 'none' ? 'Card night' : 'Knock', bl = '';
   if (!s) {
     if (role === 'player') { ph = 'Table ' + code; bl = kicked ? 'You were removed from this table.' : netState === 'nohost' ? 'Waiting for the host to open the table…' : 'Connecting…'; }
-    else bl = 'Two cards each. Pairs beat everything.';
+    else bl = 'Knock or Pitty Pat. Pick a game below.';
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
     const players = s.seats.filter(y => y && !y.g && !y.away && !y.so && y.s >= s.cfg.ante);
     const nReady = players.filter(y => y.bot || y.rdy).length;
     if (s.cd) { ph = 'Get ready'; bl = `First deal in <em>${+s.cd}</em>…`; }
     else if (!s.live && players.length >= 2) { ph = 'Ready check'; bl = `<b>${nReady}</b> of ${players.length} ready`; }
-    else { ph = 'Waiting for players'; bl = `${s.note ? esc(s.note) + '<br>' : ''}${seated} of 10 seats taken${seated < 2 ? ' · 2 needed to deal' : ''}`; }
+    else { ph = 'Waiting for players'; bl = `${s.note ? esc(s.note) + '<br>' : ''}${seated} of ${seatCap(s)} seats taken${seated < 2 ? ' · 2 needed to deal' : ''}`; }
+  } else if (isPP(s)) {
+    const pp = s.pp || {}, t = s.seats[s.tn];
+    if (s.ph === 'playing') {
+      ph = 'Hand ' + s.hand;
+      const nm = t ? (s.tn === myIdx ? 'You' : `<b>${esc(t.n)}</b>`) : '';
+      if (pp.step === 'offer' && validCard(pp.top)) bl = `${nm} threw ${aRank(pp.top)}. Got a match? Take it!`;
+      else if (pp.step === 'pull') bl = s.tn === myIdx ? '<b>Your turn</b>: pull a card' : `${nm} is pulling`;
+      else if (pp.step === 'drawn') bl = `${nm} ${s.tn === myIdx ? 'are' : 'is'} looking at a card`;
+      else if (pp.step === 'throw') bl = `${nm} made a pair and ${s.tn === myIdx ? 'throw' : 'throws'} a card`;
+    } else if (s.ph === 'done' && s.res) {
+      if (s.res.k === 'pitty') { const w = s.res.w[0]; ph = 'Pitty Pat!'; bl = `${nameOf(s, w.i, myIdx)} ${w.i === myIdx ? 'win' : 'wins'} <em>${fmtT(w.amt)}</em>. Next hand in a moment.`; }
+      else { ph = 'No winner'; bl = s.res.why === 'stuck' ? `Everyone left was stuck with a dead card. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.` : `The pile ran out. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.`; }
+    }
   } else if (s.ph === 'deciding') {
     ph = 'Hand ' + s.hand + (s.fresh === 0 ? ' · no ante' : '');
     const t = s.seats[s.tn];
@@ -1927,6 +2396,24 @@ function renderCenter(s){
     pot.classList.toggle('big', lv >= 1); pot.classList.toggle('mega', lv >= 2);
   }
   else pot.hidden = true;
+  const mid = $('#ppmid');
+  if (isPP(s) && (s.ph === 'playing' || s.ph === 'done')) {
+    const pp = s.pp || {};
+    let top = '<div class="card slot"></div>';
+    if (s.ph === 'playing' && pp.step === 'offer' && validCard(pp.top)) {
+      if (ppOfferSeen.oid !== pp.oid) { ppOfferSeen.oid = pp.oid; ppOfferSeen.at = Date.now(); ppOfferSeen.dur = role === 'host' ? Math.max(500, (+pp.ow || PP_OFFER) * 1000 - (Date.now() - ppOfferAt)) : (+pp.ow || PP_OFFER) * 1000 - 300; }
+      top = cardHTML(pp.top) + `<i class="ring" style="animation-duration:${ppOfferSeen.dur}ms"></i>`;
+    }
+    mid.hidden = false;
+    setHTML(mid, `<div class="pppile" id="ppPile"><div class="card back"></div><div class="card back"></div><b>${+pp.pile || 0}</b></div><div class="pptop" id="ppTop">${top}</div>`);
+  } else if (!mid.hidden) { mid.hidden = true; setHTML(mid, ''); }
+  if (isPP(s)) {
+    const dl = s.round ? s.seats[s.bt] : null;
+    setHTML($('#audinfo'), '');
+    setHTML($('#deckinfo'), dl && (s.ph === 'playing' || s.ph === 'done') ? `${s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals'} · ${+(s.pp && s.pp.pile) || 0} in the pile` : '');
+    setHTML(below, bl);
+    return;
+  }
   const dl = s && s.round ? s.seats[s.bt] : null;
   setHTML($('#audinfo'), '');
   setHTML($('#deckinfo'), s && s.round ? `${dl ? (s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals') : 'Deck'} · ${+s.left || 0} cards left` : '');
@@ -1976,8 +2463,8 @@ function dockHTML(s){
   const nn = netNotice(); if (nn) out.push(nn);
   if (role === 'none') {
     const saved = loadSaved();
-    out.push(`<p class="lead">Two cards each. Pairs beat everything and Aces are high. Start your own table, or join one that's playing now.</p>`);
-    out.push(`<form id="startForm" class="joinrow"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"><button class="btn gold" type="submit">Start a table</button></form>`);
+    out.push(`<p class="lead">Two games for card night: <b>Knock</b> (two cards, pairs win) and <b>Pitty Pat</b> (match every card, don't sleep). Start a table, or join one that's playing now.</p>`);
+    out.push(`<form id="startForm" class="joinform"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"><div class="startrow"><button class="btn gold" type="submit" value="knock">Start Knock</button><button class="btn gold" type="submit" value="pitty">Start Pitty Pat</button></div></form>`);
     out.push(lobbyHTML());
     out.push(installHTML());
     out.push(`<div class="divider">or use a table code</div><form id="codeForm" class="joinrow"><label class="sr" for="codeIn">Table code</label><input id="codeIn" maxlength="8" placeholder="Table code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn ghost" type="submit">Join</button></form>`);
@@ -1991,21 +2478,22 @@ function dockHTML(s){
   }
   const i = s ? mySeatIdx(s) : -1; const x = i >= 0 ? s.seats[i] : null;
   if (!x) {
-    const full = s && s.seats.every(Boolean);
+    const full = isFull(s);
     if (!myName) {
       out.push(`<p class="lead">Type your name, then take a seat or just watch from the audience.</p>${nameForm()}`);
-      if (full) out.push('<p class="small muted">All 10 seats are taken right now. You can watch until one opens up.</p>');
+      if (full) out.push(`<p class="small muted">All ${seatCap(s)} seats are taken right now. You can watch until one opens up.</p>`);
       if (role === 'host') out.push(inviteHTML());
       return out.join('');
     }
     if (!s) return out.join('');
     if (me.sit && !full) { out.push('<p class="lead">Finding you a seat…</p>'); return out.join(''); }
-    if (full) out.push(`<p class="lead">All 10 seats are taken, so you're in the audience as <b>${esc(myName)}</b>. ${me.sit ? 'You\'ll get the next open seat.' : ''}</p>`);
+    if (full) out.push(`<p class="lead">All ${seatCap(s)} seats are taken, so you're in the audience as <b>${esc(myName)}</b>. ${me.sit ? 'You\'ll get the next open seat.' : ''}</p>`);
     else out.push(`<p class="lead">You're in the audience as <b>${esc(myName)}</b> · <button type="button" class="linkbtn" data-act="menu">change name</button></p><div class="actions" style="--n:1"><button type="button" class="btn gold" data-act="sit">Take a seat</button></div>`);
     out.push('<p class="small muted">The audience can talk too: tap the chat button at the top.</p>');
     if (role === 'host') out.push(inviteHTML());
     return out.join('');
   }
+  if (isPP(s)) return ppDockHTML(s, i, x, out);
   const hole = curHole();
   const dealt = x.st === 'in' || x.st === 'knock' || x.st === 'fold';
   const showCards = hole && dealt && (s.ph === 'deciding' || s.ph === 'done');
@@ -2093,11 +2581,85 @@ function dockHTML(s){
   if (!x.so && !myTurn && s.live && s.ph !== 'recap' && x.st !== 'out') out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>${dealt && s.ph === 'deciding' ? ' from the next hand' : ''}. You keep your seat and tokens.</p>`);
   return out.join('');
 }
+function ppDockHTML(s, i, x, out){
+  const pp = s.pp || {}, { h, p } = ppMine();
+  const inHand = x.st === 'in' && (s.ph === 'playing' || s.ph === 'done');
+  const myTurn = s.ph === 'playing' && s.tn === i && x.st === 'in' && pp.step !== 'offer';
+  const throwing = myTurn && pp.step === 'throw';
+  const dead = (x.dd || []).filter(validCard);
+  if (!throwing || !h.includes(ppSel)) ppSel = throwing ? (h.includes(ppSel) ? ppSel : '') : '';
+  const pending = !!ppPending && ppPending.split(':')[1] === String(s.q);
+  if (inHand) {
+    const hand = h.map(c => `<button type="button" class="ppcard${ppSel === c ? ' sel' : ''}" data-act="ppsel" data-c="${c}"${throwing && !dead.length ? '' : ' disabled'} aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}">${cardHTML(c)}</button>`).join('') + (p ? `<div class="ppnew">${cardHTML(p)}<span>New</span></div>` : '');
+    out.push(`<div class="pphand">${hand || '<span class="small muted">No cards left in your hand.</span>'}</div>`);
+    if (dead.length) out.push(`<div class="ppdead">${dead.map(c => cardHTML(c)).join('')}<span>💀 Dead: throw ${dead.length > 1 ? 'these' : 'it'} the next time you make a pair.</span></div>`);
+    out.push(`<p class="ppinfo">Pairs down <b>${(x.pr || []).length}</b> · Your tokens <b>${fmtT(x.s)}</b>${x.t ? ` · ante ${fmtT(x.t)} in` : ''}</p>`);
+  } else out.push(`<div class="me-row"><div class="me-info"><div class="me-hand">${esc(x.so ? 'Sitting out' : x.st === 'out' ? 'Out of tokens' : 'Seated')}</div><div class="me-sub">Your tokens <b>${fmtT(x.s)}</b></div></div></div>`);
+  let status = '', buttons = '';
+  const asker = role === 'host' ? s.seats.findIndex(y => y && y.ask) : -1;
+  const t = s.seats[s.tn], tn = t ? esc(t.n) : 'Someone';
+  if (x.s < s.cfg.ante && !inHand || x.st === 'out') {
+    status = x.s < 0 ? `You owe <em>${fmtT(-x.s)}</em>.` : 'You\'re out of tokens.';
+    buttons = role === 'host' ? `<button type="button" class="btn gold wide" data-act="give" data-i="${i}">Give yourself ${fmtT(s.cfg.st)}</button>` : (x.ask ? '' : '<button type="button" class="btn gold wide" data-act="ask">Ask the host for more tokens</button>');
+    if (x.ask && role !== 'host') status += ' The host has your request.';
+  } else if (x.so && !inHand) {
+    if (x.back) { status = 'You\'re coming back next hand.'; buttons = '<button type="button" class="btn ghost wide" data-act="sitout" data-v="1">Stay out</button>'; }
+    else { status = 'You\'re sitting out. You keep your seat and your tokens, and you don\'t pay any antes.'; buttons = '<button type="button" class="btn gold wide" data-act="sitout" data-v="0">Deal me back in</button>'; }
+  } else if (s.ph === 'waiting') {
+    const players = s.seats.filter(y => y && !y.g && !y.away && !y.so && y.s >= s.cfg.ante);
+    if (s.pause) { status = 'The host paused new hands.'; if (role === 'host') buttons = '<button type="button" class="btn gold wide" data-act="resume-deal">Deal the next hand</button>'; }
+    else if (s.live) status = 'Shuffling up the next hand…';
+    else {
+      const nReady = players.filter(y => y.bot || y.rdy).length;
+      const waitingOn = players.filter(y => !y.bot && !y.rdy).map(y => (y.c === myCid ? 'you' : esc(y.n)));
+      if (s.cd) status = `Everyone's ready. First deal in <em>${+s.cd}</em>…`;
+      else if (players.length < 2) status = 'Waiting for at least one more player. Share the link so friends can join.';
+      else status = `<em>${nReady}</em> of ${players.length} ready. Waiting on ${joinNames(waitingOn)}.`;
+      const btns = [x.rdy ? '<button type="button" class="btn ghost" data-act="ready" data-v="0">I\'m not ready</button>' : '<button type="button" class="btn gold" data-act="ready" data-v="1">I\'m ready</button>'];
+      if (role === 'host' && players.length >= 2 && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
+      buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
+      if (role === 'host' && s.seats.filter(Boolean).length < 2) buttons += inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>';
+    }
+  } else if (s.ph === 'done') {
+    if (s.res && s.res.k === 'pitty') { const w = s.res.w[0]; status = w.i === i ? `<b>Pitty Pat!</b> You win <em>${fmtT(w.amt)}</em>.` : `${esc(s.seats[w.i] ? s.seats[w.i].n : 'Someone')} wins <em>${fmtT(w.amt)}</em>. Next hand in a moment.`; }
+    else status = `No winner this hand. The <em>${fmtT(s.pot)}</em> pot stays for the next one.`;
+  } else if (x.st === 'left') status = 'You left this hand.';
+  else if (x.st === 'wait') status = x.away ? 'You were away, so you\'re sitting this hand out.' : 'You\'re in from the next hand.';
+  else if (pp.step === 'offer' && validCard(pp.top)) {
+    if (pp.from === i) status = `Waiting to see if anyone takes your ${rankWord(pp.top)}…`;
+    else if (ppClaimed === pp.oid) status = 'Grabbing it…';
+    else {
+      const left = Math.max(300, ppOfferSeen.dur - (Date.now() - ppOfferSeen.at));
+      status = `${tn} threw ${aRank(pp.top)}. If it matches a card in your hand, tap fast!`;
+      buttons = `<button type="button" class="btn take wide" data-act="pptake">Take the ${rankWord(pp.top)}<i class="ppbar" style="animation-duration:${ppOfferSeen.dur}ms"></i></button>`;
+      void left;
+    }
+  } else if (myTurn && pp.step === 'pull') {
+    status = 'Your turn. Pull a card from the pile.';
+    buttons = `<button type="button" class="btn gold wide" data-act="pppull"${pending ? ' disabled' : ''}>Pull a card</button>`;
+  } else if (myTurn && pp.step === 'drawn') {
+    status = p ? `You pulled ${aRank(p)}. Does it match a card in your hand?` : 'Pulling…';
+    buttons = `<div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="ppthrowpend"${pending || !p ? ' disabled' : ''}>Throw it</button><button type="button" class="btn gold" data-act="pppair"${pending || !p ? ' disabled' : ''}>Pair it</button></div>`;
+  } else if (throwing) {
+    if (dead.length) { status = `Nice pair! Now your dead ${rankWord(dead[0])} has to go.`; buttons = `<button type="button" class="btn gold wide" data-act="ppthrow" data-c="${dead[0]}"${pending ? ' disabled' : ''}>Throw the dead ${rankWord(dead[0])}</button>`; }
+    else if (ppSel) { status = `Throw the ${rankWord(ppSel)} of ${SUIT_NAME[ppSel[1]]}?`; buttons = `<button type="button" class="btn gold wide" data-act="ppthrow" data-c="${ppSel}"${pending ? ' disabled' : ''}>Throw the ${rankWord(ppSel)}</button>`; }
+    else status = 'Nice pair! Now tap a card to throw it out.';
+  } else if (s.ph === 'playing') {
+    status = pp.step === 'pull' ? `${tn} is pulling a card…` : pp.step === 'drawn' ? `${tn} is looking at their card…` : `${tn} made a pair and is throwing a card…`;
+  }
+  if (inHand && s.ph === 'playing' && dead.length && h.every(c => ppCount(h, c[0]) % 2 === 0)) status += ' <span class="muted">You\'re stuck: your other cards are all paired, so you can\'t make another pair this hand.</span>';
+  if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
+  if (status) out.push(`<p class="status">${status}</p>`);
+  if (buttons) out.push(buttons);
+  if (!x.so && s.live && x.st !== 'out' && !myTurn && !(pp.step === 'offer' && pp.from !== i && s.ph === 'playing')) out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>${inHand && s.ph === 'playing' ? ' from the next hand' : ''}. You keep your seat and tokens.</p>`);
+  return out.join('');
+}
 function nameForm(){
   return `<form id="nameForm" class="joinform"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname"><div class="actions" style="--n:2"><button class="btn gold" type="submit" value="sit">Take a seat</button><button class="btn ghost" type="submit" value="watch">Just watch</button></div></form>`;
 }
 function renderHeader(s){
-  setText($('#sub'), code ? `Table ${code}${s ? ' · Ante ' + fmtT(s.cfg.ante) : ''}` : 'Two cards · pairs win');
+  setText($('#brandName'), s && isPP(s) ? 'Pitty Pat' : 'Knock');
+  setText($('#sub'), code ? `Table ${code}${s ? ' · Ante ' + fmtT(s.cfg.ante) : ''}` : 'Card night with family');
   const pill = $('#netpill'); let cls = 'pill', txt = 'Not at a table';
   if (role === 'host') {
     const n = 1 + [...pres.values()].filter(p => p.conn && p.conn.open).length;
@@ -2137,7 +2699,8 @@ function menuHTML(s){
     <section><h3>Host controls</h3>
       <div class="field"><label for="setAnte">Ante each hand</label>${sel('setAnte', [[50,'0.50'],[100,'1.00'],[150,'1.50'],[200,'2.00'],[500,'5.00']], cfg.ante)}</div>
       <div class="field"><label for="setStart">Tokens for new players</label>${sel('setStart', [[1000,'10.00'],[2000,'20.00'],[5000,'50.00'],[10000,'100.00']], cfg.st)}</div>
-      <div class="field"><label for="setTimer">Time to decide</label>${sel('setTimer', [[0,'No limit'],[20,'20 seconds'],[30,'30 seconds'],[60,'60 seconds']], cfg.tm)}</div>
+      <div class="field"><label for="setTimer">${isPP(s) ? 'Time for your turn' : 'Time to decide'}</label>${sel('setTimer', [[0,'No limit'],[20,'20 seconds'],[30,'30 seconds'],[60,'60 seconds']], cfg.tm)}</div>
+      ${isPP(s) ? `<div class="field"><label for="setOw">Time to take a thrown card</label>${sel('setOw', [[5,'5 seconds'],[8,'8 seconds'],[12,'12 seconds']], +cfg.ow || 8)}</div>` : ''}
       <div class="field"><label for="setPause">New hands</label>${sel('setPause', [[0,'Keep dealing'],[1,'Pause']], S.pause)}</div>
       <div class="field"><label for="setTheme">Table look</label>${sel('setTheme', Object.entries(THEMES), THEMES[cfg.theme] ? cfg.theme : 'green')}</div>
       <p class="small muted">Your phone is running this table, so keep this page open with the screen on. Changes start with the next hand.</p>
@@ -2147,10 +2710,23 @@ function menuHTML(s){
   } else if (s) {
     const dealer = (s.seats.find(x => x && x.c === s.hid) || {}).n;
     parts.push(`<section><h3>Leave</h3><button type="button" class="btn ghost wide" data-act="tolobby">Back to the lobby</button></section>`);
-    parts.push(`<section><h3>Table settings</h3><p class="small">Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds to decide' : 'No time limit'}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
+    parts.push(`<section><h3>Table settings</h3><p class="small">${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
   }
   if (s) parts.push(`<section><h3>Tonight's leaderboard</h3>${leaderHTML(s)}</section>`);
   parts.push(`<section><h3>Site visitors</h3><button type="button" class="btn ghost wide" data-act="visitors">👀 See who's been visiting</button></section>`);
+  if (isPP(s)) {
+    parts.push(`<section><h3>How to play Pitty Pat</h3><ol class="howto">
+    <li>2 to 6 players. Everyone antes ${fmtT(cfg.ante)} into the game pot each hand, and the winner takes it.</li>
+    <li>Every hand uses a fresh deck. The dealer deals 5 cards to each player, starting on their left, and the rest is the pile. The deal passes to the left every hand, and the player left of the dealer goes first.</li>
+    <li>On your turn, <b>pull a card</b>. If it matches a card in your hand, tap <b>Pair it</b>: the pair goes down face up, then you throw out any card. If it doesn't match, you throw out the card you pulled.</li>
+    <li>Every thrown card is up for grabs for ${+cfg.ow || 8} seconds. If it matches a card in your hand, tap <b>Take it</b>. If two people tap, the one closest to the thrower's left gets it, lays the pair down and throws a card, and play goes on to their left. If nobody takes it, the next player pulls.</li>
+    <li>A match is the same rank. Suits don't matter. Pairs you're dealt stay hidden in your hand, and you can't take a third card for a pair you already hold. If you hold three of a kind, the fourth one gives you two pairs.</li>
+    <li><b>Don't sleep.</b> If a thrown card matched yours and you didn't get it, because you didn't tap in time or someone closer beat you, your card goes <b>dead</b>. It's turned face up, and the next time you make a pair, your dead card has to be the card you throw. You can't match your own dead card. Throwing away a card you pulled that matched also counts as sleeping.</li>
+    <li>You win the moment every card left in your hand is paired, with no dead cards: <b>Pitty Pat!</b></li>
+    <li>If the pile runs out, the thrown cards are shuffled into a new pile. If nobody can win, the pot stays for the next hand.</li>
+  </ol></section>`);
+    return parts.join('');
+  }
   parts.push(`<section><h3>How to play</h3><ol class="howto">
     <li>The first hand deals once everyone sitting at the table taps <b>I'm ready</b>. The host can also tap <b>Start now</b>. After that, hands keep coming on their own.</li>
     <li>When a new pot starts, everyone puts in the ante (${fmtT(cfg.ante)}). Then the dealer gives everyone two cards that only they can see.</li>
@@ -2190,6 +2766,15 @@ function toast(msg){
   document.body.appendChild(t); setTimeout(() => t.remove(), 2700);
 }
 function notify(s){
+  if (isPP(s)) {
+    const i = mySeatIdx(s), pp = s.pp || {};
+    const myTurn = i >= 0 && s.ph === 'playing' && s.tn === i && pp.step === 'pull';
+    if (myTurn) { const key = s.hand + ':' + s.q; if (notifiedTurn !== key) { notifiedTurn = key; toast('Your turn: pull a card'); sfx('ding'); try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {} } }
+    const title = myTurn ? 'Your turn · Pitty Pat' : 'Pitty Pat';
+    if (document.title !== title) document.title = title;
+    if (s.ph === 'done' && s.res && s.res.k === 'pitty') { const key = s.code + ':' + s.hand; if (notifiedRes !== key) { notifiedRes = key; if (s.res.w[0].i === i) toast(`Pitty Pat! You won ${fmtT(s.res.w[0].amt)}`); } }
+    return;
+  }
   const i = s ? mySeatIdx(s) : -1;
   const myTurn = !!s && i >= 0 && s.ph === 'deciding' && s.tn === i;
   if (myTurn) {
@@ -2212,6 +2797,8 @@ function render(){
   const th = s && s.cfg && THEMES[s.cfg.theme] ? s.cfg.theme : 'green';
   if ($('#app').dataset.felt !== th) $('#app').dataset.felt = th;
   if (sceneTheme !== th) paintScene(th);
+  const gm = isPP(s) ? 'pitty' : 'knock';
+  if (G.game !== gm) { G.game = gm; layout(); }
   detectFx(s);
   renderHeader(s);
   renderSeats(s);
@@ -2275,6 +2862,12 @@ function bindUI(){
       case 'keep': keepPlaying(b.dataset.v === '1'); break;
       case 'sitout': sitOut(b.dataset.v === '1'); break;
       case 'startnow': startNow(); break;
+      case 'pppull': ppMove('pull'); break;
+      case 'pppair': ppMove('pair'); break;
+      case 'ppthrowpend': { const { p } = ppMine(); if (p) ppMove('throw', p); break; }
+      case 'ppthrow': if (validCard(b.dataset.c)) ppMove('throw', b.dataset.c); break;
+      case 'ppsel': if (validCard(b.dataset.c)) { ppSel = ppSel === b.dataset.c ? '' : b.dataset.c; sfx('flick'); scheduleRender(); } break;
+      case 'pptake': ppMove('take'); break;
       case 'lobbyjoin': askToJoin(+b.dataset.slot); break;
       case 'lobbycancel': cancelAsk(); break;
       case 'askyes': answerAsk(b.dataset.cid, true); break;
@@ -2309,14 +2902,14 @@ function bindUI(){
     }
     const inp = f.querySelector('input'); const nm = cleanName(inp && inp.value);
     if (!nm) { toast('Type your name first'); if (inp) inp.focus(); return; }
-    if (f.id === 'startForm') { myName = nm; store.set('knock_name', nm); startTable(); }
+    if (f.id === 'startForm') { myName = nm; store.set('knock_name', nm); startTable(e.submitter && e.submitter.value === 'pitty' ? 'pitty' : 'knock'); }
     else if (f.id === 'nameForm') { setName(nm); if (e.submitter && e.submitter.value === 'watch') watchOnly(); else sitDown(); }
     else if (f.id === 'renameForm') { setName(nm); toast('Name saved'); }
     scheduleRender();
   });
   document.addEventListener('change', e => {
     const t = e.target;
-    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room' };
+    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow' };
     if (map[t.id]) setCfg(map[t.id], t.value);
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetMode) closeMenu(); });
