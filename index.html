@@ -377,6 +377,7 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .ppdead .card{box-shadow:0 0 0 2px rgba(201,53,63,.9)}
 .ppinfo{font-size:12.5px;color:var(--muted);margin-top:6px}
 .ppinfo b{color:var(--ivory)}
+.takerow{grid-template-columns:2fr 3fr !important}
 .btn.take{position:relative;overflow:hidden;background:linear-gradient(180deg,#8fe0b0,#3fae72);color:#06221a;font-size:19px}
 .ppbar{position:absolute;left:0;bottom:0;height:5px;width:100%;background:rgba(6,34,26,.55);transform-origin:left;animation:tick linear forwards}
 .sides{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
@@ -812,7 +813,7 @@ function botDecide(i){
    it's turned face up and must be the next card they throw. You win when every card left in your hand
    is in pairs. Pairs you're dealt stay hidden in your hand. */
 const PP_SEATS = 6, PP_START = 2000, PP_OFFER = 8, PP_HOLD_MS = 3500;
-let ppPend = null, ppDisc = [], ppClaims = new Set(), ppOfferAt = 0, ppHoldEnd = 0;
+let ppPend = null, ppDisc = [], ppClaims = new Set(), ppPasses = new Set(), ppOfferAt = 0, ppHoldEnd = 0;
 /* Side pots (the host turns them on): Colors, Spades and Porter, each a set price a hand.
    You pick yours before the deal. A side pot rolls over until it's won; once you're in you pay every
    hand to stay in, and you can only join when it's back at zero. Colors and Spades are judged on your
@@ -971,7 +972,14 @@ function ppAct(i, a){
   if (a.k === 'take') {
     if (pp.step !== 'offer' || a.o !== pp.oid || i === pp.from) return 'no offer';
     if (!ppCanMatch(i, pp.top)) return 'no match';
-    ppClaims.add(i); ppSettle(false);
+    ppPasses.delete(i); ppClaims.add(i); ppSettle(false);
+    return '';
+  }
+  /* "Don't need it": once everyone has taken or passed, the card is settled right away */
+  if (a.k === 'pass') {
+    if (pp.step !== 'offer' || a.o !== pp.oid || i === pp.from) return 'no offer';
+    if (!ppClaims.has(i)) ppPasses.add(i);
+    ppSettle(false);
     return '';
   }
   if (i !== S.tn) return 'not your turn';
@@ -1033,7 +1041,7 @@ function ppKill(j, r, why){
 function ppOffer(i, c){
   const pp = S.pp;
   pp.step = 'offer'; pp.top = c; pp.from = i; pp.oid = (pp.oid || 0) + 1; S.tn = i; S.q++;
-  ppClaims = new Set(); ppOfferAt = Date.now();
+  ppClaims = new Set(); ppPasses = new Set(); ppOfferAt = Date.now();
   ppEv({ k:'throw', i, c });
 }
 /* Decide who gets a thrown card. Before the time is up we only settle once nobody closer to the
@@ -1041,6 +1049,7 @@ function ppOffer(i, c){
 function ppSettle(timeUp){
   const pp = S.pp; if (!S || S.ph !== 'playing' || pp.step !== 'offer') return;
   const c = pp.top, n = S.seats.length; let winner = -1;
+  if (!timeUp && S.seats.every((x, j) => j === pp.from || !ppIn(x) || ppClaims.has(j) || ppPasses.has(j))) timeUp = true;
   for (let k = 1; k < n; k++) {
     const j = (pp.from + k) % n;
     if (!ppIn(S.seats[j])) continue;
@@ -1055,7 +1064,7 @@ function ppSettle(timeUp){
     if (!ppIn(S.seats[j]) || !ppCanMatch(j, c)) continue;
     ppKill(j, c[0], past ? 'beat' : 'slept');
   }
-  ppClaims = new Set();
+  ppClaims = new Set(); ppPasses = new Set();
   if (winner >= 0) { ppEv({ k:'take', i:winner, f:pp.from, c }); ppLay(winner, c); }
   else {
     ppDisc.push(c); pp.disc = ppDisc.length;
@@ -1257,6 +1266,15 @@ function ppHostTick(now){
   if (pp.cw || pp.hold) return;
   if (pp.step === 'offer') {
     S.seats.forEach((x, j) => {
+      if (!x || j === pp.from || !ppIn(x) || ppPasses.has(j)) return;
+      if (!x.bot && awaySince.has(x.c)) { ppPasses.add(j); return; }
+      if (x.bot && !ppCanMatch(j, pp.top)) {
+        const key = pp.oid + ':p' + j;
+        if (!ppBotClaim.has(key)) ppBotClaim.set(key, now + 500 + randInt(1200));
+        else if (now >= ppBotClaim.get(key)) { ppBotClaim.delete(key); ppPasses.add(j); }
+      }
+    });
+    S.seats.forEach((x, j) => {
       if (!x || !x.bot || j === pp.from || !ppCanMatch(j, pp.top)) return;
       const key = pp.oid + ':' + j;
       if (!ppBotClaim.has(key)) ppBotClaim.set(key, now + 1100 + randInt(2800) + (randInt(100) < 12 ? 600000 : 0));
@@ -1360,8 +1378,8 @@ function onClientMsg(c, d){
     case 'pp': {
       const i = S.seats.findIndex(y => y && y.c === p.cid);
       if (i >= 0 && isPP(S) && d.k === 'pull' && S.pp && S.pp.hold) { try { c.send({ t:'ppno', r:'new hand', k:'pull' }); } catch (e) {} }
-      else if (i >= 0 && isPP(S) && ['pull', 'pair', 'throw', 'take'].includes(d.k)) {
-        const r = ppAct(i, { k:d.k, c:validCard(d.c) ? d.c : null, q:d.k === 'take' ? undefined : +d.q, o:+d.o });
+      else if (i >= 0 && isPP(S) && ['pull', 'pair', 'throw', 'take', 'pass'].includes(d.k)) {
+        const r = ppAct(i, { k:d.k, c:validCard(d.c) ? d.c : null, q:d.k === 'take' || d.k === 'pass' ? undefined : +d.q, o:+d.o });
         if (r) { try { c.send({ t:'ppno', r, k:d.k }); } catch (e) {} }
         hostTick();
       }
@@ -1852,7 +1870,7 @@ function onHostMsg(d){
 }
 
 /* ---------- Pitty Pat: your moves ---------- */
-let ppSel = '', ppPending = '', ppClaimed = 0;
+let ppSel = '', ppPending = '', ppClaimed = 0, ppPassed = 0;
 const ppOfferSeen = { oid:-1, at:0, dur:8000 };
 const rankTxt = c => (c[0] === 'T' ? '10' : c[0]);
 const rankWord = c => RNAME[rv(c)];
@@ -1900,7 +1918,10 @@ function ppMove(k, c){
     ppClaimed = s.pp.oid;
   }
   if (k === 'pull' && s.pp.hold) { ppNope('new hand'); return; }
+  if (k === 'pass') ppPassed = s.pp.oid;
+  if (k === 'take') ppPassed = 0;
   const msg = { k, c:c || null, q:s.q, o:s.pp.oid };
+  if (k === 'pass') delete msg.q;
   if (k === 'throw') ppSel = '';
   if (role === 'host') { const r = ppAct(i, msg); if (r) { ppNope(r); if (k === 'take') ppClaimed = 0; } hostTick(); }
   else { send(Object.assign({ t:'pp' }, msg)); ppPending = k + ':' + (k === 'take' ? 'o' + s.pp.oid : s.q); }
@@ -3253,11 +3274,12 @@ function ppDockHTML(s, i, x, out){
   else if (pp.step === 'offer' && validCard(pp.top)) {
     if (pp.from === i) status = `Waiting to see if anyone takes your ${rankWord(pp.top)}…`;
     else if (ppClaimed === pp.oid) status = 'Grabbing it…';
-    else {
-      const left = Math.max(300, ppOfferSeen.dur - (Date.now() - ppOfferSeen.at));
+    else if (ppPassed === pp.oid) {
+      status = `You passed on the ${rankWord(pp.top)}. Waiting on everyone else…`;
+      buttons = '<button type="button" class="btn ghost wide" data-act="pptake">Wait, take it after all</button>';
+    } else {
       status = `${tn} threw ${aRank(pp.top)}. Got a match? Tap fast!`;
-      buttons = `<button type="button" class="btn take wide" data-act="pptake">Take the ${rankWord(pp.top)}<i class="ppbar" style="animation-duration:${ppOfferSeen.dur}ms"></i></button>`;
-      void left;
+      buttons = `<div class="actions takerow" style="--n:2"><button type="button" class="btn ghost" data-act="pppass">Don't need it</button><button type="button" class="btn take" data-act="pptake">Take the ${rankWord(pp.top)}<i class="ppbar" style="animation-duration:${ppOfferSeen.dur}ms"></i></button></div>`;
     }
   } else if (myTurn && pp.step === 'pull' && pp.hold) {
     status = '<b>New hand!</b> Look at your cards. You go first in a moment.';
@@ -3534,6 +3556,7 @@ function bindUI(){
       case 'ppunstack': if (Date.now() >= ppNoClickUntil) { ppUnstack(b.dataset.c); sfx('flick'); scheduleRender(); } break;
       case 'ppstackall': ppStackAll(); store.set('knock_ppdrag', '1'); sfx('ding'); scheduleRender(); break;
       case 'pptake': ppMove('take'); break;
+      case 'pppass': ppMove('pass'); break;
       case 'ppside': if (PP_SIDES.includes(b.dataset.k)) ppToggleSide(b.dataset.k); break;
       case 'ppsideopen': ppSideOpen = !ppSideOpen; scheduleRender(); break;
       case 'ppclaim': if (PP_SIDES.includes(b.dataset.k)) ppClaimSide(b.dataset.k); break;
