@@ -84,6 +84,20 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .pot[hidden],.pill[hidden]{display:none}
 .pot .lbl{font-family:var(--font-body);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .below{font-size:12.5px;line-height:1.4;color:rgba(243,234,216,.82);text-wrap:balance}
+#center:has(.ppres){max-width:272px;z-index:5}
+#center:has(.ppres) #phase{display:none}
+.ppres{text-align:left;pointer-events:none;background:rgba(22,15,11,.93);border:1px solid rgba(230,178,80,.55);border-radius:16px;padding:9px 12px 8px;box-shadow:0 10px 28px rgba(0,0,0,.55);animation:presIn .35s ease-out both}
+.ppres h4{margin:0 0 4px;text-align:center;font:800 10.5px/1.2 var(--font-body);letter-spacing:.2em;text-transform:uppercase;color:var(--brass)}
+.rrow{display:flex;gap:7px;align-items:center;padding:5px 0;font-size:12.5px;line-height:1.3;color:var(--ivory);text-wrap:pretty;animation:rrowIn .4s ease-out both}
+.rrow+.rrow{border-top:1px solid rgba(243,234,216,.1)}
+.rrow>i{font-style:normal;font-size:15px;width:19px;text-align:center;flex:none}
+.rrow.main{font-size:14px}
+.rrow.roll{color:rgba(243,234,216,.66);font-size:12px}
+.rrow:nth-of-type(2){animation-delay:.45s}.rrow:nth-of-type(3){animation-delay:.9s}.rrow:nth-of-type(4){animation-delay:1.35s}.rrow:nth-of-type(5){animation-delay:1.8s}
+@keyframes rrowIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes presIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.rcards{display:inline-flex;gap:2px;vertical-align:middle;margin:0 1px}
+.rcards .card{width:17px;height:24px;border-radius:3px;font-size:8px;box-shadow:0 1px 2px rgba(0,0,0,.5)}
 .below b{color:var(--ivory)}
 .below em{font-style:normal;color:var(--brass);font-weight:800}
 .coin{width:16px;height:16px;border-radius:50%;flex:none;background:radial-gradient(circle, var(--brass) 0 36%, #8a6420 37% 45%, var(--brass) 46% 100%);box-shadow:0 1px 0 #6d4d15, inset 0 0 0 1.5px #f3d28a}
@@ -401,6 +415,12 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .sideline{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .sideline .in{color:#9fe3bb;font-weight:700}
 .btn.claim.por{flex:0 0 auto;min-height:40px;padding:6px 14px;font-size:14px}
+.gone{display:flex;flex-direction:column;gap:10px}
+.gonehead{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.28);border:1px solid rgba(230,178,80,.28)}
+.gonehead>span{font-size:30px;flex:none}
+.gonehead b{display:block;font-size:17px;color:#f0c35a;margin-bottom:2px}
+.gonehead div>span{font-size:14px;line-height:1.4;color:var(--ivory)}
+.gone .small{text-align:center;margin:0}
 .startrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .rgame{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);margin-right:4px}
 .me-info{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -849,7 +869,7 @@ function ppSideBuyIn(elig){
   S.side.res = null;
   ppSideCl = { col:new Set(), spd:new Set() };
   S.seats.forEach(x => { if (x) x.sp = {}; });
-  PP_SIDES.forEach(k => { const sp = S.side[k]; sp.in = 0; sp.n = 0; sp.won = 0; sp.wc = ''; sp.price = price; sp.solo = 0; });
+  PP_SIDES.forEach(k => { const sp = S.side[k]; sp.in = 0; sp.n = 0; sp.won = 0; sp.wc = ''; sp.wa = 0; sp.price = price; sp.solo = 0; });
   if (!price) return;
   /* a side pot needs at least two players paying in. With only one, nobody pays that hand and the pot
      sits out; and a pot with fewer than two players in it is open for anyone to join. */
@@ -871,7 +891,7 @@ function ppClaim(i, k){
     if (S.side.por.won) return 'taken';
     if (!ppOneAway(x)) return 'not yet';
     const amt = S.side.por.pot;
-    x.s += amt; S.side.por.pot = 0; S.side.por.m = []; S.side.por.won = 1; S.side.por.wc = x.c; S.q++;
+    x.s += amt; S.side.por.pot = 0; S.side.por.m = []; S.side.por.won = 1; S.side.por.wc = x.c; S.side.por.wa = amt; S.q++;
     ppEv({ k:'porter', i, amt });
     return '';
   }
@@ -903,6 +923,7 @@ function ppSideSettle(){
     sp.pot = 0; sp.m = [];
   });
   if (S.side.por.in && !S.side.por.won) res.por = { roll:S.side.por.pot };
+  else if (S.side.por.won) { const pi = S.seats.findIndex(y => y && y.c === S.side.por.wc); if (pi >= 0) res.por = { w:[{ i:pi, amt:+S.side.por.wa || 0 }] }; }
   ppSideCl = { col:new Set(), spd:new Set() };
   if (S.pp) S.pp.cw = 0;
   if (Object.keys(res).length) { S.side.res = res; ppEv({ k:'side', res }); }
@@ -1112,14 +1133,14 @@ function ppWin(i){
   streak(i);
   ppEv({ k:'win', i, amt });
   ppSideSettle();
-  nextHandAt = Date.now() + 7000;
+  nextHandAt = Date.now() + (S.side && S.side.res ? 9500 : 7000);
 }
 function ppNoWinner(why){
   S.ph = 'done'; S.tn = -1; S.pp.step = 'done'; S.pp.top = null; S.q++;
   S.res = { k:'nowin', pot:S.pot, w:[], l:[], why:why || 'pile' };
   ppEv({ k:'nowin', why:why || 'pile' });
   ppSideSettle();
-  nextHandAt = Date.now() + 5000;
+  nextHandAt = Date.now() + (S.side && S.side.res ? 8500 : 5000);
 }
 /* players who leave in the middle of a hand are out of it; their cards go to the thrown pile */
 function ppLeavers(){
@@ -1206,7 +1227,7 @@ const params = new URLSearchParams(location.search);
 const ps = params.get('ps');
 let code = (location.hash || '').replace('#', '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
 
-let role = 'none', peer = null, conn = null, netState = 'idle', retryTimer = null, tryingSince = 0;
+let role = 'none', peer = null, conn = null, netState = 'idle', retryTimer = null, tryingSince = 0, noHostAt = 0;
 const pres = new Map();
 let view = { s:null, hole:null, pend:null }, lastHostMsg = 0, lastPing = 0;
 let awaySince = new Map(), lastPub = '', lastTurnKey = '', turnClock = 0, botTimer = null, botKey = '', waitStartAt = 0;
@@ -1819,7 +1840,7 @@ function connectClient(){
     p.on('error', err => {
       if (peer !== p) return;
       const t = err && err.type;
-      if (t === 'peer-unavailable') { netState = 'nohost'; dropConn(); retryLater(5000); }
+      if (t === 'peer-unavailable') { netState = 'nohost'; if (!noHostAt) noHostAt = Date.now(); dropConn(); retryLater(5000); }
       else if (t === 'browser-incompatible') netState = 'unsupported';
       else { netState = 'offline'; if (p.destroyed) peer = null; dropConn(); retryLater(4000); }
       scheduleRender();
@@ -1843,7 +1864,7 @@ function openConn(){
     pc.addEventListener('iceconnectionstatechange', () => { if (pc.iceConnectionState === 'failed') giveUp('nolink'); });
   };
   watchIce();
-  c.on('open', () => { clearTimeout(to); if (conn !== c) return; netState = 'live'; tryingSince = 0; lastHostMsg = Date.now(); sendHello(); scheduleRender(); });
+  c.on('open', () => { clearTimeout(to); if (conn !== c) return; netState = 'live'; tryingSince = 0; noHostAt = 0; lastHostMsg = Date.now(); sendHello(); scheduleRender(); });
   c.on('data', d => { if (conn === c) onHostMsg(d); });
   const lost = () => { clearTimeout(to); if (conn !== c) return; const wasOpen = c.open || netState === 'live'; conn = null; netState = wasOpen ? 'lost' : (answered() ? 'nolink' : 'noanswer'); if (!tryingSince) tryingSince = Date.now(); scheduleRender(); retryLater(2000); };
   c.on('close', lost); c.on('error', lost);
@@ -2850,7 +2871,7 @@ function renderCenter(s){
   const myIdx = s ? mySeatIdx(s) : -1;
   let ph = role === 'none' ? 'Card night' : 'Knock', bl = '';
   if (!s) {
-    if (role === 'player') { ph = 'Table ' + code; bl = kicked ? 'You were removed from this table.' : netState === 'nohost' ? 'Waiting for the host to open the table…' : 'Connecting…'; }
+    if (role === 'player') { ph = 'Table ' + code; bl = kicked ? 'You were removed from this table.' : hostGone() ? 'Everyone\'s gone. The host left this table.' : 'Connecting…'; }
     else bl = 'Knock or Pitty Pat. Pick a game below.';
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
@@ -2868,8 +2889,8 @@ function renderCenter(s){
       else if (pp.cw) bl = 'Side pot claims are open';
       else if (pp.step === 'offer' && validCard(pp.top)) bl = `${nm} threw ${aRank(pp.top)}`;
     } else if (s.ph === 'done' && s.res) {
-      if (s.res.k === 'pitty') { const w = s.res.w[0]; ph = 'Pitty Pat!'; bl = `${nameOf(s, w.i, myIdx)} ${w.i === myIdx ? 'win' : 'wins'} <em>${fmtT(w.amt)}</em>.`; }
-      else { ph = 'No winner'; bl = s.res.why === 'stuck' ? `Nobody could make another pair. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.` : `The pile ran out. The <em>${fmtT(s.pot)}</em> pot stays for the next hand.`; }
+      ph = '';
+      bl = ppResultsHTML(s, myIdx);
     }
   } else if (s.ph === 'deciding') {
     ph = 'Hand ' + s.hand + (s.fresh === 0 ? ' · no ante' : '');
@@ -2885,14 +2906,15 @@ function renderCenter(s){
     bl = holding() ? (s.res && s.res.tie ? 'Two new cards each for the tied players…' : '') : resultText(s, myIdx);
   }
   setText(phase, ph);
-  if (s) {
+  if (s && isPP(s) && s.ph === 'done' && s.res) pot.hidden = true;
+  else if (s) {
     const pv = holding() && holdPot != null ? holdPot : s.pot, lv = potLevel(pv);
     pot.hidden = false; setHTML(pot, `<span class="coin"></span><span class="lbl">Pot</span>${fmtT(pv)}`);
     pot.classList.toggle('big', lv >= 1); pot.classList.toggle('mega', lv >= 2);
   }
   else pot.hidden = true;
   const mid = $('#ppmid');
-  if (isPP(s) && (s.ph === 'playing' || s.ph === 'done')) {
+  if (isPP(s) && s.ph === 'playing') {
     const pp = s.pp || {};
     let top = '<div class="card slot"></div>';
     if (s.ph === 'playing' && pp.step === 'offer' && validCard(pp.top)) {
@@ -2919,6 +2941,16 @@ function renderCenter(s){
 function inviteHTML(){
   return `<div class="invite"><span class="lbl">Invite friends with this link</span><code>${esc(inviteLink())}</code>
     <div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="copy">Copy link</button><button type="button" class="btn gold" data-act="share">Share…</button></div>${role === 'host' ? '<p class="small muted">Use Share… so you stay on this page. While your screen is locked or you\'re in another app, friends can\'t join.</p>' : ''}</div>`;
+}
+/* nobody is hosting this table: right away for someone just arriving, after 30 seconds for someone who was playing */
+function hostGone(){
+  return role === 'player' && !kicked && netState !== 'live' && !!noHostAt && (!view.s || Date.now() - noHostAt > 30000);
+}
+function goneHTML(){
+  return `<div class="gone"><div class="gonehead"><span aria-hidden="true">🚪</span><div><b>Everyone's gone.</b><span>The host left table ${esc(code)}, so nobody's playing here right now. Start your own room or find a table that's open.</span></div></div>
+    <form id="goneForm" class="joinform"><label class="sr" for="nameIn">Your name</label><div class="ifield">${PERSON_SVG}<input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"></div><div class="startrow"><button class="btn gold big" type="submit" value="knock">${CARDS_SVG('♠')}Start Knock</button><button class="btn gold big" type="submit" value="pitty">${CARDS_SVG('♥')}Start Pitty Pat</button></div></form>
+    <button type="button" class="btn ghost wide" data-act="tolobby">See open tables</button>
+    <p class="small muted">If the host comes back, you'll be put back in on your own.</p></div>`;
 }
 function netNotice(){
   if (role === 'host') {
@@ -2956,6 +2988,7 @@ function holeAnim(hand){
   return now - holeAnimAt.at < 700;
 }
 function dockHTML(s){
+  if (hostGone()) return goneHTML();
   const out = [];
   const nn = netNotice(); if (nn) out.push(nn);
   if (role === 'none') {
@@ -3119,6 +3152,24 @@ function ppSideChips(s, x, price, sd){
   }).join('') + '</div>';
 }
 const ppCwSeen = { h:'', at:0 };
+/* end of a hand: who won what, in the middle of the table */
+function ppResultsHTML(s, myIdx){
+  const r = s.res || {}, sr = (s.side && s.side.res) || {};
+  const nm = i => `<b>${nameOf(s, i, myIdx)}</b>`;
+  const minis = cs => { const v = (cs || []).filter(validCard); return v.length ? `<span class="rcards">${v.map(c => cardHTML(c)).join('')}</span>` : ''; };
+  const rows = [];
+  if (r.k === 'pitty' && r.w && r.w[0]) rows.push(`<div class="rrow main"><i>🏆</i><span>${nm(r.w[0].i)} won the game <em>+${fmtT(r.w[0].amt)}</em></span></div>`);
+  else rows.push(`<div class="rrow main"><i>🤷🏾</i><span>No winner. The <em>${fmtT(s.pot)}</em> pot stays.</span></div>`);
+  const win = (k, label, cardsOf) => {
+    const v = sr[k]; if (!v) return;
+    if (v.w && v.w.length) v.w.forEach(w => rows.push(`<div class="rrow"><i>${SIDE_ICON[k]}</i><span>${nm(w.i)} won ${label}${cardsOf ? cardsOf(w) : ''} <em>+${fmtT(w.amt)}</em>${v.w.length > 1 ? ' (split)' : ''}</span></div>`));
+    else rows.push(`<div class="rrow roll"><i>${SIDE_ICON[k]}</i><span>${label}: no winner, <em>${fmtT(v.roll)}</em> rolls over</span></div>`);
+  };
+  win('por', 'Porter');
+  win('spd', 'High Spades', w => { const c = (w.c || []).find(validCard); return c ? ` with ${minis([c])}` : ''; });
+  win('col', 'Colors', w => ` with ${minis(w.c)}`);
+  return `<div class="ppres"><h4>Hand ${+s.hand || ''} results</h4>${rows.join('')}</div>`;
+}
 function ppSideResultText(s, myIdx){
   const r = s.side && s.side.res; if (!r) return '';
   const nm = i => nameOf(s, i, myIdx);
@@ -3306,7 +3357,7 @@ function ppDockHTML(s, i, x, out){
   }
   if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
   if (s.ph === 'playing' && pp.cw && x.st === 'in') status = '<b>Side pot claims are open.</b> ' + status;
-  if (s.ph === 'done' && s.side && s.side.res) status += `<br>${ppSideResultText(s, i)}`;
+  void ppSideResultText;
   if (status) out.push(`<p class="status">${status}</p>`);
   if (buttons) out.push(buttons);
   if (x.st !== 'out') out.push(ppSideHTML(s, i, x));
@@ -3317,7 +3368,7 @@ function nameForm(){
   return `<form id="nameForm" class="joinform"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname"><div class="actions" style="--n:2"><button class="btn gold" type="submit" value="sit">Take a seat</button><button class="btn ghost" type="submit" value="watch">Just watch</button></div></form>`;
 }
 function renderHeader(s){
-  setText($('#brandName'), role === 'none' ? 'Quit Playin\'!' : s && isPP(s) ? 'Pitty Pat' : 'Knock');
+  setText($('#brandName'), role === 'none' || (!s && hostGone()) ? 'Quit Playin\'!' : s && isPP(s) ? 'Pitty Pat' : 'Knock');
   setText($('#sub'), code ? `Table ${code}${s ? ' · Ante ' + fmtT(s.cfg.ante) : ''}` : 'Card night with family');
   const op = $('#onlinePill'), showOn = role === 'none' && lobbyOnline > 0;
   if (op.hidden === showOn) op.hidden = !showOn;
@@ -3327,7 +3378,7 @@ function renderHeader(s){
     const n = 1 + [...pres.values()].filter(p => p.conn && p.conn.open).length;
     if (netState === 'live') { cls += ' live'; txt = `${n} here`; } else if (netState === 'offline' || netState === 'unsupported') { cls += ' bad'; txt = 'Offline'; } else { cls += ' warn'; txt = 'Opening'; }
   } else if (role === 'player') {
-    if (kicked) { cls += ' bad'; txt = 'Removed'; } else if (netState === 'live') { cls += ' live'; txt = 'Live'; } else if (netState === 'connecting') { cls += ' warn'; txt = 'Connecting'; } else { cls += ' bad'; txt = 'Reconnecting'; }
+    if (kicked) { cls += ' bad'; txt = 'Removed'; } else if (hostGone()) { cls += ' bad'; txt = 'Host gone'; } else if (netState === 'live') { cls += ' live'; txt = 'Live'; } else if (netState === 'connecting') { cls += ' warn'; txt = 'Connecting'; } else { cls += ' bad'; txt = 'Reconnecting'; }
   }
   if (pill.className !== cls) pill.className = cls;
   setText($('#netTxt'), txt);
@@ -3597,6 +3648,11 @@ function bindUI(){
     const inp = f.querySelector('input'); const nm = cleanName(inp && inp.value);
     if (!nm) { toast('Type your name first'); if (inp) inp.focus(); return; }
     if (f.id === 'startForm') { myName = nm; store.set('knock_name', nm); startTable(e.submitter && e.submitter.value === 'pitty' ? 'pitty' : 'knock'); }
+    else if (f.id === 'goneForm') {
+      myName = nm; store.set('knock_name', nm); store.set('knock_sit_' + code, '0');
+      try { sessionStorage.setItem('knock_autostart', e.submitter && e.submitter.value === 'pitty' ? 'pitty' : 'knock'); } catch (err) {}
+      location.hash = ''; if (!location.hash) location.reload(); return;
+    }
     else if (f.id === 'nameForm') { setName(nm); if (e.submitter && e.submitter.value === 'watch') watchOnly(); else sitDown(); }
     else if (f.id === 'renameForm') { setName(nm); toast('Name saved'); }
     scheduleRender();
@@ -3627,6 +3683,9 @@ function boot(){
     const saved = loadSaved();
     if (saved && saved.code === code) resumeHost(saved);
     else { role = 'player'; me.sit = !!myName && store.get('knock_sit_' + code) === '1'; connectClient(); }
+  } else {
+    let auto = ''; try { auto = sessionStorage.getItem('knock_autostart') || ''; sessionStorage.removeItem('knock_autostart'); } catch (e) {}
+    if (auto && myName) startTable(auto === 'pitty' ? 'pitty' : 'knock');
   }
   render();
   pinTop(); setTimeout(pinTop, 300); setTimeout(pinTop, 1200);
