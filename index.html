@@ -831,7 +831,8 @@ function botDecide(i){
    any card; if it doesn't, you throw out the card you pulled. Every thrown card is offered around the
    table for a few seconds: anyone who can match it may tap Take it, and the closest to the thrower's
    left gets it. Anyone else who could have matched it (beaten to it, or asleep) has that card go dead:
-   it's turned face up and must be the next card they throw. You win when every card left in your hand
+   it's turned face up and must be the next card they throw. Any time someone lays down a pair, however
+   they got it, everyone else holding a loose card of that rank has it go dead too. You win when every card left in your hand
    is in pairs. Pairs you're dealt stay hidden in your hand. */
 const PP_SEATS = 6, PP_START = 2000, PP_OFFER = 8, PP_HOLD_MS = 3500;
 let ppPend = null, ppDisc = [], ppClaims = new Set(), ppPasses = new Set(), ppOfferAt = 0, ppHoldEnd = 0;
@@ -1051,14 +1052,16 @@ function ppLay(i, c){
   S.pp.top = null;
   ppEv({ k:'pair', i, c:[m, c], dead:fromDead ? 1 : 0 });
   if (!x.dd.length && ppAllPairs(h)) { ppWin(i); return; }
+  /* someone beat everyone else to that rank: anyone holding a loose one has it go dead */
+  S.seats.forEach((y, j) => { if (j !== i && ppIn(y)) ppKill(j, c[0], 'pair', i); });
   S.tn = i; S.pp.step = 'throw'; S.pp.from = -1;
 }
-function ppKill(j, r, why){
+function ppKill(j, r, why, by){
   const x = S.seats[j], h = holes[x.c];
   if (ppCount(h, r) % 2 === 0) return;
   const k = h.findIndex(y => y[0] === r); if (k < 0) return;
   const d = h.splice(k, 1)[0]; x.dd.push(d); x.hc = h.length;
-  ppEv({ k:'dead', i:j, c:d, why });
+  ppEv(by != null ? { k:'dead', i:j, c:d, why, by } : { k:'dead', i:j, c:d, why });
 }
 function ppOffer(i, c){
   const pp = S.pp;
@@ -2328,7 +2331,9 @@ function ppFx(s, e){
       textFx(slept ? '😴 SLEPT!' : '💀 DEAD', { x:clampX(p.x), y:p.y - 50 }, 'ouch', 1600);
       sfx(slept ? 'wind' : 'ouch');
       const you = e.i === mySeatIdx(s);
-      toast(slept ? `😴 ${who(e.i)} slept on ${aRank(e.c)}! ${you ? 'Your' : 'Their'} ${rankWord(e.c)} is dead.` : `💀 ${who(e.i)} got beat to ${aRank(e.c)}. ${you ? 'Your' : 'Their'} ${rankWord(e.c)} is dead.`);
+      toast(slept ? `😴 ${who(e.i)} slept on ${aRank(e.c)}! ${you ? 'Your' : 'Their'} ${rankWord(e.c)} is dead.`
+        : e.why === 'pair' && e.by != null ? `💀 ${who(e.by)} paired the ${RPL[rv(e.c)]}. ${you ? 'Your' : who(e.i) + '\'s'} ${rankWord(e.c)} is dead.`
+        : `💀 ${who(e.i)} got beat to ${aRank(e.c)}. ${you ? 'Your' : 'Their'} ${rankWord(e.c)} is dead.`);
       break;
     }
     case 'reshuffle': textFx('RESHUFFLE', { x:G.cx, y:G.cy - 80 }, 'big', 1200); sfx('whoosh'); break;
@@ -3435,7 +3440,7 @@ function menuHTML(s){
     <li>On your turn, <b>pull a card</b>. If it matches a card in your hand, tap <b>Pair it</b>: the pair goes down face up, then you throw out any card. If it doesn't match, you throw out the card you pulled.</li>
     <li>Every thrown card is up for grabs for ${+cfg.ow || 8} seconds. If it matches a card in your hand, tap <b>Take it</b>. If two people tap, the one closest to the thrower's left gets it, lays the pair down and throws a card, and play goes on to their left. If nobody takes it, the next player pulls.</li>
     <li>A match is the same rank. Suits don't matter. Pairs you're dealt stay hidden in your hand, and you can't take a third card for a pair you already hold. If you hold three of a kind, the fourth one gives you two pairs.</li>
-    <li><b>Don't sleep.</b> If a thrown card matched yours and you didn't get it, because you didn't tap in time or someone closer beat you, your card goes <b>dead</b>. It's turned face up, and the next time you make a pair, your dead card has to be the card you throw. If another card of that rank comes up, pulled or thrown, you can still match it with your dead card. Throwing away a card you pulled that matched also counts as sleeping.</li>
+    <li><b>Don't sleep.</b> If a thrown card matched yours and you didn't get it, because you didn't tap in time or someone closer beat you, your card goes <b>dead</b>. Same if anyone else lays down a pair of your card: when someone pairs Kings, your King is dead. A dead card is turned face up, and the next time you make a pair, your dead card has to be the card you throw. If another card of that rank comes up, pulled or thrown, you can still match it with your dead card. Throwing away a card you pulled that matched also counts as sleeping.</li>
     <li>You win the moment every card left in your hand is paired, with no dead cards: <b>Pitty Pat!</b></li>
     <li>If the pile runs out, the thrown cards are shuffled into a new pile. If nobody can win, the pot stays for the next hand.</li>
   </ol></section>`);
