@@ -484,6 +484,10 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .plist li .giverow{flex-basis:100%;padding:2px 0 4px}
 .plist li:has(.giverow){flex-wrap:wrap}
 .chipbtn{min-height:38px;border-radius:10px;border:1px solid rgba(243,234,216,.2);background:rgba(243,234,216,.07);font-weight:700;font-size:13px;padding:0 12px;white-space:nowrap;flex:none}
+.sidepick{display:grid;grid-template-columns:auto repeat(4,1fr);align-items:center;gap:6px}
+.sidepick>span{font-size:14px;font-weight:800;color:var(--ivory);padding-right:4px;white-space:nowrap}
+.sidepick .segb{min-height:38px;padding:0 2px;border-radius:11px;border:1px solid rgba(243,234,216,.18);background:rgba(255,255,255,.04);color:var(--ivory);font:800 14px var(--font-body);cursor:pointer}
+.sidepick .segb.on{background:var(--brass);border-color:var(--brass);color:var(--ink)}
 .invite{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid rgba(220,171,74,.28)}
 .invite .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}
 .invite code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--ivory);overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
@@ -3039,6 +3043,11 @@ function renderCenter(s){
   setHTML($('#deckinfo'), s && s.round ? `${dl ? (s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals') : 'Deck'} · ${+s.left || 0} cards left` : '');
   setHTML(below, bl);
 }
+/* the host picks side pots right on the waiting screen: one compact row */
+function sidePickHTML(s){
+  const sv = +(s && s.cfg && s.cfg.side) || 0;
+  return `<div class="sidepick" role="group" aria-label="Side pots"><span>Side pots</span>${[[0, 'Off'], [25, '0.25'], [50, '0.50'], [100, '1.00']].map(([v, l]) => `<button type="button" class="segb${sv === v ? ' on' : ''}" data-act="setcfg" data-f="side" data-v="${v}" aria-pressed="${sv === v}">${l}</button>`).join('')}</div>`;
+}
 function inviteHTML(){
   return `<div class="invite"><span class="lbl">Invite friends with this link</span><code>${esc(inviteLink())}</code>
     <div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="copy">Copy link</button><button type="button" class="btn gold" data-act="share">Share…</button></div>${role === 'host' ? '<p class="small muted">Use Share… so you stay on this page. While your screen is locked or you\'re in another app, friends can\'t join.</p>' : ''}</div>`;
@@ -3214,6 +3223,8 @@ function dockHTML(s){
 }
 function ppSideHTML(s, i, x){
   const price = +s.cfg.side || 0, sd = s.side;
+  /* waiting for the first deal: the host picks the side pot price right here, next to the switches */
+  if (role === 'host' && s.ph === 'waiting') return sidePickHTML(s) + (price ? ppSideChips(s, x, price, sd) : '');
   if (!price && !(sd && PP_SIDES.some(k => sd[k] && sd[k].pot))) return '';
   const pp = s.pp || {}, playing = s.ph === 'playing', mine = ppMyClaims();
   const inHand = x.st === 'in' && (playing || s.ph === 'done');
@@ -3417,8 +3428,10 @@ function ppDockHTML(s, i, x, out){
       else status = `<em>${nReady}</em> of ${players.length} ready. Waiting on ${joinNames(waitingOn)}.`;
       const btns = [x.rdy ? '<button type="button" class="btn ghost" data-act="ready" data-v="0">I\'m not ready</button>' : '<button type="button" class="btn gold" data-act="ready" data-v="1">I\'m ready</button>'];
       if (role === 'host' && players.length >= 2 && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
+      const alone = role === 'host' && s.seats.filter(Boolean).length < 2;
+      if (alone) btns.push('<button type="button" class="btn ghost" data-act="addbot">Practice with a bot</button>');
       buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
-      if (role === 'host' && s.seats.filter(Boolean).length < 2) buttons += inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>';
+      if (alone) buttons += inviteHTML();
     }
   } else if (s.ph === 'done') {
     if (s.res && s.res.k === 'pitty') { const w = s.res.w[0]; status = w.i === i ? `<b>Pitty Pat!</b> You win <em>${fmtT(w.amt)}</em>.` : `${esc(s.seats[w.i] ? s.seats[w.i].n : 'Someone')} wins <em>${fmtT(w.amt)}</em>. Next hand in a moment.`; }
@@ -3692,6 +3705,7 @@ function bindUI(){
       case 'fold': act('fold'); break;
       case 'ask': askTokens(); break;
       case 'give': giveTokens(+b.dataset.i, +b.dataset.a); break;
+      case 'setcfg': if (b.dataset.f === 'side') setCfg('side', b.dataset.v); break;
       case 'giveopen': { const x = S && S.seats[+b.dataset.i]; giveOpen = x && giveOpen !== x.c ? x.c : ''; renderSheet(cur()); break; }
       case 'addbot': addBot(); break;
       case 'rmbots': removeBots(); break;
