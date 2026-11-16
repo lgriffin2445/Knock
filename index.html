@@ -309,6 +309,7 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .nm .tag{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--muted);vertical-align:1px}
 .stk{font-size:12px;font-weight:800;color:var(--brass);font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center;gap:4px;margin-top:3px}
 .stk .coin{width:11px;height:11px}
+.porbadge.botfill{background:linear-gradient(#cfd8dc,#90a4ae);font-size:8.5px}
 .porbadge{display:inline-block;margin:2px auto 1px;padding:1px 7px 1px 5px;border-radius:999px;background:linear-gradient(#f3d28a,var(--brass));color:var(--ink);font:800 9px/14px var(--font-body);letter-spacing:.08em;box-shadow:0 1px 3px rgba(0,0,0,.5);white-space:nowrap}
 .dchip{position:absolute;top:-9px;left:-9px;width:21px;height:21px;border-radius:50%;background:var(--brass);color:var(--ink);font:800 11px/21px var(--font-body);text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.55),inset 0 0 0 2px #f3d28a;z-index:4}
 .stk.neg{color:#f08a91}
@@ -463,6 +464,13 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .linkbtn{background:none;border:0;padding:0;color:var(--brass);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .notice{font-size:13px;line-height:1.35;padding:8px 10px;border-radius:12px;background:rgba(220,171,74,.12);border:1px solid rgba(220,171,74,.38);display:flex;gap:10px;align-items:center;justify-content:space-between}
 .notice.bad{background:rgba(201,53,63,.12);border-color:rgba(201,53,63,.45)}
+.giverow{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn.give{min-width:58px;color:#f0c35a;border-color:rgba(230,178,80,.45);background:rgba(230,178,80,.1)}
+.chipbtn.on{background:rgba(230,178,80,.22);border-color:rgba(230,178,80,.6)}
+.givehead{margin:0 0 6px;font-weight:700}
+.notice.givenote{flex-direction:column;align-items:stretch;gap:8px}
+.plist li .giverow{flex-basis:100%;padding:2px 0 4px}
+.plist li:has(.giverow){flex-wrap:wrap}
 .chipbtn{min-height:38px;border-radius:10px;border:1px solid rgba(243,234,216,.2);background:rgba(243,234,216,.07);font-weight:700;font-size:13px;padding:0 12px;white-space:nowrap;flex:none}
 .invite{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid rgba(220,171,74,.28)}
 .invite .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}
@@ -951,7 +959,7 @@ function ppStartHand(){
   S.seats.forEach(x => {
     if (!x) return;
     if (x.so && x.back) { x.so = 0; x.back = 0; }
-    x.pr = []; x.dd = []; x.hc = 0; x.sh = null; x.t = 0; x.a = '';
+    x.pr = []; x.dd = []; x.hc = 0; x.sh = null; x.t = 0; x.a = ''; x.bf = 0;
     x.st = x.so ? 'wait' : x.s < ante ? 'out' : (x.away ? 'wait' : 'in');
   });
   let elig = S.seats.map((x, i) => (x && x.st === 'in' ? i : -1)).filter(i => i >= 0);
@@ -1146,23 +1154,15 @@ function ppNoWinner(why){
   nextHandAt = Date.now() + (S.side && S.side.res ? 8500 : 5000);
 }
 /* players who leave in the middle of a hand are out of it; their cards go to the thrown pile */
+/* Someone who leaves in the middle of a hand keeps their seat, cards, dead cards and pairs until the
+   hand is over. A bot finishes the hand for them, and anything it wins is theirs. */
 function ppLeavers(){
   if (!S || S.ph !== 'playing') return;
   S.seats.forEach((x, i) => {
-    if (!x || !x.g || x.st !== 'in') return;
-    const h = holes[x.c] || [];
-    ppDisc.push(...h, ...(x.dd || [])); holes[x.c] = []; x.dd = []; x.hc = 0; x.st = 'left'; x.a = 'Left';
-    ppClaims.delete(i);
-    if (S.tn === i && S.pp.step !== 'offer') {
-      if (ppPend) { ppDisc.push(ppPend); ppPend = null; }
-      S.tn = ppNext(i); S.pp.step = 'pull'; S.pp.from = -1; S.q++;
-    }
-    S.pp.disc = ppDisc.length;
+    if (!x || x.bot || !x.g || x.st !== 'in' || x.bf) return;
+    x.bf = 1; S.q++;
     ppEv({ k:'left', i });
   });
-  const live = S.seats.map((x, i) => (ppIn(x) ? i : -1)).filter(i => i >= 0);
-  if (live.length === 1) ppWin(live[0]);
-  else if (!live.length) ppNoWinner();
 }
 /* the move made for you when your time runs out (or you're away): pull, throw the pulled card, or throw a loose card */
 function ppAuto(i){
@@ -1274,14 +1274,14 @@ function ppHostTick(now){
   const pp = S.pp;
   /* bots claim side pots they really have, a few seconds in (and sometimes forget, like people) */
   if (S.side && +S.cfg.side) S.seats.forEach((x, j) => {
-    if (!x || !x.bot || !ppIn(x) || !x.sp) return;
+    if (!x || !ppBotPlays(x) || !ppIn(x) || !x.sp) return;
     const want = [];
     if (pp.cw && x.sp.col && ppColorsRank(ppDealt[x.c] || [])) want.push('col');
     if (pp.cw && x.sp.spd && ppSpadeRank(ppDealt[x.c] || [])) want.push('spd');
     if (x.sp.por && !S.side.por.won && ppOneAway(x)) want.push('por');
     want.forEach(k => {
       const key = S.hand + ':' + k + ':' + j + (k === 'por' ? ':' + S.q : '');
-      if (!ppBotSide.has(key)) ppBotSide.set(key, now + 1500 + randInt(4000) + (randInt(100) < 15 ? 600000 : 0));
+      if (!ppBotSide.has(key)) ppBotSide.set(key, now + 1500 + randInt(4000) + (x.bot && randInt(100) < 15 ? 600000 : 0));
       else if (now >= ppBotSide.get(key)) { ppBotSide.set(key, Infinity); ppClaim(j, k); }
     });
   });
@@ -1292,17 +1292,16 @@ function ppHostTick(now){
   if (pp.step === 'offer') {
     S.seats.forEach((x, j) => {
       if (!x || j === pp.from || !ppIn(x) || ppPasses.has(j)) return;
-      if (!x.bot && awaySince.has(x.c)) { ppPasses.add(j); return; }
-      if (x.bot && !ppCanMatch(j, pp.top)) {
+      if (ppBotTakes(x) && !ppCanMatch(j, pp.top)) {
         const key = pp.oid + ':p' + j;
         if (!ppBotClaim.has(key)) ppBotClaim.set(key, now + 500 + randInt(1200));
         else if (now >= ppBotClaim.get(key)) { ppBotClaim.delete(key); ppPasses.add(j); }
       }
     });
     S.seats.forEach((x, j) => {
-      if (!x || !x.bot || j === pp.from || !ppCanMatch(j, pp.top)) return;
+      if (!x || !ppBotTakes(x) || j === pp.from || !ppCanMatch(j, pp.top)) return;
       const key = pp.oid + ':' + j;
-      if (!ppBotClaim.has(key)) ppBotClaim.set(key, now + 1100 + randInt(2800) + (randInt(100) < 12 ? 600000 : 0));
+      if (!ppBotClaim.has(key)) ppBotClaim.set(key, now + 1100 + randInt(2800) + (x.bot && randInt(100) < 12 ? 600000 : 0));
       else if (now >= ppBotClaim.get(key) && S.pp.step === 'offer') { ppBotClaim.delete(key); ppAct(j, { k:'take', o:pp.oid }); }
     });
     if (ppBotClaim.size > 60) ppBotClaim.clear();
@@ -1312,16 +1311,20 @@ function ppHostTick(now){
   const i = S.tn, x = S.seats[i]; if (!x) return;
   const key = S.hand + ':' + S.q;
   if (key !== lastTurnKey) { lastTurnKey = key; turnClock = now; }
-  if (x.bot) {
+  if (ppBotPlays(x)) {
     if (ppBotKey !== key) {
       ppBotKey = key; clearTimeout(ppBotTimer);
-      ppBotTimer = setTimeout(() => { if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i) { ppBotMove(i); hostTick(); } }, 700 + randInt(1100));
+      ppBotTimer = setTimeout(() => { const y = S && S.seats[i]; if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i && y && ppBotPlays(y)) { ppBotMove(i); hostTick(); } }, 700 + randInt(1100));
     }
     return;
   }
-  const away = awaySince.has(x.c) ? now - awaySince.get(x.c) : 0;
-  if ((S.cfg.tm > 0 && now - turnClock > S.cfg.tm * 1000) || away > 15000) ppAuto(i);
+  if (S.cfg.tm > 0 && now - turnClock > S.cfg.tm * 1000) ppAuto(i);
 }
+/* A bot plays for real bots, for anyone who left mid-hand, and for anyone whose phone has dropped
+   (away for 8 seconds). They take their seat back the moment they're here again. */
+function ppBotPlays(x){ return !!x && (x.bot || x.g || x.away); }
+/* for a thrown card, a dropped phone gets help right away (the offer only lasts a few seconds) */
+function ppBotTakes(x){ return ppBotPlays(x) || (!!x && awaySince.has(x.c)); }
 function startTable(game){
   if (!myName) return;
   if (!hasPeerLib()) { toast('This page did not load fully. Reload and try again.'); return; }
@@ -1497,7 +1500,7 @@ function hostTick(){
     let here, p;
     if (x.c === myCid) { here = true; p = { n:myName, sit:me.sit, av:myAv }; }
     else { p = pres.get(x.c); here = !!(p && p.conn && p.conn.open && now - p.seen < 20000); }
-    if (here) { awaySince.delete(x.c); x.away = 0; if (p.sit) { x.g = 0; const nm = cleanName(p.n); if (nm) x.n = nm; x.av = AV_LIST.includes(p.av) ? p.av : ''; } else x.g = 1; }
+    if (here) { awaySince.delete(x.c); x.away = 0; if (p.sit) { x.g = 0; x.bf = 0; const nm = cleanName(p.n); if (nm) x.n = nm; x.av = AV_LIST.includes(p.av) ? p.av : ''; } else x.g = 1; }
     else { if (!awaySince.has(x.c)) awaySince.set(x.c, now); x.away = now - awaySince.get(x.c) > 8000 ? 1 : 0; if (now - awaySince.get(x.c) > 90000) x.g = 1; }
   });
   if (isPP(S)) { if (S.ph !== 'playing') removeGone(); else ppLeavers(); }
@@ -1563,12 +1566,21 @@ function addBot(){
   hostTick();
 }
 function removeBots(){ if (role === 'host' && S) { S.seats.forEach(x => { if (x && x.bot) x.g = 1; }); hostTick(); } }
-function giveTokens(i){
+const GIVE_AMTS = [100, 500, 800, 1000];
+function giveAmts(s){ const st = +s.cfg.st || 0; return GIVE_AMTS.includes(st) || st <= 0 ? GIVE_AMTS : GIVE_AMTS.concat(st); }
+/* buttons to give someone 1, 5, 8, 10 or the starting amount */
+function giveRow(s, i, self){
+  return `<div class="giverow">${giveAmts(s).map(a => `<button type="button" class="chipbtn give" data-act="give" data-i="${i}" data-a="${a}" aria-label="Give ${self ? 'yourself' : esc(s.seats[i] ? s.seats[i].n : '')} ${fmtT(a)}">+${fmtT(a)}</button>`).join('')}</div>`;
+}
+let giveOpen = '';
+function giveTokens(i, amt){
   if (role !== 'host' || !S) return;
   const x = S.seats[i]; if (!x) return;
-  x.s += S.cfg.st; x.ask = 0; if (x.st === 'out') x.st = 'wait'; stat(x.c).in += S.cfg.st;
-  if (S.dk && S.dk.st[x.c] != null) S.dk.st[x.c] += S.cfg.st;
-  toast(`Gave ${x.n} ${fmtT(S.cfg.st)}`); hostTick();
+  const a = giveAmts(S).includes(+amt) ? +amt : S.cfg.st;
+  x.s += a; x.ask = 0; if (x.st === 'out') x.st = 'wait'; stat(x.c).in += a;
+  if (S.dk && S.dk.st[x.c] != null) S.dk.st[x.c] += a;
+  giveOpen = '';
+  toast(x.c === myCid ? `You gave yourself ${fmtT(a)}` : `Gave ${x.n} ${fmtT(a)}`); hostTick();
 }
 function setCfg(field, val){
   if (role !== 'host' || !S) return;
@@ -2337,6 +2349,7 @@ function ppFx(s, e){
       break;
     }
     case 'reshuffle': textFx('RESHUFFLE', { x:G.cx, y:G.cy - 80 }, 'big', 1200); sfx('whoosh'); break;
+    case 'left': if (e.i !== mySeatIdx(s)) toast(`${who(e.i)} left. A bot will finish their hand, and anything it wins is theirs.`); break;
     case 'win': {
       const to = P(e.i); textFx('PITTY PAT!', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2300);
       moneyRain(20, ['💵', '🎉', '💵', '✨']); sfx('fanfare'); setTimeout(() => sfx('cash'), 480);
@@ -2764,8 +2777,9 @@ function ppSeatView(s, i, x, isMine){
   const dchip = s.round && s.bt === i ? '<span class="dchip" title="Dealer">D</span>' : '';
   const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
   const won = win ? `<span class="won">+${fmtT(s.res.w[0].amt)}</span>` : '';
+  const botb = s.ph === 'playing' && x.st === 'in' && !x.bot && (x.g || x.away) ? `<div class="porbadge botfill">🤖 ${x.g ? 'BOT FINISHING' : 'BOT PLAYING'}</div>` : '';
   const por = s.side && s.side.por && s.side.por.won && s.side.por.wc && s.side.por.wc === x.c && (s.ph === 'playing' || s.ph === 'done') ? '<div class="porbadge" title="Got the Porter pot this hand">🎯 PORTER</div>' : '';
-  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div>${por}<div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${(prs || dds) && !isMine ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
+  return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div>${por}${botb}<div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${(prs || dds) && !isMine ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
 }
 function seatView(s, i, x, isMine){
   if (isPP(s)) return ppSeatView(s, i, x, isMine);
@@ -3052,7 +3066,7 @@ function dockHTML(s){
   if (x.s < s.cfg.ante && !dealt || x.st === 'out') {
     status = x.s < 0 ? `You owe <em>${fmtT(-x.s)}</em>.` : 'You\'re out of tokens.';
     buttons = role === 'host'
-      ? `<button type="button" class="btn gold wide" data-act="give" data-i="${i}">Give yourself ${fmtT(s.cfg.st)}</button>`
+      ? `<p class="givehead">Give yourself:</p>${giveRow(s, i, 1)}`
       : (x.ask ? '' : `<button type="button" class="btn gold wide" data-act="ask">Ask the host for more tokens</button>`);
     if (x.ask && role !== 'host') status += ' The host has your request.';
   } else if (x.so && s.ph !== 'recap' && !dealt) {
@@ -3110,7 +3124,7 @@ function dockHTML(s){
   } else if (x.st === 'knock') status = 'You knocked. Waiting for everyone else to decide…';
   else if (x.st === 'fold') status = 'You folded this hand.';
   else if (s.ph === 'deciding') { const t = s.seats[s.tn]; status = t ? `Waiting for ${esc(t.n)} to decide…` : 'Waiting…'; }
-  if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
+  if (asker >= 0 && asker !== i) out.unshift(`<div class="notice givenote"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more. Give them:</span>${giveRow(s, asker)}</div>`);
   if (status) out.push(`<p class="status">${status}</p>`);
   if (buttons) out.push(buttons);
   if (!x.so && !myTurn && s.live && s.ph !== 'recap' && x.st !== 'out') out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>${dealt && s.ph === 'deciding' ? ' from the next hand' : ''}. You keep your seat and tokens.</p>`);
@@ -3304,7 +3318,7 @@ function ppDockHTML(s, i, x, out){
   const t = s.seats[s.tn], tn = t ? esc(t.n) : 'Someone';
   if (x.s < s.cfg.ante && !inHand || x.st === 'out') {
     status = x.s < 0 ? `You owe <em>${fmtT(-x.s)}</em>.` : 'You\'re out of tokens.';
-    buttons = role === 'host' ? `<button type="button" class="btn gold wide" data-act="give" data-i="${i}">Give yourself ${fmtT(s.cfg.st)}</button>` : (x.ask ? '' : '<button type="button" class="btn gold wide" data-act="ask">Ask the host for more tokens</button>');
+    buttons = role === 'host' ? `<p class="givehead">Give yourself:</p>${giveRow(s, i, 1)}` : (x.ask ? '' : '<button type="button" class="btn gold wide" data-act="ask">Ask the host for more tokens</button>');
     if (x.ask && role !== 'host') status += ' The host has your request.';
   } else if (x.so && !inHand) {
     if (x.back) { status = 'You\'re coming back next hand.'; buttons = '<button type="button" class="btn ghost wide" data-act="sitout" data-v="1">Stay out</button>'; }
@@ -3360,7 +3374,7 @@ function ppDockHTML(s, i, x, out){
   } else if (s.ph === 'playing') {
     status = pp.step === 'pull' ? `${tn} is pulling…` : pp.step === 'drawn' ? `${tn} is deciding…` : `${tn} made a pair and is throwing…`;
   }
-  if (asker >= 0 && asker !== i) out.unshift(`<div class="notice"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more.</span><button type="button" class="chipbtn" data-act="give" data-i="${asker}">Give ${fmtT(s.cfg.st)}</button></div>`);
+  if (asker >= 0 && asker !== i) out.unshift(`<div class="notice givenote"><span>${esc(s.seats[asker].n)} is out of tokens and asked for more. Give them:</span>${giveRow(s, asker)}</div>`);
   if (s.ph === 'playing' && pp.cw && x.st === 'in') status = '<b>Side pot claims are open.</b> ' + status;
   void ppSideResultText;
   if (status) out.push(`<p class="status">${status}</p>`);
@@ -3404,7 +3418,7 @@ function menuHTML(s){
   parts.push(`<section><h3>You</h3><form id="renameForm" class="joinrow"><label class="sr" for="nameEdit">Your name</label><input id="nameEdit" maxlength="12" value="${esc(myName)}" placeholder="Your name" autocomplete="nickname"><button class="btn ghost" type="submit">Save name</button></form><div class="field"><span>Your look</span><button type="button" class="chipbtn" data-act="avatar">${myAv ? myAv + ' Change' : 'Pick an emoji'}</button></div><div class="field"><span>Sounds</span><button type="button" class="chipbtn" data-act="sound">${SFX.on ? 'On 🔊' : 'Off 🔇'}</button></div><p class="small muted">Tip: tap anyone's seat to throw something at them. Tap your own seat to change your look.</p>${me.sit && s && mySeatIdx(s) >= 0 ? '<button type="button" class="btn ghost wide" data-act="stand">Leave your seat and watch</button>' : ''}</section>`);
   if (s) { const aud = Array.isArray(s.aud) ? s.aud.map(a => cleanName(a && a.n)).filter(Boolean) : []; parts.push(`<section><h3>Audience</h3><p class="small">${aud.length ? aud.map(esc).join(', ') : 'No one is watching right now.'}</p><p class="small muted">Anyone with the link can watch and chat without taking a seat.</p></section>`); }
   if (host) {
-    const players = S.seats.map((x, i) => x ? `<li><span class="who">${esc(x.n)}${x.bot ? ' (bot)' : ''}${x.ask ? ' <span class="asked">asked</span>' : ''}</span><span class="amt">${fmtT(x.s)}</span><button type="button" class="chipbtn" data-act="give" data-i="${i}">+${fmtT(S.cfg.st)}</button>${x.c !== myCid ? `<button type="button" class="chipbtn warn" data-act="kick" data-i="${i}">${kickArm === x.c ? 'Sure?' : 'Remove'}</button>` : ''}</li>` : '').join('');
+    const players = S.seats.map((x, i) => x ? `<li><span class="who">${esc(x.n)}${x.bot ? ' (bot)' : ''}${x.ask ? ' <span class="asked">asked</span>' : ''}</span><span class="amt">${fmtT(x.s)}</span><button type="button" class="chipbtn${giveOpen === x.c ? ' on' : ''}" data-act="giveopen" data-i="${i}" aria-expanded="${giveOpen === x.c}">Give</button>${x.c !== myCid ? `<button type="button" class="chipbtn warn" data-act="kick" data-i="${i}">${kickArm === x.c ? 'Sure?' : 'Remove'}</button>` : ''}${giveOpen === x.c ? giveRow(S, i) : ''}</li>` : '').join('');
     const rt = roomType();
     const listed = rt === 'hidden' ? 'Not shown in the lobby. Only people with your link or code can come in.'
       : lobbySlot ? (rt === 'open' ? 'Showing in the lobby. Anyone can walk in.' : 'Showing in the lobby. People tap Ask to join, and you choose who comes in. Anyone with your link gets straight in.')
@@ -3595,7 +3609,8 @@ function bindUI(){
       case 'knock': act('knock'); break;
       case 'fold': act('fold'); break;
       case 'ask': askTokens(); break;
-      case 'give': giveTokens(+b.dataset.i); break;
+      case 'give': giveTokens(+b.dataset.i, +b.dataset.a); break;
+      case 'giveopen': { const x = S && S.seats[+b.dataset.i]; giveOpen = x && giveOpen !== x.c ? x.c : ''; renderSheet(cur()); break; }
       case 'addbot': addBot(); break;
       case 'rmbots': removeBots(); break;
       case 'resume-deal': setCfg('pause', 0); break;
