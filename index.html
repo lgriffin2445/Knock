@@ -484,23 +484,6 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .plist li .giverow{flex-basis:100%;padding:2px 0 4px}
 .plist li:has(.giverow){flex-wrap:wrap}
 .chipbtn{min-height:38px;border-radius:10px;border:1px solid rgba(243,234,216,.2);background:rgba(243,234,216,.07);font-weight:700;font-size:13px;padding:0 12px;white-space:nowrap;flex:none}
-.setup{display:flex;flex-direction:column;gap:14px;padding:12px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid rgba(220,171,74,.28)}
-.setup .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}
-.setup .small{margin:0}
-.srow{display:flex;flex-direction:column;gap:8px}
-.shead b{display:block;font-size:16px;color:var(--ivory)}
-.shead span{display:block;margin-top:2px;font-size:13px;line-height:1.35;color:var(--muted)}
-.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.segb{min-height:44px;border-radius:12px;border:1px solid rgba(243,234,216,.18);background:rgba(255,255,255,.04);color:var(--ivory);font:800 15px var(--font-body);cursor:pointer}
-.segb.on{background:var(--brass);border-color:var(--brass);color:var(--ink)}
-.looks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.look{display:flex;flex-direction:column;align-items:center;gap:6px;padding:9px 4px 7px;border-radius:12px;border:1px solid rgba(243,234,216,.14);background:rgba(255,255,255,.03);color:var(--ivory);font:700 12px/1.2 var(--font-body);cursor:pointer}
-.look.on{border-color:var(--brass);background:rgba(220,171,74,.12);box-shadow:inset 0 0 0 1px var(--brass)}
-.sw{display:block;width:78%;aspect-ratio:1.65;border-radius:50%;background:radial-gradient(ellipse at 50% 38%,var(--f),var(--d));box-shadow:0 0 0 4px var(--r),0 3px 8px 4px rgba(0,0,0,.45)}
-.sw-wood{background:repeating-linear-gradient(91deg,rgba(0,0,0,.1) 0 2px,transparent 2px 7px),radial-gradient(ellipse at 50% 38%,var(--f),var(--d))}
-.sw-kitchen{background:repeating-linear-gradient(0deg,rgba(255,246,236,.32) 0 5px,transparent 5px 10px),repeating-linear-gradient(90deg,rgba(255,246,236,.32) 0 5px,transparent 5px 10px),radial-gradient(ellipse at 50% 38%,var(--f),var(--d))}
-.sw-juke{box-shadow:0 0 0 4px var(--r),0 0 0 5px #d9a640,0 0 14px 5px rgba(220,70,255,.45)}
-.sw-red{box-shadow:0 0 0 4px var(--r),0 0 0 5px #b8913f,0 3px 8px 4px rgba(0,0,0,.45)}
 .invite{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid rgba(220,171,74,.28)}
 .invite .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}
 .invite code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--ivory);overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
@@ -2053,8 +2036,6 @@ function shareLink(){
 
 /* ---------- looks, sounds and table effects ---------- */
 const THEMES = { green:'Classic green', red:'Red casino', blue:'Midnight blue', wood:'Backyard wood', juke:'Juke joint', kitchen:'Kitchen table' };
-/* felt, felt edge and rail colours for the little table pictures on the setup card */
-const THEME_SW = { green:['#14695c', '#08332d', '#3b2016'], red:['#9e2335', '#3a0810', '#141414'], blue:['#2a4e9a', '#0a1636', '#22160f'], wood:['#b27c47', '#4e3017', '#2c1a0c'], juke:['#6c3196', '#1f0a35', '#0d0a10'], kitchen:['#c43d45', '#7a1d24', '#6b4424'] };
 const AV_LIST = ['😎','🤠','🥷','👑','🦁','🐐','🦊','🐸','🤖','👽','🧢','💅','🃏','🐻','🐯','🦄','💰','🔥'];
 const THROWS = ['👟','💩','🥚','🍅','🖕🏾','💸','🔥','❤️','🧻','🎯'];
 let myAv = AV_LIST.includes(store.get('knock_av')) ? store.get('knock_av') : '';
@@ -3058,17 +3039,6 @@ function renderCenter(s){
   setHTML($('#deckinfo'), s && s.round ? `${dl ? (s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals') : 'Deck'} · ${+s.left || 0} cards left` : '');
   setHTML(below, bl);
 }
-/* the host's waiting screen: side pots (Pitty Pat) and the table look, right there */
-function setupHTML(s){
-  const cfg = (s && s.cfg) || {}, th = THEMES[cfg.theme] ? cfg.theme : 'green', sv = +cfg.side || 0;
-  const side = isPP(s) ? `<div class="srow"><div class="shead"><b>Side pots</b><span>Colors, Spades and Porter. Each player picks which ones they pay into.</span></div>
-    <div class="seg" role="group" aria-label="Side pots">${[[0, 'Off'], [25, '0.25'], [50, '0.50'], [100, '1.00']].map(([v, l]) => `<button type="button" class="segb${sv === v ? ' on' : ''}" data-act="setcfg" data-f="side" data-v="${v}" aria-pressed="${sv === v}">${l}</button>`).join('')}</div></div>` : '';
-  const looks = Object.entries(THEMES).map(([k, name]) => {
-    const [f, d, r] = THEME_SW[k] || THEME_SW.green;
-    return `<button type="button" class="look${k === th ? ' on' : ''}" data-act="setcfg" data-f="theme" data-v="${k}" aria-pressed="${k === th}"><i class="sw sw-${k}" style="--f:${f};--d:${d};--r:${r}"></i><span>${esc(name)}</span></button>`;
-  }).join('');
-  return `<div class="setup"><span class="lbl">Set up your table</span>${side}<div class="srow"><div class="shead"><b>Table look</b></div><div class="looks">${looks}</div></div><p class="small muted">You can change these any time from the menu.</p></div>`;
-}
 function inviteHTML(){
   return `<div class="invite"><span class="lbl">Invite friends with this link</span><code>${esc(inviteLink())}</code>
     <div class="actions" style="--n:2"><button type="button" class="btn ghost" data-act="copy">Copy link</button><button type="button" class="btn gold" data-act="share">Share…</button></div>${role === 'host' ? '<p class="small muted">Use Share… so you stay on this page. While your screen is locked or you\'re in another app, friends can\'t join.</p>' : ''}</div>`;
@@ -3207,7 +3177,6 @@ function dockHTML(s){
         : '<button type="button" class="btn gold" data-act="ready" data-v="1">I\'m ready</button>'];
       if (role === 'host' && players.length >= 2 && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
       buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
-      if (role === 'host') buttons += setupHTML(s);
       if (role === 'host' && seated < 2) buttons += inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>';
     }
   } else if (s.ph === 'recap') {
@@ -3449,7 +3418,6 @@ function ppDockHTML(s, i, x, out){
       const btns = [x.rdy ? '<button type="button" class="btn ghost" data-act="ready" data-v="0">I\'m not ready</button>' : '<button type="button" class="btn gold" data-act="ready" data-v="1">I\'m ready</button>'];
       if (role === 'host' && players.length >= 2 && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
       buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
-      if (role === 'host') buttons += setupHTML(s);
       if (role === 'host' && s.seats.filter(Boolean).length < 2) buttons += inviteHTML() + '<button type="button" class="btn ghost wide" data-act="addbot">Practice with a bot</button>';
     }
   } else if (s.ph === 'done') {
@@ -3724,7 +3692,6 @@ function bindUI(){
       case 'fold': act('fold'); break;
       case 'ask': askTokens(); break;
       case 'give': giveTokens(+b.dataset.i, +b.dataset.a); break;
-      case 'setcfg': setCfg(b.dataset.f, b.dataset.v); break;
       case 'giveopen': { const x = S && S.seats[+b.dataset.i]; giveOpen = x && giveOpen !== x.c ? x.c : ''; renderSheet(cur()); break; }
       case 'addbot': addBot(); break;
       case 'rmbots': removeBots(); break;
