@@ -206,6 +206,17 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .btn.wide.warnbtn{background:#7a1f24;color:#fff;border:1px solid #ff8a8a}
 .sidepick.spto{grid-template-columns:auto repeat(5,1fr)}
 .sidepick.spto>span,.sidepick.spteams>span{min-width:66px}
+.spupset{position:absolute;left:50%;width:min(300px,86%);padding-top:26px;transform-origin:50% 0;animation:spupset 3.7s cubic-bezier(.3,1.3,.5,1) both;z-index:4}
+.spupset .chain{position:absolute;top:0;width:3px;height:30px;background:repeating-linear-gradient(180deg,#c9c2b4 0 5px,#6f6a60 5px 7px);border-radius:2px}
+.spupset .chain.l{left:22%}.spupset .chain.r{right:22%}
+.spupset .sign{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 14px 11px;border-radius:12px;border:3px solid #3b2016;background:repeating-linear-gradient(176deg,rgba(0,0,0,.08) 0 3px,transparent 3px 9px),linear-gradient(#a8743f,#7a4f26);box-shadow:0 10px 26px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,220,170,.35)}
+.spupset .sign::before,.spupset .sign::after{content:'';position:absolute;top:6px;width:7px;height:7px;border-radius:50%;background:#2b1a0d;box-shadow:inset 0 1px 1px rgba(255,255,255,.3)}
+.spupset .sign::before{left:21%}.spupset .sign::after{right:21%}
+.spupset small{font-size:13px;font-weight:800;color:#fff2d6;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 0 #3b2016}
+.spupset b{font-family:var(--font-display);font-weight:400;font-size:38px;line-height:1.05;color:#fff6e0;letter-spacing:.04em;text-shadow:0 3px 0 #3b2016,0 0 14px rgba(0,0,0,.35);white-space:nowrap}
+.spupset span{font-size:13px;font-weight:800;color:#ffe2a8;text-shadow:0 1px 0 #3b2016}
+@keyframes spupset{0%{transform:translate(-50%,-150%) rotate(-10deg);opacity:0}12%{transform:translate(-50%,0) rotate(9deg);opacity:1}24%{transform:translate(-50%,0) rotate(-7deg)}36%{transform:translate(-50%,0) rotate(5deg)}48%{transform:translate(-50%,0) rotate(-3deg)}60%{transform:translate(-50%,0) rotate(1.5deg)}72%{transform:translate(-50%,0) rotate(0)}88%{transform:translate(-50%,0) rotate(0);opacity:1}100%{transform:translate(-50%,-30px) rotate(0);opacity:0}}
+@media (prefers-reduced-motion:reduce){.spupset{animation:none;transform:translate(-50%,0)}}
 .spbroke{position:absolute;left:0;right:0;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:linear-gradient(90deg,rgba(10,6,4,0) 0%,rgba(10,6,4,.9) 14%,rgba(10,6,4,.9) 86%,rgba(10,6,4,0) 100%);border-top:2px solid var(--brass);border-bottom:2px solid var(--brass);animation:spbroke 3.2s cubic-bezier(.2,.8,.2,1) both;z-index:3}
 .spbroke b{font-family:var(--font-display);font-weight:400;font-size:28px;letter-spacing:.08em;color:#f0c35a;text-shadow:0 2px 8px rgba(0,0,0,.6);white-space:nowrap}
 .spbroke span{font-size:13px;font-weight:700;color:var(--ivory);white-space:nowrap}
@@ -1319,7 +1330,8 @@ function ppVoidHand(){
    renege: each team gets one Renege! call a hand, and a team caught reneging gives 3 of its books to the
    other team. The host can turn reneging off, and then everyone has to follow suit.
    Make your bid: 10 points a book, and every extra book is a bag worth 1. Every 10 bags costs 100.
-   Miss your bid (shot): lose 10 a book. Shot twice in a row loses the game. First team to the target wins. */
+   Miss your bid (shot): lose 10 a book. Shot twice in a row loses the game (the host can turn that off).
+   First team to the target wins. */
 const SP_SEATS = 4, SP_BOARD = 3, SP_BLIND_MIN = 6, SP_BLIND_GAP = 100, SP_TARGETS = [250, 350, 400, 450, 500];
 const SP_TRICK_MS = 1500, SP_LAST_MS = 3500, SP_DONE_MS = 10000;
 /* host only (never sent to phones): reneges each team hasn't been caught for this hand, and whether
@@ -1489,10 +1501,10 @@ function spScoreHand(){
   });
   let over = -1, why = '';
   const target = +S.cfg.to || 500;
-  const shot2 = [0, 1].filter(t => sp.shot[t] >= 2);
+  const shot2 = S.cfg.sh === 'off' ? [] : [0, 1].filter(t => sp.shot[t] >= 2);
   if (shot2.length === 1) { over = 1 - shot2[0]; why = 'shot'; }
   else if (shot2.length === 2 || Math.max(sp.sc[0], sp.sc[1]) >= target) {
-    if (sp.sc[0] !== sp.sc[1]) { over = sp.sc[0] > sp.sc[1] ? 0 : 1; why = shot2.length === 2 ? 'shot' : 'score'; }
+    if (sp.sc[0] !== sp.sc[1]) { over = sp.sc[0] > sp.sc[1] ? 0 : 1; why = shot2.length === 2 ? 'bothshot' : 'score'; }
   }
   sp.hist.push([res[0].pts, res[1].pts]); if (sp.hist.length > 40) sp.hist.shift();
   S.res = { k:'spades', t:res, over, why, hand:S.hand };
@@ -1816,7 +1828,7 @@ function startTable(game){
   role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true; rememberSit(true);
   S.cfg.room = 'private'; S.cfg.name = cleanRoom(`${myName}'s table`);
   if (game === 'pitty') { S.game = 'pitty'; S.cfg.st = PP_START; S.cfg.ow = PP_OFFER; S.pp = { step:'pull', pile:0, top:null, from:-1, oid:0, eid:0, ev:[], ow:PP_OFFER }; }
-  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 500; S.cfg.teams = 'pick'; S.cfg.rn = 'on'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
+  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 500; S.cfg.teams = 'pick'; S.cfg.rn = 'on'; S.cfg.sh = 'on'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
   else S.game = 'knock';
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
 }
@@ -2112,6 +2124,7 @@ function setCfg(field, val){
   else if (field === 'to' && SP_TARGETS.includes(v)) S.cfg.to = v;
   else if (field === 'teams' && ['pick', 'random'].includes(val)) S.cfg.teams = val;
   else if (field === 'rn' && ['on', 'off'].includes(val)) S.cfg.rn = val;
+  else if (field === 'sh' && ['on', 'off'].includes(val)) S.cfg.sh = val;
   else if (field === 'room' && ['open', 'private', 'hidden'].includes(val)) {
     S.cfg.room = val; startLobbyListing();
     if (val === 'open') [...asks.keys()].forEach(cid => answerAsk(cid, true));
@@ -2886,6 +2899,27 @@ function spDetectFx(s){
   let t = 60;
   fresh.forEach(e => { setTimeout(() => spFx(cur() || s, e), t); t += e.k === 'deal' ? 700 : 120; });
 }
+/* A team missed its bid: a wooden "UPSET!" sign drops in and swings. The other team took their books. */
+function spUpset(s, r, me){
+  const miss = [0, 1].filter(t => r.t[t] && !r.t[t].made);
+  if (!miss.length) return false;
+  const mine = me >= 0 && me < SP_SEATS ? spTeam(me) : -1;
+  let who, big, sub, emo;
+  if (miss.length === 2) { who = 'Both teams'; big = 'UPSET!'; sub = 'Nobody made their bid'; emo = '🙃'; }
+  else {
+    const t = miss[0];
+    if (mine === t) { who = 'We got'; big = 'UPSET!'; sub = 'They took our books'; emo = '😩'; }
+    else if (mine >= 0) { who = 'They got'; big = 'UPSET!'; sub = 'We took their books'; emo = '😂'; }
+    else { who = SP_TEAM_NAME[t] + ' team got'; big = 'UPSET!'; sub = SP_TEAM_NAME[1 - t] + ' team took their books'; emo = '😂'; }
+  }
+  const el = document.createElement('div'); el.className = 'spupset';
+  el.innerHTML = `<i class="chain l"></i><i class="chain r"></i><div class="sign"><small>${esc(who)}</small><b>${emo} ${big} ${emo}</b><span>${esc(sub)}</span></div>`;
+  el.style.top = Math.max(4, Math.round((G.cy || 260) - 250)) + 'px';
+  $('#fx').appendChild(el); setTimeout(() => el.remove(), 3800);
+  sfx(miss.includes(mine) ? 'ouch' : 'drum');
+  if (!miss.includes(mine) && mine >= 0) setTimeout(() => burst('😂', { x:G.cx, y:Math.max(60, (G.cy || 260) - 140) }, 1300), 700);
+  return true;
+}
 /* "Spades broke": a banner that sweeps across the table, so everyone knows spades can be led now */
 function spBrokeBanner(sub){
   const el = document.createElement('div'); el.className = 'spbroke';
@@ -2910,8 +2944,8 @@ function spFx(s, e){
       else { textFx('NO RENEGE', { x:G.cx, y:G.cy - 70 }, 'big', 1600); sfx('fold'); toast(`${who(e.i)} called renege, but nobody reneged. That call is used up.`); }
       break;
     }
-    case 'hand': { const r = s.res; if (r && Array.isArray(r.t)) { const t = me >= 0 && me < SP_SEATS ? spTeam(me) : -1; if (t >= 0 && !r.t[t].made) { textFx('SHOT!', { x:G.cx, y:G.cy - 80 }, 'big', 1500); sfx('ouch'); } else sfx('cash'); if (t >= 0 && r.t[t].bagHit) toast('10 bags: your team loses 100'); } break; }
-    case 'game': { const r = s.res || {}; const us = me >= 0 && me < SP_SEATS && spTeam(me) === r.over; textFx(us ? 'WE WON! 🏆' : 'GAME', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2600); sfx(us ? 'fanfare' : 'drum'); if (us) ['🎉', '🏆', '🎉'].forEach((em, k) => setTimeout(() => burst(em, { x:G.cx + (k - 1) * 60, y:G.cy - 30 }, 1400), k * 180)); break; }
+    case 'hand': { const r = s.res; if (r && Array.isArray(r.t)) { const t = me >= 0 && me < SP_SEATS ? spTeam(me) : -1; if (!spUpset(s, r, me)) sfx('cash'); if (t >= 0 && r.t[t].bagHit) toast('10 bags: your team loses 100'); } break; }
+    case 'game': { const r = s.res || {}; if (Array.isArray(r.t)) spUpset(s, r, me); const us = me >= 0 && me < SP_SEATS && spTeam(me) === r.over; textFx(us ? 'WE WON! 🏆' : 'GAME', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2600); sfx(us ? 'fanfare' : 'drum'); if (us) ['🎉', '🏆', '🎉'].forEach((em, k) => setTimeout(() => burst(em, { x:G.cx + (k - 1) * 60, y:G.cy - 30 }, 1400), k * 180)); break; }
   }
 }
 function ppDetectFx(s){
@@ -3751,7 +3785,7 @@ function spResultsHTML(s, myIdx){
   if (r.over >= 0) {
     const us = myIdx >= 0 && myIdx < SP_SEATS && spTeam(myIdx) === r.over;
     const lead = myIdx >= 0 && myIdx < SP_SEATS ? (us ? 'You win the game!' : 'They win the game.') : SP_TEAM_NAME[r.over] + ' team wins!';
-    rows.push(`<div class="rrow main"><i>🏆</i><span><b>${lead}</b> ${names(r.over)}${r.why === 'shot' ? ` · ${esc(spTeamLabel(s, 1 - r.over))} got shot twice in a row` : ''}</span></div>`);
+    rows.push(`<div class="rrow main"><i>🏆</i><span><b>${lead}</b> ${names(r.over)}${r.why === 'shot' ? ` · ${esc(spTeamLabel(s, 1 - r.over))} got shot last hand and again this hand, so ${spTeamLabel(s, 1 - r.over) === 'Us' ? 'we lose' : 'they lose'}` : r.why === 'bothshot' ? ' · both teams got shot two hands in a row, so the higher score wins' : ''}</span></div>`);
   }
   [0, 1].forEach(t => {
     const x = r.t[t];
@@ -4210,10 +4244,11 @@ function ppDockHTML(s, i, x, out){
 /* ---------- Spades: your cards and your moves ---------- */
 let spRenArm = 0;
 function spSetupHTML(s){
-  const to = +s.cfg.to || 500, tm = s.cfg.teams === 'random' ? 'random' : 'pick', rn = s.cfg.rn === 'off' ? 'off' : 'on';
+  const to = +s.cfg.to || 500, tm = s.cfg.teams === 'random' ? 'random' : 'pick', rn = s.cfg.rn === 'off' ? 'off' : 'on', sh = s.cfg.sh === 'off' ? 'off' : 'on';
   return `<div class="sidepick spto" role="group" aria-label="Play to"><span>Play to</span>${SP_TARGETS.map(v => `<button type="button" class="segb${to === v ? ' on' : ''}" data-act="setcfg" data-f="to" data-v="${v}" aria-pressed="${to === v}">${v}</button>`).join('')}</div>
     <div class="sidepick spteams" role="group" aria-label="Teams"><span>Teams</span>${[['pick', 'Pick seats'], ['random', 'Random']].map(([v, l]) => `<button type="button" class="segb${tm === v ? ' on' : ''}" data-act="setcfg" data-f="teams" data-v="${v}" aria-pressed="${tm === v}">${l}</button>`).join('')}</div>
-    <div class="sidepick spteams" role="group" aria-label="Reneging"><span>Renege</span>${[['on', 'Allowed'], ['off', 'Off']].map(([v, l]) => `<button type="button" class="segb${rn === v ? ' on' : ''}" data-act="setcfg" data-f="rn" data-v="${v}" aria-pressed="${rn === v}">${l}</button>`).join('')}</div>`;
+    <div class="sidepick spteams" role="group" aria-label="Reneging"><span>Renege</span>${[['on', 'Allowed'], ['off', 'Off']].map(([v, l]) => `<button type="button" class="segb${rn === v ? ' on' : ''}" data-act="setcfg" data-f="rn" data-v="${v}" aria-pressed="${rn === v}">${l}</button>`).join('')}</div>
+    <div class="sidepick spteams" role="group" aria-label="Shot twice loses"><span>Shot twice loses</span>${[['on', 'On'], ['off', 'Off']].map(([v, l]) => `<button type="button" class="segb${sh === v ? ' on' : ''}" data-act="setcfg" data-f="sh" data-v="${v}" aria-pressed="${sh === v}">${l}</button>`).join('')}</div>`;
 }
 function spDockHTML(s, i, x, out){
   const sp = s.sp || {}, t = spTeam(i), live = s.ph === 'playing';
@@ -4247,7 +4282,7 @@ function spDockHTML(s, i, x, out){
     if (role === 'host' && seated < SP_SEATS) btns.push('<button type="button" class="btn ghost" data-act="fillbots">Fill with bots</button>');
     buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
     if (role === 'host') buttons += spSetupHTML(s);
-    else buttons += `<p class="small muted">Playing to ${+s.cfg.to || 500}. Reneging ${s.cfg.rn === 'off' ? 'is off: you have to follow suit' : 'is allowed, and each team gets one Renege! call a hand'}. ${s.cfg.teams === 'random' ? 'Teams get picked at random when the game starts.' : 'Partners sit across from each other: tap an open seat to move.'}</p>`;
+    else buttons += `<p class="small muted">Playing to ${+s.cfg.to || 500}. Reneging ${s.cfg.rn === 'off' ? 'is off: you have to follow suit' : 'is allowed, and each team gets one Renege! call a hand'}. ${s.cfg.sh === 'off' ? 'Getting shot twice doesn\'t end the game.' : 'Shot twice in a row loses.'} ${s.cfg.teams === 'random' ? 'Teams get picked at random when the game starts.' : 'Partners sit across from each other: tap an open seat to move.'}</p>`;
     if (role === 'host' && s.cfg.teams !== 'random' && seated < SP_SEATS) buttons += '<p class="small muted">Partners sit across from each other. Tap an open seat to move.</p>';
     if (role === 'host' && seated < SP_SEATS) buttons += inviteHTML();
   } else if (s.ph === 'over') {
@@ -4346,6 +4381,7 @@ function menuHTML(s){
     <section><h3>Host controls</h3>
       ${isSP(s) ? `<div class="field"><label for="setTo">Play to</label>${sel('setTo', SP_TARGETS.map(v => [v, v + ' points']), +cfg.to || 500)}</div>
       <div class="field"><label for="setTeams">Teams</label>${sel('setTeams', [['pick', 'Pick your seats'], ['random', 'Random teams']], cfg.teams === 'random' ? 'random' : 'pick')}</div>
+      <div class="field"><label for="setSh">Shot twice loses</label>${sel('setSh', [['on', 'On (shot twice in a row loses)'], ['off', 'Off (play to the target)']], cfg.sh === 'off' ? 'off' : 'on')}</div>
       <div class="field"><label for="setRn">Reneging</label>${sel('setRn', [['on', 'Allowed (Renege! calls)'], ['off', 'Off (must follow suit)']], cfg.rn === 'off' ? 'off' : 'on')}</div>` : `<div class="field"><label for="setAnte">Ante each hand</label>${sel('setAnte', [[50,'0.50'],[100,'1.00'],[150,'1.50'],[200,'2.00'],[500,'5.00']], cfg.ante)}</div>
       <div class="field"><label for="setStart">Tokens for new players</label>${sel('setStart', [[1000,'10.00'],[2000,'20.00'],[5000,'50.00'],[10000,'100.00']], cfg.st)}</div>`}
       <div class="field"><label for="setTimer">${isPP(s) ? 'Time for your turn' : 'Time to decide'}</label>${sel('setTimer', [[0,'No limit'],[20,'20 seconds'],[30,'30 seconds'],[60,'60 seconds']], cfg.tm)}</div>
@@ -4361,7 +4397,7 @@ function menuHTML(s){
   } else if (s) {
     const dealer = (s.seats.find(x => x && x.c === s.hid) || {}).n;
     parts.push(`<section><h3>Leave</h3><button type="button" class="btn ghost wide" data-act="tolobby">Back to the lobby</button></section>`);
-    parts.push(`<section><h3>Table settings</h3><p class="small">${isSP(s) ? `Spades · Play to ${+cfg.to || 500} · ${cfg.teams === 'random' ? 'Random teams' : 'Pick your seats'} · Reneging ${cfg.rn === 'off' ? 'off' : 'allowed'} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}` : `${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}`}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
+    parts.push(`<section><h3>Table settings</h3><p class="small">${isSP(s) ? `Spades · Play to ${+cfg.to || 500} · ${cfg.teams === 'random' ? 'Random teams' : 'Pick your seats'} · Reneging ${cfg.rn === 'off' ? 'off' : 'allowed'} · Shot twice loses: ${cfg.sh === 'off' ? 'off' : 'on'} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}` : `${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}`}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
   }
   if (s && !isSP(s)) parts.push(`<section><h3>Tonight's leaderboard</h3>${leaderHTML(s)}</section>`);
   parts.push(`<section><h3>Site visitors</h3><button type="button" class="btn ghost wide" data-act="visitors">👀 See who's been visiting</button></section>`);
@@ -4376,7 +4412,7 @@ function menuHTML(s){
     <li><b>Blind:</b> a team 100 or more behind can bid blind before looking at their cards: 6 or more, and it pays double (or costs double).</li>
     <li><b>Playing:</b> left of the dealer leads. Follow the suit that was led if you can. If you can't, you can cut with a spade or throw anything. Nobody can lead a spade until someone cuts, unless spades are all they have. Highest spade wins the book; if there's no spade, the highest card of the suit led wins. The winner leads next.</li>
     <li><b>Reneging:</b> ${cfg.rn === 'off' ? 'the host turned reneging off, so the app makes everyone follow suit.' : 'the app lets you play any card, even when you could follow suit. Each team gets one <b>Renege!</b> call a hand. If the other team really reneged, they give your team 3 of their books. If you\'re wrong, your call is used up. (The host can turn reneging off.)'}</li>
-    <li><b>Scoring:</b> make your bid and you get 10 points a book; every extra book is a bag worth 1. Every 10 bags costs 100. Miss your bid and you're shot: you lose 10 a book. Shot twice in a row loses the game.</li>
+    <li><b>Scoring:</b> make your bid and you get 10 points a book; every extra book is a bag worth 1. Every 10 bags costs 100. Miss your bid and you're shot (upset): the other team took your books, and you lose 10 a book. ${cfg.sh === 'off' ? 'The host turned off "shot twice loses", so the game only ends when a team reaches the target.' : 'Shot twice in a row loses the game (the host can turn this off).'}</li>
     <li>The deal moves left every hand. First team to ${to} wins. If both teams pass ${to} on the same hand, the higher score wins.</li>
   </ol></section>`);
     return parts.join('');
@@ -4552,7 +4588,7 @@ function bindUI(){
       case 'fold': act('fold'); break;
       case 'ask': askTokens(); break;
       case 'give': giveTokens(+b.dataset.i, +b.dataset.a); break;
-      case 'setcfg': if (['side', 'to', 'teams', 'rn'].includes(b.dataset.f)) setCfg(b.dataset.f, b.dataset.v); break;
+      case 'setcfg': if (['side', 'to', 'teams', 'rn', 'sh'].includes(b.dataset.f)) setCfg(b.dataset.f, b.dataset.v); break;
       case 'fillbots': fillBots(); break;
       case 'spsel': if (spValid(b.dataset.c) && (!b.classList.contains('nopick') || b.classList.contains('dim'))) spPick(b.dataset.c); break;
       case 'spplay': if (spValid(b.dataset.c)) spMove('play', { c:b.dataset.c }); break;
@@ -4637,7 +4673,7 @@ function bindUI(){
   });
   document.addEventListener('change', e => {
     const t = e.target;
-    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow', setSide:'side', setTo:'to', setTeams:'teams', setRn:'rn' };
+    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow', setSide:'side', setTo:'to', setTeams:'teams', setRn:'rn', setSh:'sh' };
     if (map[t.id]) setCfg(map[t.id], t.value);
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetMode) closeMenu(); });
