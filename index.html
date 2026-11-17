@@ -128,6 +128,82 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 /* kitchen table: a red-and-white checkered tablecloth on a wooden table */
 #app[data-felt="kitchen"]{--felt:#b3343c;--felt-deep:#6e1a20;--felt-hi:#c9454c;--rail:#6b4424;--rail-hi:#b07a42;--room-a:#22302c;--print:rgba(255,248,236,.26);--dock-a:#33231a;--dock-b:#1a110b;--dock-line:rgba(230,178,80,.35)}
 #app[data-felt="kitchen"] #felt{background:repeating-linear-gradient(0deg,rgba(255,246,236,.24) 0 16px,transparent 16px 32px),repeating-linear-gradient(90deg,rgba(255,246,236,.24) 0 16px,transparent 16px 32px),radial-gradient(ellipse at 50% 38%,var(--felt-hi) 0%,var(--felt) 50%,var(--felt-deep) 100%)}
+/* ---- Spades ---- */
+.card.joker{gap:0}
+.card.joker .r{font-family:var(--font-body);font-weight:900;font-size:calc(var(--cw)*.27);letter-spacing:.04em;line-height:1}
+.card.joker .s{font-size:calc(var(--cw)*.48);margin:0;line-height:1}
+.card.joker .jk{font-family:var(--font-body);font-weight:800;font-size:calc(var(--cw)*.13);letter-spacing:.1em;line-height:1}
+.card.joker.bigj .s{color:#d9a21b;text-shadow:0 0 1px #7a4a00}
+.card.joker.lilj .s{color:#5b6670}
+.seat.sp .plate{border-top:3px solid var(--tc,#888)}
+.seat.sp.t0{--tc:#e0525a}
+.seat.sp.t1{--tc:#4f8fe8}
+.tdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--tc,#888);margin-right:5px;vertical-align:baseline;flex:none}
+.tdot.t0,.spsc.t0 .tdot{--tc:#e0525a}
+.tdot.t1,.spsc.t1 .tdot{--tc:#4f8fe8}
+.seat.sp.t0 .tdot{--tc:#e0525a}.seat.sp.t1 .tdot{--tc:#4f8fe8}
+.stk.sp{font-size:12px;font-weight:700;color:var(--ivory);white-space:nowrap}
+.stk.sp b{color:var(--brass)}
+.stk.sp .bid{color:#f0c35a}
+.seat.sp.open{opacity:.85}
+.seat.sp.open .plate{border-style:dashed;background:rgba(0,0,0,.35)}
+.seat.sp.open .nm{color:var(--muted)}
+.seat.sp.open .btn.sm{margin-top:5px;min-height:30px;padding:0 10px;font-size:12px}
+.minis.spn{min-height:0}
+.spcount{display:inline-block;min-width:20px;padding:1px 6px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid rgba(243,234,216,.25);font-size:11px;font-weight:800;color:var(--ivory)}
+.sptrick{--cw:38px;display:grid;grid-template-columns:repeat(3,var(--cw));grid-template-rows:calc(var(--cw)*1.05) calc(var(--cw)*1.05) calc(var(--cw)*1.05);gap:2px 6px;margin:2px 0 calc(var(--cw)*.35)}
+.sptrick .sl{display:flex;justify-content:center}
+.sptrick .sl.t{grid-area:1/2}.sptrick .sl.l{grid-area:2/1}.sptrick .sl.r{grid-area:2/3}.sptrick .sl.b{grid-area:3/2}
+.sptrick .card{box-shadow:0 3px 8px rgba(0,0,0,.45)}
+.sptrick .card.slot{opacity:.35;box-shadow:none}
+.sptrick .card.win{box-shadow:0 0 0 3px var(--brass),0 0 18px rgba(240,195,90,.6)}
+.sptrick .card.inb{animation:spInB .28s ease-out both}.sptrick .card.int{animation:spInT .28s ease-out both}
+.sptrick .card.inl{animation:spInL .28s ease-out both}.sptrick .card.inr{animation:spInR .28s ease-out both}
+@keyframes spInB{from{transform:translateY(60px) scale(.8);opacity:0}}
+@keyframes spInT{from{transform:translateY(-60px) scale(.8);opacity:0}}
+@keyframes spInL{from{transform:translateX(-60px) scale(.8);opacity:0}}
+@keyframes spInR{from{transform:translateX(60px) scale(.8);opacity:0}}
+.spscore{display:flex;gap:12px;justify-content:center;font-size:12.5px;font-weight:700;color:var(--ivory);white-space:nowrap}
+#center:has(.spscore),#center:has(.sptrick){max-width:280px}
+.spsc{white-space:nowrap}
+.spres .rrow>i.tdot{width:10px;height:10px;flex:none;border-radius:50%;margin-top:6px;font-size:0}
+.seat.sp.win .stk.sp,.seat.sp.win .stk.sp b,.seat.sp.win .stk.sp .bid{color:var(--ink)}
+.sphand .card:not(.back){justify-content:flex-start;align-items:flex-start;padding:calc(var(--cw)*.06) 0 0 calc(var(--cw)*.08)}
+.sphand .card:not(.back) .r{font-size:calc(var(--cw)*.4);width:calc(var(--cw)*.42);text-align:center}
+.sphand .card:not(.back) .s{font-size:calc(var(--cw)*.36);width:calc(var(--cw)*.42);text-align:center;margin-top:0}
+.sphand .card.joker .r{font-size:calc(var(--cw)*.2);width:auto;letter-spacing:0}
+.sphand .card.joker .s{font-size:calc(var(--cw)*.42);width:calc(var(--cw)*.42)}
+.sphand .card.joker .jk{font-size:calc(var(--cw)*.12);margin-top:2px}
+.spsc b{color:#f0c35a;font-size:14px;margin-left:2px}
+.spsc i{font-style:normal;font-size:10.5px;color:rgba(243,234,216,.6);margin-left:4px}
+.spto{display:block;font-size:10.5px;color:rgba(243,234,216,.62);margin-top:2px;letter-spacing:.02em}
+.spres .rrow.sprow{align-items:flex-start}
+.spres .rrow.sprow>.tdot{margin-top:5px}
+.spres .rrow small{display:block;font-size:11px;color:rgba(243,234,216,.7);margin-top:2px}
+.spres .rrow .tot{margin-left:auto;font-size:15px;color:#f0c35a;padding-left:8px}
+.spres .rrow.shot em{color:#ff8a8a}
+.sphand{--cw:50px;display:flex;justify-content:center;padding:14px 0 2px;min-height:calc(var(--cw)*1.4 + 16px)}
+.sphand .spcard{flex:none;padding:0;border:0;background:none;border-radius:7px;cursor:pointer;transition:transform .15s ease;margin-left:min(3px,calc((100% - var(--n) * var(--cw)) / (var(--n) - 1)))}
+.sphand .spcard:first-child{margin-left:0}
+.sphand .spcard .card{box-shadow:-2px 1px 4px rgba(0,0,0,.45)}
+.sphand .spcard.sel{transform:translateY(-14px)}
+.sphand .spcard.sel .card{box-shadow:0 0 0 3px var(--brass),-2px 4px 10px rgba(0,0,0,.5)}
+.sphand .spcard.dim .card{filter:brightness(.62) saturate(.7)}
+.sphand .spcard.nopick{cursor:default}
+.spbids{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.spbids.blind{grid-template-columns:repeat(4,1fr);margin-bottom:8px}
+.spbids .segb{min-height:42px;border-radius:11px;border:1px solid rgba(243,234,216,.18);background:rgba(255,255,255,.05);color:var(--ivory);font:800 16px var(--font-body);cursor:pointer}
+.spbids .segb.nil{color:#f0c35a}
+.spbids .segb:disabled{opacity:.3;cursor:default}
+.spbids .segb:not(:disabled):active{background:var(--brass);color:var(--ink)}
+.spbk{display:block;margin-top:4px;font-size:13px;color:var(--muted)}
+.renrow{display:flex;gap:10px;align-items:center}
+.renrow .btn{flex:none;min-height:38px}
+.renrow .small{margin:0;line-height:1.3}
+.btn.warnbtn{border-color:rgba(255,110,110,.6);color:#ffb3b3}
+.btn.wide.warnbtn{background:#7a1f24;color:#fff;border:1px solid #ff8a8a}
+.sidepick.spto{grid-template-columns:auto repeat(5,1fr)}
+.sidepick.spteams{grid-template-columns:auto repeat(2,1fr)}
 .neon{position:absolute;white-space:nowrap;pointer-events:none;font:400 24px/1 var(--font-display);color:#ffe4f7;text-shadow:0 0 3px #ff4fd8,0 0 9px #ff4fd8,0 0 20px #ff2fc0,0 0 38px rgba(255,47,192,.65);animation:neonb 5s ease-in-out infinite}
 .neon.blue{font:900 13px/1 var(--font-body);letter-spacing:.2em;padding:5px 6px 5px 9px;border:2px solid #b8e4ff;border-radius:8px;color:#e4f5ff;text-shadow:0 0 3px #4fb8ff,0 0 9px #4fb8ff,0 0 20px #2f8fff;box-shadow:0 0 8px #4fb8ff,0 0 18px rgba(47,143,255,.5),inset 0 0 8px rgba(79,184,255,.55);animation:neonflick 7s steps(1) infinite}
 .neon.gold{font:400 20px/1 var(--font-display);color:#fff2c8;text-shadow:0 0 3px #ffb43a,0 0 9px #ffb43a,0 0 20px #ff9a1a,0 0 36px rgba(255,154,26,.6)}
@@ -435,6 +511,7 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .gonehead div>span{font-size:14px;line-height:1.4;color:var(--ivory)}
 .gone .small{text-align:center;margin:0}
 .startrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.startrow .spstart{grid-column:1 / -1}
 .rgame{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);margin-right:4px}
 .me-info{display:flex;flex-direction:column;gap:3px;min-width:0}
 .me-hand{font-weight:800;font-size:16px;line-height:1.25}
@@ -1218,6 +1295,291 @@ function ppVoidHand(){
   S.note = mid ? 'The last hand was called off when the host reconnected. Antes and side pot buy-ins were returned.' : '';
 }
 </script>
+<script id="engine-sp">
+/* ===================== Spades =====================
+   4 players in 2 teams. Partners sit across from each other: seats 0 and 2 are one team, 1 and 3 the other.
+   52 cards: the 2 of hearts and 2 of clubs come out, the Big Joker and Lil Joker go in.
+   Spades are trump. Highest first: Big Joker, Lil Joker, 2 of diamonds, 2 of spades, then Ace of spades down
+   to the 3. The 2 of diamonds counts as a spade, not a diamond.
+   Everyone gets 13. The team that isn't dealing bids first. Partners' bids add up to the team bid, and a team
+   has to bid at least 3 books (the board). Nil means you take no books at all: +100 if you do it, -100 if you don't.
+   A team 100 or more behind may bid blind before looking at their cards: 6 or more, double points either way.
+   Left of the dealer leads. You can't lead a spade until someone cuts (plays a spade on another suit) unless
+   spades are all you have. You're supposed to follow suit, but the app lets you renege. Each team gets one
+   Renege! call a hand; a team caught reneging gives 3 of its books to the other team.
+   Make your bid: 10 points a book, and every extra book is a bag worth 1. Every 10 bags costs 100.
+   Miss your bid (shot): lose 10 a book. Shot twice in a row loses the game. First team to the target wins. */
+const SP_SEATS = 4, SP_BOARD = 3, SP_BLIND_MIN = 6, SP_BLIND_GAP = 100, SP_TARGETS = [250, 350, 400, 450, 500];
+const SP_TRICK_MS = 1500, SP_LAST_MS = 3500, SP_DONE_MS = 10000;
+/* host only (never sent to phones): reneges each team hasn't been caught for this hand, and whether
+   one has shown (someone played a suit they'd already shown they were out of) */
+let spRen = [0, 0], spShown = [0, 0], spWait = 0;
+const spIsJ = c => c === 'BJ' || c === 'LJ';
+const spValid = c => validCard(c) || spIsJ(c);
+const spSuit = c => (spIsJ(c) || c === '2d' || c[1] === 's' ? 's' : c[1]);
+const spPow = c => (c === 'BJ' ? 100 : c === 'LJ' ? 99 : c === '2d' ? 98 : c === '2s' ? 97 : rv(c));
+const spTeam = i => i % 2;
+const spMate = i => (i + 2) % 4;
+const SP_ALL = (() => { const d = []; for (const r of RANKS) for (const s of SUITS) d.push(r + s); return d.filter(c => c !== '2h' && c !== '2c').concat(['BJ', 'LJ']); })();
+const SP_ORDER = { s:0, h:1, c:2, d:3 };
+function spSortHand(h){ return h.slice().sort((a, b) => (SP_ORDER[spSuit(a)] - SP_ORDER[spSuit(b)]) || (spPow(b) - spPow(a))); }
+function spShuffle(){
+  const d = SP_ALL.slice();
+  for (let i = d.length - 1; i > 0; i--) { const j = randInt(i + 1); const t = d[i]; d[i] = d[j]; d[j] = t; }
+  return d;
+}
+function spFresh(){ return { step:'wait', b:[null, null, null, null], bl:[0, 0], bd:[1, 1], tk:[0, 0, 0, 0], tr:[], lead:-1, br:0, last:null, sc:[0, 0], bg:[0, 0], shot:[0, 0], rc:[0, 0], pn:[0, 0], vd:['', '', '', ''], gone:[], ord:[], ev:[], eid:0, hist:[] }; }
+function spEv(e){ const sp = S.sp; sp.eid = (sp.eid || 0) + 1; e.id = sp.eid; sp.ev.push(e); if (sp.ev.length > 24) sp.ev.splice(0, sp.ev.length - 24); }
+function spNewGame(){
+  const ev = S.sp ? S.sp.ev : [], eid = S.sp ? S.sp.eid : 0;
+  S.sp = spFresh(); S.sp.ev = ev; S.sp.eid = eid;
+  S.hand = 0; S.bt = -1; S.round = 0; S.res = null; S.tn = -1; S.ph = 'waiting';
+  spRen = [0, 0]; spShown = [0, 0]; spWait = 0;
+}
+function spStartHand(){
+  const sp = S.sp;
+  if (S.seats.slice(0, SP_SEATS).some(x => !x)) { S.ph = 'waiting'; return; }
+  S.hand++; S.q++; S.round = 1;
+  S.bt = S.bt >= 0 && S.bt < SP_SEATS ? (S.bt + 1) % SP_SEATS : randInt(SP_SEATS);
+  const d = spShuffle();
+  for (let i = 0; i < SP_SEATS; i++) {
+    const x = S.seats[i];
+    holes[x.c] = spSortHand(d.slice(i * 13, i * 13 + 13));
+    x.hc = 13; x.st = 'in'; x.a = ''; x.t = 0;
+  }
+  deck = [];
+  Object.assign(sp, { step:'bid', b:[null, null, null, null], bl:[0, 0], tk:[0, 0, 0, 0], tr:[], lead:-1, br:0, last:null, rc:[0, 0], pn:[0, 0], vd:['', '', '', ''], gone:[] });
+  spRen = [0, 0]; spShown = [0, 0]; spWait = 0;
+  /* a team 100 or more behind decides on blind before anyone on it sees their cards */
+  sp.bd = [0, 1].map(t => (sp.sc[1 - t] - sp.sc[t] >= SP_BLIND_GAP ? 0 : 1));
+  /* the team that isn't dealing bids first: left of the dealer, their partner, then the dealer's partner, then the dealer */
+  sp.ord = [1, 3, 2, 0].map(k => (S.bt + k) % SP_SEATS);
+  S.tn = sp.ord[0]; S.ph = 'playing'; S.res = null;
+  spEv({ k:'deal', d:S.bt });
+}
+/* what you may bid: the team has to reach the board, and the second partner can't take it past 13 */
+function spBidLimits(i){
+  const mb = S.sp.b[spMate(i)];
+  if (mb === null || mb === undefined) return { min:0, max:13, nil:true };
+  const m = mb === 'N' ? 0 : mb;
+  return { min:Math.max(0, SP_BOARD - m), max:13 - m, nil:m >= SP_BOARD };
+}
+const spBidOf = b => (b === 'N' ? 0 : +b || 0);
+/* a team's bid in books (a nil doesn't add anything; a blind team bid is the whole thing) */
+function spTeamBid(t){ const sp = S.sp; return sp.bl[t] || spBidOf(sp.b[t]) + spBidOf(sp.b[t + 2]); }
+function spNextBid(){
+  const sp = S.sp; S.q++;
+  const nx = sp.ord.find(j => sp.b[j] === null);
+  if (nx === undefined) { sp.step = 'play'; S.tn = (S.bt + 1) % SP_SEATS; sp.lead = S.tn; spEv({ k:'go', i:S.tn }); }
+  else S.tn = nx;
+}
+function spAct(i, a){
+  if (!S || S.ph !== 'playing' || !S.sp || !a) return 'not now';
+  const sp = S.sp, x = S.seats[i]; if (!x || i >= SP_SEATS) return 'no seat';
+  if (a.k === 'renege') return spCall(i);
+  if (S.tn !== i) return 'not your turn';
+  const h = holes[x.c] || [];
+  if (a.k === 'look' || a.k === 'blind' || a.k === 'bid') {
+    if (sp.step !== 'bid') return 'not bidding';
+    const t = spTeam(i);
+    if (!sp.bd[t]) {
+      if (a.k === 'look') { sp.bd[t] = 1; S.q++; spEv({ k:'look', i }); return ''; }
+      if (a.k !== 'blind') return 'blind first';
+      const n = Math.round(+a.n);
+      if (!(n >= SP_BLIND_MIN && n <= 13)) return 'bad bid';
+      sp.bd[t] = 1; sp.bl[t] = n; sp.b[i] = n; sp.b[spMate(i)] = 0;
+      spEv({ k:'bid', i, n, blind:1 }); spNextBid(); return '';
+    }
+    if (a.k !== 'bid') return 'bad bid';
+    const nil = a.n === 'N' || a.n === 'nil', n = nil ? 0 : Math.round(+a.n);
+    if (!nil && !(n >= 0 && n <= 13)) return 'bad bid';
+    const lim = spBidLimits(i);
+    if (nil ? !lim.nil : n < lim.min || n > lim.max) return 'board';
+    sp.b[i] = nil ? 'N' : n;
+    spEv({ k:'bid', i, n:sp.b[i] }); spNextBid(); return '';
+  }
+  if (a.k === 'play') {
+    if (sp.step !== 'play') return 'wait';
+    const c = a.c, k = h.indexOf(c); if (k < 0) return 'not in your hand';
+    const su = spSuit(c), t = spTeam(i);
+    /* playing a suit you already showed you were out of proves an earlier renege */
+    const proof = sp.vd[i].includes(su);
+    if (!sp.tr.length) {
+      if (su === 's' && !sp.br && h.some(d => spSuit(d) !== 's')) return 'not broken';
+    } else {
+      const led = spSuit(sp.tr[0].c);
+      if (su !== led) {
+        /* everyone can see you didn't follow; only the host knows if you really could have */
+        if (h.some(d => spSuit(d) === led)) spRen[t]++;
+        if (!sp.vd[i].includes(led)) sp.vd[i] += led;
+      }
+    }
+    if (proof && spRen[t] > 0) spShown[t] = 1;
+    h.splice(k, 1); x.hc = h.length; sp.gone.push(c);
+    sp.tr.push({ i, c });
+    if (su === 's' && !sp.br) { sp.br = 1; if (sp.tr.length > 1) spEv({ k:'cut', i }); }
+    spEv({ k:'play', i, c });
+    if (sp.tr.length === SP_SEATS) spTrickDone(); else { S.tn = (i + 1) % SP_SEATS; S.q++; }
+    return '';
+  }
+  return 'bad move';
+}
+function spTrickWinner(tr){
+  let best = tr[0];
+  for (const p of tr.slice(1)) {
+    const ps = spSuit(p.c), bs = spSuit(best.c);
+    if (ps === bs ? spPow(p.c) > spPow(best.c) : ps === 's') best = p;
+  }
+  return best.i;
+}
+function spTrickDone(){
+  const sp = S.sp, w = spTrickWinner(sp.tr);
+  sp.tk[w]++; sp.last = { tr:sp.tr.slice(), w }; sp.step = 'trick'; S.tn = w; S.q++;
+  spEv({ k:'trick', w });
+}
+/* after everyone has seen the trick, it's swept to the winner, who leads next */
+function spCollect(){
+  const sp = S.sp; if (!sp || sp.step !== 'trick') return;
+  sp.tr = []; S.q++;
+  if (S.seats.slice(0, SP_SEATS).every(x => !(holes[x.c] || []).length)) { sp.step = 'last'; return; }
+  sp.step = 'play'; sp.lead = S.tn;
+}
+/* Renege! Each team gets one call a hand, any time after the bidding until the hand is counted */
+function spCall(i){
+  const sp = S.sp;
+  if (!['play', 'trick', 'last'].includes(sp.step)) return 'not now';
+  const t = spTeam(i), o = 1 - t;
+  if (sp.rc[t]) return 'used';
+  sp.rc[t] = 1; S.q++;
+  if (spRen[o] > 0) { spRen[o] = 0; spShown[o] = 0; sp.pn[o] += 3; spEv({ k:'renege', i, ok:1, o }); }
+  else spEv({ k:'renege', i, ok:0, o });
+  return '';
+}
+function spScoreHand(){
+  const sp = S.sp; if (!sp || S.ph !== 'playing') return;
+  const nonNil = t => [t, t + 2].filter(j => sp.b[j] !== 'N');
+  const bn = [0, 1].map(t => nonNil(t).reduce((a, j) => a + sp.tk[j], 0));
+  /* caught reneging: up to 3 of your books go to the other team */
+  const mv = [0, 0];
+  [0, 1].forEach(t => { if (sp.pn[t]) mv[t] = Math.min(sp.pn[t], bn[t]); });
+  const books = [bn[0] - mv[0] + mv[1], bn[1] - mv[1] + mv[0]];
+  const res = [0, 1].map(t => {
+    const blind = sp.bl[t] || 0, K = blind || spTeamBid(t), B = books[t], made = B >= K;
+    let pts = made ? (blind ? 20 : 10) * K + (B - K) : -(blind ? 20 : 10) * K;
+    let bags = made ? B - K : 0;
+    const nil = [t, t + 2].filter(j => sp.b[j] === 'N').map(j => { const ok = sp.tk[j] === 0; pts += ok ? 100 : -100; pts += sp.tk[j]; bags += sp.tk[j]; return { i:j, ok:ok ? 1 : 0, tk:sp.tk[j] }; });
+    sp.bg[t] += bags;
+    let bagHit = 0;
+    while (sp.bg[t] >= 10) { sp.bg[t] -= 10; pts -= 100; bagHit++; }
+    sp.sc[t] += pts;
+    sp.shot[t] = made ? 0 : sp.shot[t] + 1;
+    return { bid:K, blind:blind ? 1 : 0, books:B, made:made ? 1 : 0, pts, bags, bagHit, nil, gave:mv[t], got:mv[1 - t], score:sp.sc[t], bg:sp.bg[t] };
+  });
+  let over = -1, why = '';
+  const target = +S.cfg.to || 500;
+  const shot2 = [0, 1].filter(t => sp.shot[t] >= 2);
+  if (shot2.length === 1) { over = 1 - shot2[0]; why = 'shot'; }
+  else if (shot2.length === 2 || Math.max(sp.sc[0], sp.sc[1]) >= target) {
+    if (sp.sc[0] !== sp.sc[1]) { over = sp.sc[0] > sp.sc[1] ? 0 : 1; why = shot2.length === 2 ? 'shot' : 'score'; }
+  }
+  sp.hist.push([res[0].pts, res[1].pts]); if (sp.hist.length > 40) sp.hist.shift();
+  S.res = { k:'spades', t:res, over, why, hand:S.hand };
+  sp.step = 'done'; S.tn = -1; S.q++;
+  S.seats.slice(0, SP_SEATS).forEach(x => { if (x) x.st = 'wait'; });
+  S.ph = over >= 0 ? 'over' : 'done';
+  spEv({ k:over >= 0 ? 'game' : 'hand', over });
+  nextHandAt = Date.now() + SP_DONE_MS;
+}
+
+/* ---------- bots (and anyone a bot is playing for) ---------- */
+function spEstimate(h){
+  const sp = h.filter(c => spSuit(c) === 's'), n = sp.length, has = c => h.includes(c);
+  let e = 0;
+  if (has('BJ')) e += 1;
+  if (has('LJ')) e += 0.95;
+  if (has('2d')) e += n >= 3 ? 0.9 : 0.7;
+  if (has('2s')) e += n >= 3 ? 0.85 : 0.6;
+  if (has('As')) e += n >= 3 ? 0.8 : 0.55;
+  if (has('Ks')) e += n >= 4 ? 0.6 : n >= 3 ? 0.4 : 0.15;
+  if (has('Qs')) e += n >= 5 ? 0.4 : 0.1;
+  e += Math.max(0, n - 4) * 0.65;
+  for (const su of ['h', 'c', 'd']) {
+    const cs = h.filter(c => spSuit(c) === su), m = cs.length, r = new Set(cs.map(c => c[0]));
+    if (r.has('A')) e += m <= 5 ? 0.9 : 0.6;
+    if (r.has('K')) e += m >= 2 && m <= 4 ? (r.has('A') ? 0.7 : 0.45) : m === 1 ? 0.1 : 0.3;
+    if (r.has('Q') && r.has('K') && r.has('A') && m <= 4) e += 0.3;
+    if (n >= 3) { if (m === 0) e += 0.8; else if (m === 1 && !r.has('A')) e += 0.45; else if (m === 2) e += 0.15; }
+  }
+  return e;
+}
+function spBotBid(i){
+  const sp = S.sp, t = spTeam(i), h = holes[S.seats[i].c] || [];
+  if (!sp.bd[t]) return sp.sc[1 - t] - sp.sc[t] >= 200 ? { k:'blind', n:SP_BLIND_MIN } : { k:'look' };
+  const lim = spBidLimits(i), e = spEstimate(h);
+  const weak = !h.some(c => ['BJ', 'LJ', '2d', '2s', 'As', 'Ks'].includes(c)) && h.filter(c => spSuit(c) === 's').length <= 2 && !h.some(c => c[0] === 'A');
+  if (lim.nil && e < 0.6 && weak && randInt(100) < 45) return { k:'bid', n:'N' };
+  const n = Math.max(lim.min, Math.min(lim.max, Math.round(e)));
+  return { k:'bid', n };
+}
+function spLegal(i){
+  const sp = S.sp, h = holes[S.seats[i].c] || [];
+  if (!sp.tr.length) { const ns = h.filter(c => spSuit(c) !== 's'); return sp.br || !ns.length ? h.slice() : ns; }
+  const led = spSuit(sp.tr[0].c), f = h.filter(c => spSuit(c) === led);
+  return f.length ? f : h.slice();
+}
+function spBotPlay(i){
+  const sp = S.sp, h = holes[S.seats[i].c] || [], L = spLegal(i);
+  const gone = new Set(sp.gone), mine = new Set(h);
+  const isBoss = c => !SP_ALL.some(d => spSuit(d) === spSuit(c) && spPow(d) > spPow(c) && !gone.has(d) && !mine.has(d));
+  const low = cs => cs.slice().sort((a, b) => ((spSuit(a) === 's') - (spSuit(b) === 's')) || (spPow(a) - spPow(b)))[0];
+  const high = cs => cs.slice().sort((a, b) => spPow(b) - spPow(a))[0];
+  const m = spMate(i), t = spTeam(i);
+  const myNil = sp.b[i] === 'N' && sp.tk[i] === 0, mateNil = sp.b[m] === 'N' && sp.tk[m] === 0;
+  const need = spTeamBid(t) - [t, t + 2].filter(j => sp.b[j] !== 'N').reduce((a, j) => a + sp.tk[j], 0);
+  if (!sp.tr.length) {
+    if (myNil) return low(L);
+    const ns = L.filter(c => spSuit(c) !== 's'), spd = L.filter(c => spSuit(c) === 's');
+    const bosses = ns.filter(isBoss);
+    if (bosses.length && need > 0) return bosses[0];
+    if (sp.br && spd.length >= 4 && spd.some(isBoss)) return high(spd);
+    if (ns.length) {
+      const by = {}; ns.forEach(c => { (by[spSuit(c)] = by[spSuit(c)] || []).push(c); });
+      const suits = Object.keys(by);
+      const single = h.filter(c => spSuit(c) === 's').length >= 2 ? suits.find(su => by[su].length === 1 && !isBoss(by[su][0])) : null;
+      const su = single || suits.sort((a, b) => by[b].length - by[a].length)[0];
+      return low(by[su]);
+    }
+    return bosses[0] || low(L);
+  }
+  const wi = spTrickWinner(sp.tr), wc = sp.tr.find(p => p.i === wi).c;
+  const beats = c => (spSuit(c) === spSuit(wc) ? spPow(c) > spPow(wc) : spSuit(c) === 's');
+  const winners = L.filter(beats), losers = L.filter(c => !beats(c));
+  const last = sp.tr.length === SP_SEATS - 1;
+  if (myNil) return losers.length ? high(losers) : low(L);
+  if (wi === m) {
+    if (mateNil && winners.length) return low(winners);
+    return low(losers.length ? losers : L);
+  }
+  if (winners.length && (need > 0 || mateNil || last || winners.some(isBoss))) {
+    if (last) return low(winners);
+    const sure = winners.filter(c => isBoss(c) && spSuit(c) === spSuit(sp.tr[0].c));
+    if (sure.length) return low(sure);
+    if (sp.tr.length === 1 && spSuit(wc) !== 's' && !mateNil) {
+      const cut = winners.filter(c => spSuit(c) === 's');
+      if (cut.length && cut.length === winners.length) return low(cut);
+      return low(losers.length ? losers : L);
+    }
+    return low(winners);
+  }
+  return low(losers.length ? losers : L);
+}
+function spBotMove(i){
+  const sp = S.sp; if (!sp || S.ph !== 'playing' || S.tn !== i) return '';
+  if (sp.step === 'bid') { const a = spBotBid(i); const r = spAct(i, a); return r || (a.k === 'look' ? spAct(i, spBotBid(i)) : ''); }
+  if (sp.step === 'play') return spAct(i, { k:'play', c:spBotPlay(i) });
+  return '';
+}
+</script>
 
 <script>
 (function(){
@@ -1275,13 +1637,14 @@ function loadSaved(){
   try { const o = JSON.parse(store.get('knock_host') || 'null'); if (o && o.cid === myCid && typeof o.code === 'string' && validState(o.S) && Date.now() - (o.at || 0) < 3 * 86400000) return o; } catch (e) {}
   return null;
 }
-function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, deck, at:Date.now() })); }
+function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, deck, at:Date.now(), sp:isSP(S) ? { holes, ren:spRen, shown:spShown } : undefined })); }
 /* ---------- Pitty Pat: host side ---------- */
 const isPP = s => !!s && s.game === 'pitty';
-const seatCap = s => (isPP(s) ? PP_SEATS : MAX_SEATS);
+const isSP = s => !!s && s.game === 'spades';
+const seatCap = s => (isPP(s) ? PP_SEATS : isSP(s) ? SP_SEATS : MAX_SEATS);
 const isFull = s => !!s && s.seats.filter(Boolean).length >= seatCap(s);
-const gameName = s => (isPP(s) ? 'Pitty Pat' : 'Knock');
-function beginHand(){ return isPP(S) ? ppStartHand() : startHand(); }
+const gameName = s => (isPP(s) ? 'Pitty Pat' : isSP(s) ? 'Spades' : 'Knock');
+function beginHand(){ return isPP(S) ? ppStartHand() : isSP(S) ? spBegin() : startHand(); }
 let ppBotKey = '', ppBotTimer = null;
 const ppBotClaim = new Map();
 const ppBotSide = new Map();
@@ -1341,6 +1704,98 @@ function ppHostTick(now){
 function ppBotPlays(x){ return !!x && (x.bot || x.g || x.away); }
 /* for a thrown card, a dropped phone gets help right away (the offer only lasts a few seconds) */
 function ppBotTakes(x){ return ppBotPlays(x) || (!!x && awaySince.has(x.c)); }
+/* ---------- Spades: host side ---------- */
+let spBotKey = '', spBotTimer = null;
+const spBotCall = new Map();
+/* a bot plays for real bots, for anyone who left, and for anyone whose phone dropped (8 seconds) */
+function spBotPlays(x){ return !!x && (x.bot || x.g || x.away); }
+function spPeopleWaiting(){
+  const out = [];
+  for (const p of pres.values()) if (p.sit && p.n && p.conn && p.conn.open && !(S.banned || []).includes(p.cid) && !S.seats.some(x => x && x.c === p.cid)) out.push(p);
+  if (me.sit && myName && !S.seats.some(x => x && x.c === myCid)) out.unshift({ cid:myCid, n:myName });
+  return out;
+}
+/* between hands: anyone who left gets their seat filled (by someone waiting, or a bot), and people
+   waiting to play can take a bot's seat (their own old seat first) */
+function spSeatPlayers(){
+  const waiting = spPeopleWaiting();
+  const used = () => new Set(S.seats.filter(Boolean).map(x => x.n));
+  const take = k => { const p = waiting.shift(); const was = S.seats[k]; S.seats[k] = newSeat(p.cid, p.n, false); S.seats[k].st = 'wait'; void was; };
+  for (let k = 0; k < SP_SEATS; k++) {
+    const x = S.seats[k];
+    if (!x || (x.g && !x.bot)) {
+      const back = waiting.findIndex(p => x && x.c === p.cid);
+      if (back >= 0) { waiting.splice(back, 1); x.g = 0; continue; }
+      if (waiting.length) { take(k); continue; }
+      const nb = newSeat('bot' + rid(6), BOT_NAMES.find(n => !used().has(n)) || 'Bot', true);
+      if (x) nb.was = x.c;
+      S.seats[k] = nb;
+    }
+  }
+  while (waiting.length) {
+    const p = waiting[0];
+    let k = S.seats.findIndex((x, j) => j < SP_SEATS && x && x.bot && x.was === p.cid);
+    if (k < 0) k = S.seats.findIndex((x, j) => j < SP_SEATS && x && x.bot);
+    if (k < 0) break;
+    take(k);
+  }
+}
+function spBegin(){ spSeatPlayers(); spStartHand(); }
+function spStartGame(){
+  if (S.cfg.teams === 'random') {
+    const xs = S.seats.slice(0, SP_SEATS);
+    for (let k = xs.length - 1; k > 0; k--) { const j = randInt(k + 1); const t = xs[k]; xs[k] = xs[j]; xs[j] = t; }
+    xs.forEach((x, k) => { S.seats[k] = x; });
+  }
+  spNewGame();
+  spEv({ k:'teams', r:S.cfg.teams === 'random' ? 1 : 0 });
+  spBegin();
+}
+function spHostTick(now){
+  if (S.ph !== 'playing' || !S.sp) return;
+  const sp = S.sp;
+  if (sp.step === 'trick') { if (!spWait) spWait = now + SP_TRICK_MS; if (now >= spWait) { spWait = 0; spCollect(); } return; }
+  if (sp.step === 'last') { if (!spWait) spWait = now + SP_LAST_MS; if (now >= spWait) { spWait = 0; spScoreHand(); } return; }
+  /* bots notice a renege once it shows (someone plays a suit they already showed they were out of) */
+  [0, 1].forEach(t => {
+    const o = 1 - t;
+    if (!spShown[o] || sp.rc[t] || sp.step === 'bid') return;
+    if (![t, t + 2].some(j => S.seats[j] && S.seats[j].bot)) return;
+    const key = S.hand + ':' + t;
+    if (!spBotCall.has(key)) spBotCall.set(key, now + 2000 + randInt(3500) + (randInt(100) < 15 ? 600000 : 0));
+    else if (now >= spBotCall.get(key)) { spBotCall.set(key, Infinity); const j = [t, t + 2].find(q => S.seats[q] && S.seats[q].bot); spAct(j, { k:'renege' }); }
+  });
+  if (spBotCall.size > 40) spBotCall.clear();
+  const i = S.tn, x = S.seats[i]; if (!x || i < 0) return;
+  const key = S.hand + ':' + S.q;
+  if (key !== lastTurnKey) { lastTurnKey = key; turnClock = now; }
+  if (spBotPlays(x)) {
+    if (spBotKey !== key) {
+      spBotKey = key; clearTimeout(spBotTimer);
+      spBotTimer = setTimeout(() => { const y = S && S.seats[i]; if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i && y && spBotPlays(y)) { spBotMove(i); hostTick(); } }, (sp.step === 'bid' ? 900 : 650) + randInt(900));
+    }
+    return;
+  }
+  if (S.cfg.tm > 0 && now - turnClock > S.cfg.tm * 1000) spBotMove(i);
+}
+/* waiting for the first deal: 4 in their seats and everyone ready (or the host says go) */
+function spWaitTick(now){
+  const xs = S.seats.slice(0, SP_SEATS), full = xs.every(x => x && !x.g);
+  const go = full && !S.pause && (S.go || xs.every(x => x.bot || (x.rdy && !x.away)));
+  if (go) {
+    if (!waitStartAt) waitStartAt = now + 3000;
+    S.cd = Math.max(1, Math.ceil((waitStartAt - now) / 1000));
+    if (now >= waitStartAt) { waitStartAt = 0; S.cd = 0; S.go = 0; spStartGame(); }
+  } else { waitStartAt = 0; S.cd = 0; if (!full) S.go = 0; }
+}
+/* pick seats: before the game starts you can move to an open seat, or swap with a bot */
+function spMoveSeat(cid, k){
+  if (!isSP(S) || S.ph !== 'waiting' || S.cfg.teams === 'random' || !(k >= 0 && k < SP_SEATS)) return;
+  const j = S.seats.findIndex(x => x && x.c === cid); if (j < 0 || j === k) return;
+  const y = S.seats[k]; if (y && !y.bot) return;
+  S.seats[k] = S.seats[j]; S.seats[j] = y || null;
+  hostTick();
+}
 function startTable(game){
   if (!myName) return;
   if (!hasPeerLib()) { toast('This page did not load fully. Reload and try again.'); return; }
@@ -1349,6 +1804,7 @@ function startTable(game){
   role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true; rememberSit(true);
   S.cfg.room = 'private'; S.cfg.name = cleanRoom(`${myName}'s table`);
   if (game === 'pitty') { S.game = 'pitty'; S.cfg.st = PP_START; S.cfg.ow = PP_OFFER; S.pp = { step:'pull', pile:0, top:null, from:-1, oid:0, eid:0, ev:[], ow:PP_OFFER }; }
+  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 500; S.cfg.teams = 'pick'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
   else S.game = 'knock';
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
 }
@@ -1357,7 +1813,15 @@ function resumeHost(saved){
   deck = Array.isArray(saved.deck) && saved.deck.every(validCard) ? saved.deck : []; deckId++;
   if (S.due === undefined) S.due = 1;
   delete S.cfg.cap;
-  if (isPP(S)) ppVoidHand(); else voidHand();
+  if (isPP(S)) ppVoidHand();
+  else if (isSP(S)) {
+    /* Spades picks up where it left off: the cards in everyone's hands were saved too */
+    const sv = saved.sp || {};
+    const ok = sv.holes && typeof sv.holes === 'object' && S.seats.slice(0, SP_SEATS).every(x => !x || (Array.isArray(sv.holes[x.c]) && sv.holes[x.c].every(spValid)));
+    if (ok) { holes = sv.holes; spRen = Array.isArray(sv.ren) ? sv.ren.map(n => +n || 0) : [0, 0]; spShown = Array.isArray(sv.shown) ? sv.shown.map(n => +n || 0) : [0, 0]; spWait = 0; }
+    else if (S.ph === 'playing') { S.ph = 'done'; nextHandAt = Date.now() + 2000; S.res = null; }
+  }
+  else voidHand();
   S.hid = myCid;
   me.sit = S.seats.some(x => x && x.c === myCid);
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
@@ -1434,6 +1898,17 @@ function onClientMsg(c, d){
       }
       break;
     }
+    case 'sp': {
+      const i = S.seats.findIndex(y => y && y.c === p.cid);
+      if (i >= 0 && isSP(S) && ['bid', 'look', 'blind', 'play', 'renege'].includes(d.k)) {
+        const n = d.n === 'N' ? 'N' : +d.n;
+        const r = spAct(i, { k:d.k, n, c:spValid(d.c) ? d.c : null });
+        if (r) { try { c.send({ t:'spno', r, k:d.k }); } catch (e) {} }
+        hostTick();
+      }
+      break;
+    }
+    case 'spseat': spMoveSeat(p.cid, +d.i); break;
     case 'side': { const x = S.seats.find(y => y && y.c === p.cid); if (x && PP_SIDES.includes(d.k)) { x.sw = Object.assign({}, x.sw || {}, { [d.k]:d.v ? 1 : 0 }); hostTick(); } break; }
     case 'name': { const nm = cleanName(d.name); if (nm) { p.n = nm; hostTick(); } break; }
     case 'sit': { p.sit = !!d.sit; const nm = cleanName(d.name); if (nm) p.n = nm; hostTick(); break; }
@@ -1446,12 +1921,14 @@ function onClientMsg(c, d){
 /* ---------- table talk: short messages that pop up over the sender's seat ---------- */
 const QUICK = ['Pay up 💸', 'Scared money don’t make money', 'You bluffing? 👀', 'Lucky 🍀', 'Too easy 😎', 'Run it back', 'Knock knock 👊', 'Nice hand'];
 const QUICK_PP = ['Throw me something good 🙏', 'How you sleep that card? 😴', 'Porter baby! 🎯', 'You slept 😴', 'Wake up! ⏰', 'That\'s dead 💀', 'Who got my card? 🤨', 'Stop holding my card 😤', 'Hurry up and throw ⏳', 'Pitty Pat! 🎉'];
+const QUICK_SP = ['Y\'all about to get set 😤', 'That ten walked 🚶🏾', 'Somebody reneged 👀', 'Bags piling up 🎒', 'Big Joker coming 🃏', 'No table talk 🤐', 'Shot! 🎯', 'Run it back', 'Good game 🤝🏾'];
 const EMOJI = ['😂', '🔥', '😤', '🥶', '🤡', '💀', '👀', '🙌'];
 const chatLog = [], chatLast = new Map(), seatPos = new Map();
 let chatUnread = 0, chatSentAt = 0;
 function cleanChat(t){ return String(t || '').replace(BAD_CH, '').replace(/\s+/g, ' ').trim().slice(0, 80); }
 function hostChat(cid, text){
   const x = cleanChat(text); if (!x) return;
+  if (S && (S.muted || []).includes(cid)) return;
   const now = Date.now(); if (now - (chatLast.get(cid) || 0) < 1000) return; chatLast.set(cid, now);
   const seat = S && S.seats.find(y => y && y.c === cid);
   const n = seat ? seat.n : (cid === myCid ? myName : ((pres.get(cid) || {}).n || ''));
@@ -1486,6 +1963,7 @@ function showBubble(m){
 }
 function sendChat(text){
   const x = cleanChat(text); if (!x) return false;
+  const sm = cur(); if (sm && (sm.muted || []).includes(myCid)) { toast('The host turned off your chat at this table'); return false; }
   const now = Date.now(); if (now - chatSentAt < 1000) { toast('One sec, then send again'); return false; }
   if (role === 'host') { chatSentAt = now; hostChat(myCid, x); return true; }
   if (!send({ t:'chat', x })) { toast('Not connected to the table right now'); return false; }
@@ -1499,6 +1977,9 @@ function sendState(p){
     const t = S.seats[S.tn];
     if (S.ph === 'playing' && S.pp && S.pp.step === 'drawn' && t && t.c === p.cid) pend = ppPend;
     cl = { col:ppSideCl.col.has(p.cid) ? 1 : 0, spd:ppSideCl.spd.has(p.cid) ? 1 : 0 };
+  } else if (isSP(S)) {
+    const i = S.seats.findIndex(x => x && x.c === p.cid);
+    hole = i >= 0 && i < SP_SEATS && S.ph === 'playing' && S.sp && S.sp.bd[spTeam(i)] && holes[p.cid] ? holes[p.cid] : null;
   } else hole = (S.ph === 'deciding' || S.ph === 'done') && holes[p.cid] ? holes[p.cid] : null;
   try { p.conn.send({ t:'state', s:S, hole, pend, cl }); } catch (e) {}
 }
@@ -1520,6 +2001,7 @@ function hostTick(){
     else { if (!awaySince.has(x.c)) awaySince.set(x.c, now); x.away = now - awaySince.get(x.c) > 8000 ? 1 : 0; if (now - awaySince.get(x.c) > 90000) x.g = 1; }
   });
   if (isPP(S)) { if (S.ph !== 'playing') removeGone(); else ppLeavers(); }
+  else if (isSP(S)) { if (S.ph === 'waiting' || S.ph === 'over') removeGone(); }
   else if (S.ph !== 'deciding') removeGone(); else foldLeavers();
   const want = [];
   if (me.sit && myName) want.push([myCid, myName]);
@@ -1549,6 +2031,7 @@ function hostTick(){
     }
   }
   if (isPP(S)) ppHostTick(now);
+  if (isSP(S)) spHostTick(now);
   const aud = [];
   if (myName && !S.seats.some(x => x && x.c === myCid)) aud.push({ c:myCid, n:myName, av:myAv });
   for (const p of pres.values()) if (p.conn && p.conn.open && p.n && !S.seats.some(x => x && x.c === p.cid)) aud.push({ c:p.cid, n:p.n, av:AV_LIST.includes(p.av) ? p.av : '' });
@@ -1562,6 +2045,7 @@ function hostTick(){
     S.cd = Math.max(0, Math.ceil((nextHandAt - now) / 1000));
   }
   if ((S.ph === 'done' || S.ph === 'recap') && now >= nextHandAt) beginHand();
+  else if (S.ph === 'waiting' && isSP(S)) spWaitTick(now);
   else if (S.ph === 'waiting') {
     const players = S.seats.filter(x => x && !x.g && !x.away && !x.so && x.s >= S.cfg.ante);
     if (players.length < 2 && S.live) { S.live = 0; S.seats.forEach(x => { if (x && !x.bot) x.rdy = 0; }); }
@@ -1581,7 +2065,12 @@ function addBot(){
   S.seats[free] = newSeat('bot' + rid(6), BOT_NAMES.find(n => !used.has(n)) || 'Bot', true);
   hostTick();
 }
-function removeBots(){ if (role === 'host' && S) { S.seats.forEach(x => { if (x && x.bot) x.g = 1; }); hostTick(); } }
+function removeBots(){
+  if (role !== 'host' || !S) return;
+  if (isSP(S) && S.ph !== 'waiting' && S.ph !== 'over') { toast('Bots keep their seats until the game is over'); return; }
+  S.seats.forEach(x => { if (x && x.bot) x.g = 1; }); hostTick();
+}
+function fillBots(){ if (role !== 'host' || !S) return; for (let k = 0; k < seatCap(S); k++) if (!S.seats[k]) addBot(); }
 const GIVE_AMTS = [100, 500, 800, 1000];
 function giveAmts(s){ const st = +s.cfg.st || 0; return GIVE_AMTS.includes(st) || st <= 0 ? GIVE_AMTS : GIVE_AMTS.concat(st); }
 /* buttons to give someone 1, 5, 8, 10 or the starting amount */
@@ -1608,6 +2097,8 @@ function setCfg(field, val){
   else if (field === 'theme' && THEMES[val]) S.cfg.theme = val;
   else if (field === 'ow' && [5, 8, 12].includes(v)) S.cfg.ow = v;
   else if (field === 'side' && [0, 25, 50, 100].includes(v)) S.cfg.side = v;
+  else if (field === 'to' && SP_TARGETS.includes(v)) S.cfg.to = v;
+  else if (field === 'teams' && ['pick', 'random'].includes(val)) S.cfg.teams = val;
   else if (field === 'room' && ['open', 'private', 'hidden'].includes(val)) {
     S.cfg.room = val; startLobbyListing();
     if (val === 'open') [...asks.keys()].forEach(cid => answerAsk(cid, true));
@@ -1649,7 +2140,7 @@ function claimSlot(n){
   });
 }
 function roomInfo(){
-  return { t:'info', v:1, game:isPP(S) ? 'pitty' : 'knock', name:tableName(), room:roomType(), code:roomType() === 'open' ? S.code : null,
+  return { t:'info', v:1, game:isPP(S) ? 'pitty' : isSP(S) ? 'spades' : 'knock', to:isSP(S) ? +S.cfg.to || 500 : undefined, name:tableName(), room:roomType(), code:roomType() === 'open' ? S.code : null,
     players:S.seats.filter(Boolean).length, aud:Array.isArray(S.aud) ? S.aud.length : 0, ante:S.cfg.ante, host:myName || '' };
 }
 function onLobbyMsg(c, d){
@@ -1840,8 +2331,8 @@ function lobbyHTML(){
       : asking ? '<button type="button" class="btn ghost sm" data-act="lobbycancel">Cancel</button>'
       : `<button type="button" class="btn ghost sm" data-act="lobbyjoin" data-slot="${slot}">Ask to join</button>`;
     const badge = r.room === 'open' ? '<span class="rbadge open">Open</span>' : '<span class="rbadge">🔒 Private</span>';
-    const cap = r.game === 'pitty' ? 6 : 10;
-    const meta = asking ? `Waiting for ${esc(cleanName(r.host) || 'the host')} to let you in…` : `<span class="rgame">${r.game === 'pitty' ? 'Pitty Pat' : 'Knock'}</span>${Math.min(cap, +r.players || 0)}/${cap} playing${+r.aud ? ` · ${+r.aud} watching` : ''} · ante ${fmtT(r.ante)}`;
+    const cap = r.game === 'pitty' ? 6 : r.game === 'spades' ? 4 : 10;
+    const meta = asking ? `Waiting for ${esc(cleanName(r.host) || 'the host')} to let you in…` : `<span class="rgame">${r.game === 'pitty' ? 'Pitty Pat' : r.game === 'spades' ? 'Spades' : 'Knock'}</span>${Math.min(cap, +r.players || 0)}/${cap} playing${+r.aud ? ` · ${+r.aud} watching` : ''} · ${r.game === 'spades' ? `to ${+r.to || 500}` : `ante ${fmtT(r.ante)}`}`;
     return `<li class="room"><div class="rinfo"><b>${esc(cleanRoom(r.name) || 'A table')}</b><span>${badge}${meta}</span></div>${btn}</li>`;
   }).join('');
   const head = '<div class="divider">Tables playing now</div>';
@@ -1911,6 +2402,8 @@ function onHostMsg(d){
       view.hole = Array.isArray(d.hole) && d.hole.length <= 8 && d.hole.every(validCard) ? d.hole.slice() : null;
       view.pend = validCard(d.pend) ? d.pend : null;
       view.cl = d.cl && typeof d.cl === 'object' ? { col:d.cl.col ? 1 : 0, spd:d.cl.spd ? 1 : 0 } : { col:0, spd:0 };
+    } else if (d.s.game === 'spades') {
+      view.hole = Array.isArray(d.hole) && d.hole.length <= 13 && d.hole.every(spValid) ? d.hole.slice() : null; view.pend = null;
     } else { view.hole = Array.isArray(d.hole) && d.hole.length === 2 && d.hole.every(validCard) ? d.hole.slice() : null; view.pend = null; }
     if (mySeatIdx(view.s) >= 0) me.sit = true;
     scheduleRender();
@@ -1918,8 +2411,52 @@ function onHostMsg(d){
   else if (d.t === 'fx') handleFx(d);
   else if (d.t === 'ppno') { ppPending = ''; ppNope(String(d.r || ''), d.p); scheduleRender(); }
   else if (d.t === 'ppok' && d.p) { toast(ppClaimToast(d.p)); scheduleRender(); }
+  else if (d.t === 'spno') { spPending = ''; spNope(String(d.r || '')); scheduleRender(); }
   else if (d.t === 'kicked') { kicked = true; clearTimeout(retryTimer); dropConn(); netState = 'kicked'; view.s = null; scheduleRender(); }
   else if (d.t === 'chatlog' && Array.isArray(d.list)) d.list.slice(-20).forEach(m => addChat(m, true));
+}
+
+/* ---------- Spades: your moves ---------- */
+let spSel = '', spPending = '';
+const SP_SUIT_WORD = { s:'spades', h:'hearts', c:'clubs', d:'diamonds' };
+function spMine(){
+  const s = cur(); if (!isSP(s) || s.ph !== 'playing') return [];
+  const i = mySeatIdx(s); if (i < 0 || !s.sp || !s.sp.bd[spTeam(i)]) return [];
+  return ((role === 'host' ? holes[myCid] : view.hole) || []).slice();
+}
+function spLegalFor(s, h){
+  const sp = s.sp; if (!sp.tr.length) { const ns = h.filter(c => spSuit(c) !== 's'); return sp.br || !ns.length ? h : ns; }
+  const led = spSuit(sp.tr[0].c), f = h.filter(c => spSuit(c) === led);
+  return f.length ? f : h;
+}
+const spCardName = c => (c === 'BJ' ? 'Big Joker' : c === 'LJ' ? 'Lil Joker' : `${RNAME[rv(c)]} of ${SUIT_NAME[c[1]]}`);
+const spShort = c => (c === 'BJ' ? 'Big Joker' : c === 'LJ' ? 'Lil Joker' : `${rankTxt(c)}${SUIT_CH[c[1]]}`);
+function spNope(r){
+  const m = { 'not broken':'Spades aren\'t broken yet. Lead another suit.', 'board':'Your team has to bid at least 3 books (the board).', 'used':'Your team already used its renege call this hand.', 'not your turn':'Hold on, it\'s not your turn.', 'blind first':'Decide on blind first.', 'bad bid':'That bid isn\'t allowed.', 'not now':'Too late for that.', 'wait':'Hold on a second.', 'not in your hand':'Pick a card from your hand.' }[r];
+  if (m) toast(m);
+}
+function spMove(k, o){
+  const s = cur(); if (!isSP(s) || s.ph !== 'playing') return;
+  const i = mySeatIdx(s); if (i < 0) return;
+  o = o || {};
+  spPending = k + ':' + s.q;
+  if (role === 'host') { const r = spAct(i, Object.assign({ k }, o)); if (r) { spPending = ''; spNope(r); } hostTick(); }
+  else if (!send(Object.assign({ t:'sp', k }, o))) { spPending = ''; toast('Not connected to the table right now'); }
+  if (k === 'play') spSel = '';
+  scheduleRender();
+}
+function spPick(c){
+  const s = cur(); if (!isSP(s) || s.ph !== 'playing' || !s.sp || s.sp.step !== 'play') return;
+  const i = mySeatIdx(s); if (i < 0 || s.tn !== i) return;
+  const h = spMine(); if (!h.includes(c)) return;
+  if (!s.sp.tr.length && !spLegalFor(s, h).includes(c)) { toast('Spades aren\'t broken yet. Lead another suit.'); return; }
+  if (spSel === c) { spMove('play', { c }); return; }
+  spSel = c; sfx('flick'); scheduleRender();
+}
+function spSeat(k){
+  const s = cur(); if (!isSP(s)) return;
+  if (role === 'host') spMoveSeat(myCid, k); else send({ t:'spseat', i:k });
+  sfx('pop');
 }
 
 /* ---------- Pitty Pat: your moves ---------- */
@@ -2034,7 +2571,7 @@ function copyLink(){
 }
 function shareLink(){
   const link = inviteLink();
-  if (navigator.share) navigator.share({ title:'Quit Playin\'!', text:`Join my ${S && isPP(S) ? 'Pitty Pat' : view.s && isPP(view.s) ? 'Pitty Pat' : 'Knock'} table on Quit Playin'! (code ${code})`, url:link }).catch(() => {});
+  if (navigator.share) navigator.share({ title:'Quit Playin\'!', text:`Join my ${gameName(S || view.s)} table on Quit Playin'! (code ${code})`, url:link }).catch(() => {});
   else copyLink();
 }
 
@@ -2325,6 +2862,36 @@ function flyCard(c, from, to, o){
   wrap.innerHTML = c ? cardHTML(c) : '<div class="card back"></div>';
   fly(wrap, from, to, Object.assign({ dur:420, arc:36, s0:.8, s1:1 }, o || {}));
 }
+let spSeenEv = { code:'', id:0 };
+function spDetectFx(s){
+  const sp = s.sp; if (!sp || !Array.isArray(sp.ev)) return;
+  if (spSeenEv.code !== s.code) { spSeenEv = { code:s.code, id:+sp.eid || 0 }; return; }
+  const fresh = sp.ev.filter(e => e && e.id > spSeenEv.id);
+  spSeenEv.id = Math.max(spSeenEv.id, +sp.eid || 0);
+  if (fresh.length > 8) fresh.splice(0, fresh.length - 8);
+  let t = 60;
+  fresh.forEach(e => { setTimeout(() => spFx(cur() || s, e), t); t += e.k === 'deal' ? 700 : 120; });
+}
+function spFx(s, e){
+  if (!G.W || !s) return;
+  const P = i => seatIdxPos.get(i) || { x:G.cx, y:G.cy }, me = mySeatIdx(s);
+  const who = i => (i === me ? 'You' : esc(s.seats[i] ? s.seats[i].n : 'Someone'));
+  switch (e.k) {
+    case 'deal': textFx('NEW HAND', { x:G.cx, y:G.cy - 60 }, 'big', 1400); sfx('shuffle'); spSel = ''; break;
+    case 'teams': if (e.r && me >= 0 && me < SP_SEATS) { const m = s.seats[spMate(me)]; toast(`Teams are set! Your partner is ${m ? m.n : 'across from you'}.`); } break;
+    case 'bid': { const p = P(e.i); textFx(e.blind ? `BLIND ${+e.n}` : e.n === 'N' ? 'NIL' : `BID ${+e.n}`, { x:p.x, y:p.y - 46 }, e.blind || e.n === 'N' ? 'big' : '', 1400); sfx('pop'); break; }
+    case 'play': sfx('flick'); break;
+    case 'cut': textFx('CUT! ♠', { x:G.cx, y:G.cy - 74 }, 'big', 1300); sfx('whoosh'); break;
+    case 'trick': { const p = P(e.w); textFx('+1', { x:p.x, y:p.y - 40 }, '', 1100); sfx(spTeam(e.w) === spTeam(me) && me >= 0 ? 'ding' : 'clink'); break; }
+    case 'renege': {
+      if (e.ok) { textFx('RENEGE! 🚨', { x:G.cx, y:G.cy - 70 }, 'potfx lvl2', 2200); sfx('drum'); const caught = me >= 0 && me < SP_SEATS ? (spTeam(me) === e.o ? 'your team' : 'them') : SP_TEAM_NAME[e.o] + ' team'; toast(`🚨 ${who(e.i)} called renege and caught ${caught}! 3 books change hands.`); }
+      else { textFx('NO RENEGE', { x:G.cx, y:G.cy - 70 }, 'big', 1600); sfx('fold'); toast(`${who(e.i)} called renege, but nobody reneged. That call is used up.`); }
+      break;
+    }
+    case 'hand': { const r = s.res; if (r && Array.isArray(r.t)) { const t = me >= 0 && me < SP_SEATS ? spTeam(me) : -1; if (t >= 0 && !r.t[t].made) { textFx('SHOT!', { x:G.cx, y:G.cy - 80 }, 'big', 1500); sfx('ouch'); } else sfx('cash'); if (t >= 0 && r.t[t].bagHit) toast('10 bags: your team loses 100'); } break; }
+    case 'game': { const r = s.res || {}; const us = me >= 0 && me < SP_SEATS && spTeam(me) === r.over; textFx(us ? 'WE WON! 🏆' : 'GAME', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2600); sfx(us ? 'fanfare' : 'drum'); if (us) ['🎉', '🏆', '🎉'].forEach((em, k) => setTimeout(() => burst(em, { x:G.cx + (k - 1) * 60, y:G.cy - 30 }, 1400), k * 180)); break; }
+  }
+}
 function ppDetectFx(s){
   const pp = s.pp; if (!pp || !Array.isArray(pp.ev)) return;
   if (ppSeenEv.code !== s.code) { ppSeenEv = { code:s.code, id:+pp.eid || 0 }; return; }
@@ -2397,6 +2964,7 @@ function ppFx(s, e){
 function detectFx(s){
   if (!s) { prevView = null; return; }
   if (isPP(s)) { prevView = null; ppDetectFx(s); return; }
+  if (isSP(s)) { prevView = null; spDetectFx(s); return; }
   const p = prevView;
   const snap = { code:s.code, hand:s.hand, ph:s.ph, st:s.seats.map(x => x ? x.st : null), c:s.seats.map(x => x ? x.c : null), stacks:new Map(s.seats.filter(Boolean).map(x => [x.c, x.s])), pot:s.pot, ws:new Map(s.seats.filter(Boolean).map(x => [x.c, x.ws || 0])) };
   if (p && p.code === s.code) {
@@ -2576,6 +3144,7 @@ function setHTML(el, html){
 function setText(el, t){ if (el.textContent !== t) el.textContent = t; }
 function cardHTML(c, o){
   o = o || {};
+  if (c === 'BJ' || c === 'LJ') return `<div class="card joker ${c === 'BJ' ? 'red bigj' : 'lilj'}${o.cls ? ' ' + o.cls : ''}" role="img" aria-label="${c === 'BJ' ? 'Big' : 'Lil'} Joker"><span class="r">${c === 'BJ' ? 'BIG' : 'LIL'}</span><span class="s">★</span><span class="jk">JOKER</span></div>`;
   if (!validCard(c)) return '<div class="card back"></div>';
   const r = c[0] === 'T' ? '10' : c[0], su = c[1];
   return `<div class="card${su === 'h' || su === 'd' ? ' red' : ''}${o.cls ? ' ' + o.cls : ''}" role="img" aria-label="${RNAME[rv(c)]} of ${SUIT_NAME[su]}"${o.delay ? ` style="animation-delay:${o.delay}ms"` : ''}><span class="r">${r}</span><span class="s">${SUIT_CH[su]}</span></div>`;
@@ -2818,8 +3387,8 @@ function layout(){
   const f1 = Math.max(16, Math.min(34, fw * 0.06)), f2 = Math.max(7.5, Math.min(11, fw * 0.017));
   $('#feltPrint').innerHTML =
     `<defs><path id="arcT" d="M ${cx - a} ${cy} A ${a} ${b} 0 0 1 ${cx + a} ${cy}"/><path id="arcB" d="M ${cx - a2} ${cy} A ${a2} ${b2} 0 0 0 ${cx + a2} ${cy}"/></defs>` +
-    `<text class="p1" font-size="${f1}"><textPath href="#arcT" startOffset="50%" text-anchor="middle">${G.lobby ? '' : G.game === 'pitty' ? 'PITTY PAT' : 'KNOCK'}</textPath></text>` +
-    `<text class="p2" font-size="${f2}"><textPath href="#arcB" startOffset="50%" text-anchor="middle">${G.lobby ? '' : G.game === 'pitty' ? 'PAIR EVERY CARD · DON\'T SLEEP · PLAY TOKENS ONLY' : 'PAIRS BEAT ALL · ACES HIGH · PLAY TOKENS ONLY'}</textPath></text>`;
+    `<text class="p1" font-size="${f1}"><textPath href="#arcT" startOffset="50%" text-anchor="middle">${G.lobby ? '' : G.game === 'pitty' ? 'PITTY PAT' : G.game === 'spades' ? 'SPADES' : 'KNOCK'}</textPath></text>` +
+    `<text class="p2" font-size="${f2}"><textPath href="#arcB" startOffset="50%" text-anchor="middle">${G.lobby ? '' : G.game === 'pitty' ? 'PAIR EVERY CARD · DON\'T SLEEP · PLAY TOKENS ONLY' : G.game === 'spades' ? 'BIG JOKER · LIL JOKER · DEUCES HIGH · NO TABLE TALK' : 'PAIRS BEAT ALL · ACES HIGH · PLAY TOKENS ONLY'}</textPath></text>`;
   for (const el of $('#seats').children) el._h = null;
   paintScene($('#app').dataset.felt || 'green');
   scheduleRender();
@@ -2867,8 +3436,56 @@ function ppSeatView(s, i, x, isMine){
   const por = s.side && s.side.por && s.side.por.won && s.side.por.wc && s.side.por.wc === x.c && (s.ph === 'playing' || s.ph === 'done') ? '<div class="porbadge" title="Got the Porter pot this hand">🎯 PORTER</div>' : '';
   return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div>${por}${botb}<div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${(prs || dds) && !isMine ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
 }
+const SP_TEAM_NAME = ['Red', 'Blue'];
+/* "Us" and "Them" when you're playing, Red and Blue when you're watching */
+function spTeamLabel(s, t){ const i = mySeatIdx(s); return i >= 0 && i < SP_SEATS ? (spTeam(i) === t ? 'Us' : 'Them') : SP_TEAM_NAME[t]; }
+function spBidText(sp, i){
+  const b = sp.b ? sp.b[i] : null, t = spTeam(i);
+  if (b === null || b === undefined) return '';
+  if (sp.bl && sp.bl[t]) return sp.b[i] ? `Blind ${sp.bl[t]}` : 'Blind';
+  return b === 'N' ? 'Nil' : `Bid ${b}`;
+}
+function spOpenSeatView(s, i, mine){
+  const t = spTeam(i), canMove = s.ph === 'waiting' && s.cfg.teams !== 'random' && mine >= 0;
+  const btn = canMove ? `<button type="button" class="btn ghost sm" data-act="spseat" data-i="${i}">Move here</button>` : (mine < 0 && myName && !me.sit ? '<button type="button" class="btn ghost sm" data-act="sit">Take a seat</button>' : '');
+  return { cls:`seat sp open t${t}`, html:`<div class="minis"></div><div class="plate"><div class="nm">Open seat</div><div class="stk sp"><span class="tdot"></span>${esc(spTeamLabel(s, t))} team</div>${btn}</div><div class="tagpill empty" aria-hidden="true"></div>` };
+}
+function spSeatView(s, i, x, isMine){
+  const sp = s.sp || {}, t = spTeam(i);
+  const live = s.ph === 'playing';
+  const turn = live && s.tn === i && (sp.step === 'bid' || sp.step === 'play');
+  const took = live && sp.step === 'trick' && sp.last && sp.last.w === i;
+  const winT = s.ph === 'over' && s.res && s.res.over === t;
+  const cls = ['seat', 'sp', 't' + t, turn && 'turn', isMine && 'mine', winT && 'win', x.away && !isMine && 'away'].filter(Boolean).join(' ');
+  let timer = '';
+  if (turn && +s.cfg.tm > 0) timer = `<i class="tbar" style="animation-duration:${+s.cfg.tm}s"></i>`;
+  let label = '', pc = 'tagpill';
+  if (took) { label = 'Took the book'; pc += ' knock'; }
+  else if (turn) label = sp.step === 'bid' ? (isMine ? 'Your bid' : 'Bidding…') : (isMine ? 'Your turn' : 'Thinking…');
+  else if (s.ph === 'waiting' && !x.away) { label = x.rdy || x.bot ? 'Ready' : 'Not ready'; if (x.rdy || x.bot) pc += ' knock'; }
+  else if (x.away && !live) label = 'Away';
+  const pill = label && !(isMine && live) ? `<div class="${pc}">${esc(label)}</div>` : '<div class="tagpill empty" aria-hidden="true"></div>';
+  const av = AV_LIST.includes(x.av) ? x.av + ' ' : '';
+  const dchip = s.round && s.bt === i && (live || s.ph === 'done') ? '<span class="dchip" title="Dealer">D</span>' : '';
+  const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
+  /* while bidding: "Bid 3"; once the cards are flying: books taken out of the bid, like "2/3 books" */
+  const bt = sp.b ? sp.b[i] : null, tk = +(sp.tk || [])[i] || 0, blindT = sp.bl && sp.bl[t];
+  const counting = (live && sp.step !== 'bid') || s.ph === 'done' || s.ph === 'over';
+  let line;
+  if ((live || s.ph === 'done' || s.ph === 'over') && bt !== null && bt !== undefined) {
+    if (!counting) line = `<span class="bid">${esc(spBidText(sp, i))}</span>`;
+    else if (blindT) line = `<b>${tk}</b> · <span class="bid">blind ${blindT}</span>`;
+    else if (bt === 'N') line = `<b>${tk}</b> · <span class="bid">nil</span>`;
+    else line = `<b>${tk}</b>/<span class="bid">${+bt}</span> books`;
+  } else line = `${esc(spTeamLabel(s, t))} team`;
+  const muted = (s.muted || []).includes(x.c) ? ' <span title="Chat off" aria-label="Chat off">🔇</span>' : '';
+  const botb = live && !x.bot && (x.g || x.away) ? `<div class="porbadge botfill">🤖 BOT PLAYING</div>` : '';
+  const n = live && sp.bd && sp.bd[t] ? Math.max(0, Math.min(13, +x.hc || 0)) : 0;
+  return { cls, html:`<div class="minis spn">${n && !isMine ? `<span class="spcount">${n}</span>` : ''}</div><div class="plate">${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}${muted}</div>${botb}<div class="stk sp"><span class="tdot"></span>${line}</div>${timer}</div>${pill}` };
+}
 function seatView(s, i, x, isMine){
   if (isPP(s)) return ppSeatView(s, i, x, isMine);
+  if (isSP(s)) return spSeatView(s, i, x, isMine);
   const turn = s.ph === 'deciding' && s.tn === i;
   const r = resFor(s, i);
   const cls = ['seat', turn && 'turn', x.st === 'fold' && 'fold', x.st === 'out' && 'out', r && r.win && 'win', isMine && 'mine', x.st === 'wait' && 'waiting', x.away && !isMine && 'away', (x.ws || 0) >= 3 && !holding() && 'fire'].filter(Boolean).join(' ');
@@ -2909,13 +3526,25 @@ function renderSeats(s){
   if (s && G.W) {
     const occ = []; s.seats.forEach((x, i) => { if (x) occ.push(i); });
     const mine = mySeatIdx(s); let order = occ;
-    if (mine >= 0) { const k = occ.indexOf(mine); order = occ.slice(k).concat(occ.slice(0, k)); }
+    if (isSP(s)) { const base = mine >= 0 && mine < SP_SEATS ? mine : 0; order = [0, 1, 2, 3].map(k => (base + k) % SP_SEATS); }
+    else if (mine >= 0) { const k = occ.indexOf(mine); order = occ.slice(k).concat(occ.slice(0, k)); }
     const n = order.length;
     seatsEl.classList.toggle('compact', G.W < 720 && n >= 8);
     order.forEach((i, k) => {
       const th = Math.PI / 2 + k * 2 * Math.PI / n;
       const px = G.cx + G.rx * Math.cos(th), py = G.cy + G.ry * Math.sin(th);
-      const x = s.seats[i]; const key = x.c + '@' + i; seen.add(key);
+      const x = s.seats[i];
+      if (!x) {
+        const key = 'open@' + i; seen.add(key); seatIdxPos.set(i, { x:px, y:py });
+        let el = seatEls.get(key);
+        if (!el) { el = document.createElement('div'); seatsEl.appendChild(el); seatEls.set(key, el); }
+        el.style.left = px + 'px'; el.style.top = py + 'px';
+        const v = spOpenSeatView(s, i, mine);
+        if (el._c !== v.cls) { el.className = v.cls; el._c = v.cls; }
+        setHTML(el, v.html);
+        return;
+      }
+      const key = x.c + '@' + i; seen.add(key);
       seatPos.set(x.c, { x:px, y:py }); seatIdxPos.set(i, { x:px, y:py });
       let el = seatEls.get(key);
       if (!el) { el = document.createElement('div'); el.style.left = px + 'px'; el.style.top = py + 'px'; el.dataset.cid = x.c; seatsEl.appendChild(el); seatEls.set(key, el); }
@@ -2971,13 +3600,20 @@ function renderCenter(s){
   const lm = $('#lobbyMid');
   if (role === 'none') {
     document.querySelectorAll('.lcoins').forEach((el, k) => { if (!el.innerHTML) el.innerHTML = coinStackSVG(k ? 5 : 4, k); });
-    setHTML(lm, `<span class="lcrown">${CROWN_SVG}</span><span class="lnight">Card night</span><span class="lcards">${cardHTML('Ks')}${cardHTML('Qh')}</span><span class="ltag">Knock or Pitty Pat.<br>Pick a game and let's play!</span>`);
+    setHTML(lm, `<span class="lcrown">${CROWN_SVG}</span><span class="lnight">Card night</span><span class="lcards">${cardHTML('Ks')}${cardHTML('Qh')}</span><span class="ltag">Knock, Pitty Pat or Spades.<br>Pick a game and let's play!</span>`);
   } else if (lm.innerHTML) setHTML(lm, '');
   const myIdx = s ? mySeatIdx(s) : -1;
   let ph = role === 'none' ? 'Card night' : 'Knock', bl = '';
   if (!s) {
     if (role === 'player') { ph = 'Table ' + code; bl = kicked ? 'You were removed from this table.' : hostGone() ? 'Everyone\'s gone. The host left this table.' : 'Connecting…'; }
-    else bl = 'Knock or Pitty Pat. Pick a game below.';
+    else bl = 'Knock, Pitty Pat or Spades. Pick a game below.';
+  } else if (s.ph === 'waiting' && isSP(s)) {
+    const seated = s.seats.slice(0, SP_SEATS).filter(Boolean).length;
+    const nReady = s.seats.slice(0, SP_SEATS).filter(y => y && (y.bot || y.rdy)).length;
+    if (s.cd) { ph = 'Get ready'; bl = `First deal in <em>${+s.cd}</em>…`; }
+    else if (seated === SP_SEATS) { ph = 'Ready check'; bl = `<b>${nReady}</b> of 4 ready`; }
+    else { ph = 'Waiting for players'; bl = `${seated} of 4 seats taken · partners sit across`; }
+  } else if (s.ph === 'over' && isSP(s)) { ph = ''; bl = spResultsHTML(s, myIdx);
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
     const players = s.seats.filter(y => y && !y.g && !y.away && !y.so && y.s >= s.cfg.ante);
@@ -2985,6 +3621,16 @@ function renderCenter(s){
     if (s.cd) { ph = 'Get ready'; bl = `First deal in <em>${+s.cd}</em>…`; }
     else if (!s.live && players.length >= 2) { ph = 'Ready check'; bl = `<b>${nReady}</b> of ${players.length} ready`; }
     else { ph = 'Waiting for players'; bl = `${s.note ? esc(s.note) + '<br>' : ''}${seated} of ${seatCap(s)} seats taken${seated < 2 ? ' · 2 needed to deal' : ''}`; }
+  } else if (isSP(s)) {
+    const sp = s.sp || {}, t = s.seats[s.tn];
+    const nm = j => (j === myIdx ? 'You' : `<b>${esc(s.seats[j] ? s.seats[j].n : 'Someone')}</b>`);
+    if (s.ph === 'playing') {
+      ph = `Hand ${s.hand}${sp.step === 'bid' ? ' · Bidding' : sp.br ? ' · ♠ broken' : ''}`;
+      if (sp.step === 'bid') bl = t ? `${nm(s.tn)} ${s.tn === myIdx ? 'bid' : 'bids'} next` : '';
+      else if (sp.step === 'trick' && sp.last) bl = `${nm(sp.last.w)} ${sp.last.w === myIdx ? 'take' : 'takes'} the book`;
+      else if (sp.step === 'last') bl = 'Last book. Counting in a few seconds…';
+      else if (sp.step === 'play' && t) bl = !(sp.tr || []).length ? `${nm(s.tn)} ${s.tn === myIdx ? 'lead' : 'leads'}${sp.br ? '' : ' · no spades yet'}` : `${nm(s.tn)}${s.tn === myIdx ? ', your turn' : '\'s turn'}`;
+    } else if (s.ph === 'done' && s.res) { ph = ''; bl = spResultsHTML(s, myIdx); }
   } else if (isPP(s)) {
     const pp = s.pp || {}, t = s.seats[s.tn];
     if (s.ph === 'playing') {
@@ -3011,7 +3657,8 @@ function renderCenter(s){
     bl = holding() ? (s.res && s.res.tie ? 'Two new cards each for the tied players…' : '') : resultText(s, myIdx);
   }
   setText(phase, ph);
-  if (s && isPP(s) && s.ph === 'done' && s.res) pot.hidden = true;
+  if (s && isSP(s)) pot.hidden = true;
+  else if (s && isPP(s) && s.ph === 'done' && s.res) pot.hidden = true;
   else if (s) {
     const pv = holding() && holdPot != null ? holdPot : s.pot, lv = potLevel(pv);
     pot.hidden = false; setHTML(pot, `<span class="coin"></span><span class="lbl">Pot</span>${fmtT(pv)}`);
@@ -3028,7 +3675,15 @@ function renderCenter(s){
     }
     mid.hidden = false;
     setHTML(mid, `<div class="pppile" id="ppPile"><div class="card back"></div><div class="card back"></div><b>${+pp.pile || 0}</b></div><div class="pptop" id="ppTop">${top}</div>`);
+  } else if (isSP(s) && s.ph === 'playing' && s.sp && s.sp.step !== 'bid') {
+    mid.hidden = false; setHTML(mid, spTrickHTML(s, myIdx));
   } else if (!mid.hidden) { mid.hidden = true; setHTML(mid, ''); }
+  if (isSP(s)) {
+    setHTML($('#audinfo'), '');
+    setHTML($('#deckinfo'), s.sp && s.ph === 'playing' ? spScoreHTML(s) : '');
+    setHTML(below, bl);
+    return;
+  }
   if (isPP(s)) {
     const dl = s.round ? s.seats[s.bt] : null;
     if (s.pp && s.pp.cw && ppCwSeen.h !== s.code + s.hand) { ppCwSeen.h = s.code + s.hand; ppCwSeen.at = role === 'host' ? ppClaimEnd - PP_CLAIM_MS : Date.now(); }
@@ -3042,6 +3697,52 @@ function renderCenter(s){
   setHTML($('#audinfo'), '');
   setHTML($('#deckinfo'), s && s.round ? `${dl ? (s.bt === myIdx ? 'You deal' : esc(dl.n) + ' deals') : 'Deck'} · ${+s.left || 0} cards left` : '');
   setHTML(below, bl);
+}
+/* ---------- Spades: the middle of the table ---------- */
+function spScoreHTML(s){
+  const sp = s.sp || {}, sc = sp.sc || [0, 0], bg = sp.bg || [0, 0];
+  const one = t => `<span class="spsc t${t}"><span class="tdot"></span>${esc(spTeamLabel(s, t))} <b>${+sc[t]}</b><i>${+bg[t]} ${+bg[t] === 1 ? 'bag' : 'bags'}</i></span>`;
+  const bids = s.ph === 'playing' && sp.step !== 'bid' ? [0, 1].map(t => `${esc(spTeamLabel(s, t))} ${spTeamBidOf(sp, t)}`).join(' · ') : '';
+  return `<span class="spscore">${one(0)}${one(1)}</span><span class="spto">to ${+s.cfg.to || 500}${bids ? ' · bids: ' + bids : ''}</span>`;
+}
+function spTeamBidOf(sp, t){
+  if (sp.bl && sp.bl[t]) return `blind ${sp.bl[t]}`;
+  const b = [t, t + 2].map(j => sp.b[j]), n = b.reduce((a, v) => a + (v === 'N' || v == null ? 0 : +v), 0);
+  return n + (b.includes('N') ? ' + nil' : '');
+}
+function spTrickHTML(s, myIdx){
+  const sp = s.sp || {}, base = myIdx >= 0 && myIdx < SP_SEATS ? myIdx : 0;
+  const showing = sp.step === 'trick' && sp.last ? sp.last.tr : (sp.tr || []);
+  const pos = ['b', 'l', 't', 'r'];
+  const slots = pos.map(() => '<div class="card slot"></div>');
+  showing.forEach((p, k) => {
+    const rel = (p.i - base + SP_SEATS) % SP_SEATS;
+    const cls = [sp.step === 'trick' && sp.last && sp.last.w === p.i ? 'win' : '', k === showing.length - 1 && sp.step === 'play' ? 'in' + pos[rel] : ''].filter(Boolean).join(' ');
+    slots[rel] = cardHTML(p.c, { cls });
+  });
+  return `<div class="sptrick">${pos.map((c, k) => `<div class="sl ${c}">${slots[k]}</div>`).join('')}</div>`;
+}
+function spResultsHTML(s, myIdx){
+  const r = s.res || {}, rows = [];
+  if (!Array.isArray(r.t)) return '';
+  const names = t => [t, t + 2].map(j => (j === myIdx ? 'You' : esc(s.seats[j] ? s.seats[j].n : '?'))).join(' & ');
+  if (r.over >= 0) {
+    const us = myIdx >= 0 && myIdx < SP_SEATS && spTeam(myIdx) === r.over;
+    const lead = myIdx >= 0 && myIdx < SP_SEATS ? (us ? 'You win the game!' : 'They win the game.') : SP_TEAM_NAME[r.over] + ' team wins!';
+    rows.push(`<div class="rrow main"><i>🏆</i><span><b>${lead}</b> ${names(r.over)}${r.why === 'shot' ? ` · ${esc(spTeamLabel(s, 1 - r.over))} got shot twice in a row` : ''}</span></div>`);
+  }
+  [0, 1].forEach(t => {
+    const x = r.t[t];
+    const what = `${x.blind ? 'Blind ' + x.bid : 'Bid ' + x.bid}, took ${x.books}${x.made ? '' : ': <b>shot</b>'}`;
+    const extra = [];
+    x.nil.forEach(n => extra.push(`${n.i === myIdx ? 'You' : esc(s.seats[n.i] ? s.seats[n.i].n : '?')} nil ${n.ok ? '✓ +100' : '✗ −100'}`));
+    if (x.gave) extra.push(`caught reneging, gave ${x.gave} ${x.gave === 1 ? 'book' : 'books'}`);
+    if (x.got) extra.push(`got ${x.got} ${x.got === 1 ? 'book' : 'books'} for a renege`);
+    if (x.bags) extra.push(`${x.bags} ${x.bags === 1 ? 'bag' : 'bags'}`);
+    if (x.bagHit) extra.push('<b>10 bags: −100</b>');
+    rows.push(`<div class="rrow sprow${x.made ? '' : ' shot'}"><i class="tdot t${t}"></i><span><b>${esc(spTeamLabel(s, t))}</b> ${what} <em>${x.pts >= 0 ? '+' : '−'}${Math.abs(x.pts)}</em>${extra.length ? `<small>${extra.join(' · ')}</small>` : ''}</span><b class="tot">${+x.score}</b></div>`);
+  });
+  return `<div class="ppres spres"><h4>${r.over >= 0 ? 'Game over' : `Hand ${+r.hand || ''} results`} · to ${+s.cfg.to || 500}</h4>${rows.join('')}</div>`;
 }
 /* the host picks side pots right on the waiting screen: one compact row */
 function sidePickHTML(s){
@@ -3058,7 +3759,7 @@ function hostGone(){
 }
 function goneHTML(){
   return `<div class="gone"><div class="gonehead"><span aria-hidden="true">🚪</span><div><b>Everyone's gone.</b><span>The host left table ${esc(code)}, so nobody's playing here right now. Start your own room or find a table that's open.</span></div></div>
-    <form id="goneForm" class="joinform"><label class="sr" for="nameIn">Your name</label><div class="ifield">${PERSON_SVG}<input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"></div><div class="startrow"><button class="btn gold big" type="submit" value="knock">${CARDS_SVG('♠')}Start Knock</button><button class="btn gold big" type="submit" value="pitty">${CARDS_SVG('♥')}Start Pitty Pat</button></div></form>
+    <form id="goneForm" class="joinform"><label class="sr" for="nameIn">Your name</label><div class="ifield">${PERSON_SVG}<input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"></div><div class="startrow"><button class="btn gold big" type="submit" value="knock">${CARDS_SVG('♠')}Start Knock</button><button class="btn gold big" type="submit" value="pitty">${CARDS_SVG('♥')}Start Pitty Pat</button><button class="btn gold big spstart" type="submit" value="spades">${CARDS_SVG('♣')}Start Spades</button></div></form>
     <button type="button" class="btn ghost wide" data-act="tolobby">See open tables</button>
     <p class="small muted">If the host comes back, you'll be put back in on your own.</p></div>`;
 }
@@ -3103,8 +3804,8 @@ function dockHTML(s){
   const nn = netNotice(); if (nn) out.push(nn);
   if (role === 'none') {
     const saved = loadSaved();
-    out.push(`<div class="lintro">${GRILL_SVG}<p>It's card night, family! Play <b>Knock</b> (two cards, pairs win) or <b>Pitty Pat</b> (match every card, don't sleep).<em>Start a table, invite your people, or join one that's playing now!</em></p></div>`);
-    out.push(`<form id="startForm" class="joinform"><label class="sr" for="nameIn">Your name</label><div class="ifield">${PERSON_SVG}<input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"></div><div class="startrow"><button class="btn gold big" type="submit" value="knock">${CARDS_SVG('♠')}Start Knock</button><button class="btn gold big" type="submit" value="pitty">${CARDS_SVG('♥')}Start Pitty Pat</button></div></form>`);
+    out.push(`<div class="lintro">${GRILL_SVG}<p>It's card night, family! Play <b>Knock</b> (two cards, pairs win), <b>Pitty Pat</b> (match every card, don't sleep) or <b>Spades</b> (bid your books, no table talk).<em>Start a table, invite your people, or join one that's playing now!</em></p></div>`);
+    out.push(`<form id="startForm" class="joinform"><label class="sr" for="nameIn">Your name</label><div class="ifield">${PERSON_SVG}<input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"></div><div class="startrow"><button class="btn gold big" type="submit" value="knock">${CARDS_SVG('♠')}Start Knock</button><button class="btn gold big" type="submit" value="pitty">${CARDS_SVG('♥')}Start Pitty Pat</button><button class="btn gold big spstart" type="submit" value="spades">${CARDS_SVG('♣')}Start Spades</button></div></form>`);
     out.push(lobbyHTML());
     out.push(installHTML());
     out.push(`<div class="divider">or use a table code</div><form id="codeForm" class="joinrow"><label class="sr" for="codeIn">Table code</label><div class="ifield grow">${TICKET_SVG}<input id="codeIn" maxlength="8" placeholder="Table code" autocomplete="off" autocapitalize="characters" spellcheck="false"></div><button class="btn green" type="submit">Join</button></form>`);
@@ -3127,13 +3828,19 @@ function dockHTML(s){
     }
     if (!s) return out.join('');
     if (me.sit && !full) { out.push('<p class="lead">Finding you a seat…</p>'); return out.join(''); }
-    if (full) out.push(`<p class="lead">All ${seatCap(s)} seats are taken, so you're in the audience as <b>${esc(myName)}</b>. ${me.sit ? 'You\'ll get the next open seat.' : ''}</p>`);
+    if (full && isSP(s)) {
+      const bots = s.seats.slice(0, SP_SEATS).some(y => y && (y.bot || y.g));
+      out.push(`<p class="lead">All 4 seats are taken, so you're in the audience as <b>${esc(myName)}</b>.${me.sit ? (bots ? ' You\'ll take a bot\'s seat when the next hand is dealt.' : ' You\'ll get a seat if one opens up.') : ''}</p>`);
+      if (!me.sit && bots) out.push('<div class="actions" style="--n:1"><button type="button" class="btn gold" data-act="sit">Take a bot\'s seat next hand</button></div>');
+    }
+    else if (full) out.push(`<p class="lead">All ${seatCap(s)} seats are taken, so you're in the audience as <b>${esc(myName)}</b>. ${me.sit ? 'You\'ll get the next open seat.' : ''}</p>`);
     else out.push(`<p class="lead">You're in the audience as <b>${esc(myName)}</b> · <button type="button" class="linkbtn" data-act="menu">change name</button></p><div class="actions" style="--n:1"><button type="button" class="btn gold" data-act="sit">Take a seat</button></div>`);
     out.push('<p class="small muted">The audience can talk too: tap the chat button at the top.</p>');
     if (role === 'host') out.push(inviteHTML());
     return out.join('');
   }
   if (isPP(s)) return ppDockHTML(s, i, x, out);
+  if (isSP(s)) return spDockHTML(s, i, x, out);
   const hole = curHole();
   const dealt = x.st === 'in' || x.st === 'knock' || x.st === 'fold';
   const showCards = hole && dealt && (s.ph === 'deciding' || s.ph === 'done');
@@ -3478,12 +4185,98 @@ function ppDockHTML(s, i, x, out){
   if (!x.so && s.live && x.st !== 'out' && !(inHand && s.ph === 'playing')) out.push(`<p class="small muted sitline">Need a break? <button type="button" class="linkbtn" data-act="sitout" data-v="1">Sit out</button>. You keep your seat and tokens.</p>`);
   return out.join('');
 }
+/* ---------- Spades: your cards and your moves ---------- */
+let spRenArm = 0;
+function spSetupHTML(s){
+  const to = +s.cfg.to || 500, tm = s.cfg.teams === 'random' ? 'random' : 'pick';
+  return `<div class="sidepick spto" role="group" aria-label="Play to"><span>Play to</span>${SP_TARGETS.map(v => `<button type="button" class="segb${to === v ? ' on' : ''}" data-act="setcfg" data-f="to" data-v="${v}" aria-pressed="${to === v}">${v}</button>`).join('')}</div>
+    <div class="sidepick spteams" role="group" aria-label="Teams"><span>Teams</span>${[['pick', 'Pick seats'], ['random', 'Random']].map(([v, l]) => `<button type="button" class="segb${tm === v ? ' on' : ''}" data-act="setcfg" data-f="teams" data-v="${v}" aria-pressed="${tm === v}">${l}</button>`).join('')}</div>`;
+}
+function spDockHTML(s, i, x, out){
+  const sp = s.sp || {}, t = spTeam(i), live = s.ph === 'playing';
+  const h = spMine(), myTurn = live && s.tn === i;
+  const pending = !!spPending && spPending.split(':')[1] === String(s.q);
+  const hidden = live && sp.bd && !sp.bd[t];
+  const nm = j => (j === i ? 'You' : esc(s.seats[j] ? s.seats[j].n : 'Someone'));
+  if (live) {
+    let cards = '';
+    if (hidden) cards = '<span class="spcard"><div class="card back"></div></span>'.repeat(Math.max(0, Math.min(13, +x.hc || 13)));
+    else {
+      const playing = myTurn && sp.step === 'play', legal = playing ? spLegalFor(s, h) : h;
+      if (spSel && !(playing && h.includes(spSel))) spSel = '';
+      cards = h.map(c => `<button type="button" class="spcard${spSel === c ? ' sel' : ''}${playing && !legal.includes(c) ? ' dim' : ''}${playing ? '' : ' nopick'}" data-act="spsel" data-c="${c}" aria-label="${spCardName(c)}${spSel === c ? ', picked. Tap again to play' : ''}">${cardHTML(c)}</button>`).join('');
+    }
+    const n = hidden ? Math.max(1, Math.min(13, +x.hc || 13)) : Math.max(1, h.length);
+    out.push(`<div class="sphand" style="--n:${n}">${cards || '<span class="small muted">No cards left.</span>'}</div>`);
+  }
+  let status = '', buttons = '';
+  if (s.ph === 'waiting') {
+    const xs = s.seats.slice(0, SP_SEATS), seated = xs.filter(Boolean).length;
+    const nReady = xs.filter(y => y && (y.bot || y.rdy)).length;
+    const waitingOn = xs.filter(y => y && !y.bot && !y.rdy).map(y => (y.c === myCid ? 'you' : esc(y.n)));
+    if (s.cd) status = `Everyone's ready. First deal in <em>${+s.cd}</em>…`;
+    else if (seated < SP_SEATS) status = `${SP_SEATS - seated} more ${SP_SEATS - seated === 1 ? 'player' : 'players'} needed. Invite your people${role === 'host' ? ', or fill the empty seats with bots' : ''}.`;
+    else status = `<em>${nReady}</em> of 4 ready. Waiting on ${joinNames(waitingOn)}.`;
+    const btns = [x.rdy ? '<button type="button" class="btn ghost" data-act="ready" data-v="0">I\'m not ready</button>' : '<button type="button" class="btn gold" data-act="ready" data-v="1">I\'m ready</button>'];
+    if (role === 'host' && seated === SP_SEATS && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
+    if (role === 'host' && seated < SP_SEATS) btns.push('<button type="button" class="btn ghost" data-act="fillbots">Fill with bots</button>');
+    buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
+    if (role === 'host') buttons += spSetupHTML(s);
+    else buttons += `<p class="small muted">Playing to ${+s.cfg.to || 500}. ${s.cfg.teams === 'random' ? 'Teams get picked at random when the game starts.' : 'Partners sit across from each other: tap an open seat to move.'}</p>`;
+    if (role === 'host' && s.cfg.teams !== 'random' && seated < SP_SEATS) buttons += '<p class="small muted">Partners sit across from each other. Tap an open seat to move.</p>';
+    if (role === 'host' && seated < SP_SEATS) buttons += inviteHTML();
+  } else if (s.ph === 'over') {
+    const r = s.res || {};
+    status = r.over >= 0 ? (spTeam(i) === r.over ? '<b>You win the game!</b> 🏆' : '<b>They win the game.</b> Run it back?') : 'Game over.';
+    buttons = role === 'host' ? '<button type="button" class="btn gold wide" data-act="spnewgame">New game</button>' : '<p class="small muted">Waiting for the host to start a new game.</p>';
+  } else if (s.ph === 'done') {
+    status = 'Next hand in a moment.';
+  } else if (sp.step === 'bid') {
+    const mb = sp.b[spMate(i)];
+    if (hidden) {
+      const gap = (sp.sc[1 - t] || 0) - (sp.sc[t] || 0);
+      if (myTurn) {
+        status = `<b>Your team is ${gap} behind.</b> Bid blind before you look? It has to be 6 or more, and it pays double (or costs double).`;
+        buttons = `<div class="spbids blind">${[6, 7, 8, 9, 10, 11, 12, 13].map(n => `<button type="button" class="segb" data-act="spblind" data-n="${n}"${pending ? ' disabled' : ''}>Blind ${n}</button>`).join('')}</div><button type="button" class="btn gold wide" data-act="splook"${pending ? ' disabled' : ''}>Look at my cards</button>`;
+      } else status = `Your team is ${gap} behind and can bid blind. ${nm(sp.ord.find(j => spTeam(j) === t))} decides when it's your team's turn, before you see your cards.`;
+    } else if (myTurn) {
+      const lim = mb === null || mb === undefined ? { min:0, max:13, nil:true } : { min:Math.max(0, SP_BOARD - (mb === 'N' ? 0 : +mb)), max:13 - (mb === 'N' ? 0 : +mb), nil:(mb === 'N' ? 0 : +mb) >= SP_BOARD };
+      status = `<b>Your bid.</b> How many books will you take?${mb !== null && mb !== undefined ? ` Your partner bid ${mb === 'N' ? 'nil' : mb}.` : ''}${lim.min ? ' Your team has to bid at least 3 (the board).' : ''}`;
+      const opt = (v, l) => { const ok = v === 'N' ? lim.nil : v >= lim.min && v <= lim.max; return `<button type="button" class="segb${v === 'N' ? ' nil' : ''}" data-act="spbid" data-n="${v}"${ok && !pending ? '' : ' disabled'}>${l}</button>`; };
+      buttons = `<div class="spbids">${opt('N', 'Nil')}${Array.from({ length:14 }, (_, n) => opt(n, String(n))).join('')}</div>`;
+    } else {
+      const mine = spBidText(sp, i);
+      status = `${nm(s.tn)} ${s.tn === spMate(i) ? '(your partner) ' : ''}is bidding…${mine ? ` You: ${mine.toLowerCase()}.` : ''}`;
+    }
+  } else if (sp.step === 'play') {
+    if (myTurn) {
+      const led = (sp.tr || []).length ? spSuit(sp.tr[0].c) : '';
+      if (spSel) {
+        const ren = !!led && spSuit(spSel) !== led && h.some(c => spSuit(c) === led);
+        status = ren ? `⚠️ You have ${SP_SUIT_WORD[led]}. Playing the ${spCardName(spSel)} is a renege, and the other team can call it.` : `Play the ${spCardName(spSel)}? Tap it again or tap the button.`;
+        buttons = `<button type="button" class="btn ${ren ? 'warnbtn' : 'gold'} wide" data-act="spplay" data-c="${spSel}"${pending ? ' disabled' : ''}>${ren ? 'Renege with the ' : 'Play the '}${spShort(spSel)}</button>`;
+      } else status = led ? `<b>Your turn.</b> Follow ${SP_SUIT_WORD[led]} if you can. Tap a card, then tap it again to play it.` : `<b>Your lead.</b> Tap a card, then tap it again to play it.${sp.br ? '' : ' No spades until someone cuts.'}`;
+    } else status = `${nm(s.tn)}${s.tn === spMate(i) ? ' (your partner)' : ''} is playing…`;
+  } else if (sp.step === 'trick' && sp.last) status = `${nm(sp.last.w)} ${sp.last.w === i ? 'take' : 'takes'} the book.`;
+  else if (sp.step === 'last') status = 'That was the last book. Counting in a few seconds…';
+  if (live && (sp.step === 'play' || sp.step === 'trick' || sp.step === 'last')) {
+    const myBooks = +(sp.tk || [])[i] || 0, mateBooks = +(sp.tk || [])[spMate(i)] || 0;
+    status += ` <span class="spbk">Books: you ${myBooks}, partner ${mateBooks}, team bid ${spTeamBidOf(sp, t)}.</span>`;
+  }
+  if (status) out.push(`<p class="status">${status}</p>`);
+  if (buttons) out.push(buttons);
+  if (live && sp.step !== 'bid') {
+    if (sp.rc && sp.rc[t]) out.push('<p class="small muted">Your team used its renege call this hand.</p>');
+    else out.push(`<div class="renrow"><button type="button" class="btn ghost sm warnbtn" data-act="sprenege">${spRenArm > Date.now() ? 'Tap again to call it' : '🚨 Renege!'}</button><span class="small muted">Think they didn't follow suit? One call a hand. If you're right, they give your team 3 books.</span></div>`);
+  }
+  return out.join('');
+}
 function nameForm(){
   return `<form id="nameForm" class="joinform"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname"><div class="actions" style="--n:2"><button class="btn gold" type="submit" value="sit">Take a seat</button><button class="btn ghost" type="submit" value="watch">Just watch</button></div></form>`;
 }
 function renderHeader(s){
-  setText($('#brandName'), role === 'none' || (!s && hostGone()) ? 'Quit Playin\'!' : s && isPP(s) ? 'Pitty Pat' : 'Knock');
-  setText($('#sub'), code ? `Table ${code}${s ? ' · Ante ' + fmtT(s.cfg.ante) : ''}` : 'Card night with family');
+  setText($('#brandName'), role === 'none' || (!s && hostGone()) ? 'Quit Playin\'!' : s && isPP(s) ? 'Pitty Pat' : s && isSP(s) ? 'Spades' : 'Knock');
+  setText($('#sub'), code ? `Table ${code}${s ? (isSP(s) ? ' · To ' + (+s.cfg.to || 500) : ' · Ante ' + fmtT(s.cfg.ante)) : ''}` : 'Card night with family');
   const op = $('#onlinePill'), showOn = role === 'none' && lobbyOnline > 0;
   if (op.hidden === showOn) op.hidden = !showOn;
   if (showOn) setText($('#onlineTxt'), `${lobbyOnline} at the tables`);
@@ -3513,7 +4306,9 @@ function menuHTML(s){
   parts.push(`<section><h3>You</h3><form id="renameForm" class="joinrow"><label class="sr" for="nameEdit">Your name</label><input id="nameEdit" maxlength="12" value="${esc(myName)}" placeholder="Your name" autocomplete="nickname"><button class="btn ghost" type="submit">Save name</button></form><div class="field"><span>Your look</span><button type="button" class="chipbtn" data-act="avatar">${myAv ? myAv + ' Change' : 'Pick an emoji'}</button></div><div class="field"><span>Sounds</span><button type="button" class="chipbtn" data-act="sound">${SFX.on ? 'On 🔊' : 'Off 🔇'}</button></div><p class="small muted">Tip: tap anyone's seat to throw something at them. Tap your own seat to change your look.</p>${me.sit && s && mySeatIdx(s) >= 0 ? '<button type="button" class="btn ghost wide" data-act="stand">Leave your seat and watch</button>' : ''}</section>`);
   if (s) { const aud = Array.isArray(s.aud) ? s.aud.map(a => cleanName(a && a.n)).filter(Boolean) : []; parts.push(`<section><h3>Audience</h3><p class="small">${aud.length ? aud.map(esc).join(', ') : 'No one is watching right now.'}</p><p class="small muted">Anyone with the link can watch and chat without taking a seat.</p></section>`); }
   if (host) {
-    const players = S.seats.map((x, i) => x ? `<li><span class="who">${esc(x.n)}${x.bot ? ' (bot)' : ''}${x.ask ? ' <span class="asked">asked</span>' : ''}</span><span class="amt">${fmtT(x.s)}</span><button type="button" class="chipbtn${giveOpen === x.c ? ' on' : ''}" data-act="giveopen" data-i="${i}" aria-expanded="${giveOpen === x.c}">Give</button>${x.c !== myCid ? `<button type="button" class="chipbtn warn" data-act="kick" data-i="${i}">${kickArm === x.c ? 'Sure?' : 'Remove'}</button>` : ''}${giveOpen === x.c ? giveRow(S, i) : ''}</li>` : '').join('');
+    const muteBtn = x => (!x.bot && x.c !== myCid ? `<button type="button" class="chipbtn${(S.muted || []).includes(x.c) ? ' on' : ''}" data-act="mute" data-cid="${esc(x.c)}">${(S.muted || []).includes(x.c) ? 'Chat off' : 'Mute'}</button>` : '');
+    const players = S.seats.map((x, i) => x && isSP(S) ? `<li><span class="who"><span class="tdot t${spTeam(i)}"></span>${esc(x.n)}${x.bot ? ' (bot)' : ''}</span><span class="amt">${SP_TEAM_NAME[spTeam(i)]}</span>${muteBtn(x)}${x.c !== myCid ? `<button type="button" class="chipbtn warn" data-act="kick" data-i="${i}">${kickArm === x.c ? 'Sure?' : 'Remove'}</button>` : ''}</li>`
+      : x ? `<li><span class="who">${esc(x.n)}${x.bot ? ' (bot)' : ''}${x.ask ? ' <span class="asked">asked</span>' : ''}</span><span class="amt">${fmtT(x.s)}</span>${muteBtn(x)}<button type="button" class="chipbtn${giveOpen === x.c ? ' on' : ''}" data-act="giveopen" data-i="${i}" aria-expanded="${giveOpen === x.c}">Give</button>${x.c !== myCid ? `<button type="button" class="chipbtn warn" data-act="kick" data-i="${i}">${kickArm === x.c ? 'Sure?' : 'Remove'}</button>` : ''}${giveOpen === x.c ? giveRow(S, i) : ''}</li>` : '').join('');
     const rt = roomType();
     const listed = rt === 'hidden' ? 'Not shown in the lobby. Only people with your link or code can come in.'
       : lobbySlot ? (rt === 'open' ? 'Showing in the lobby. Anyone can walk in.' : 'Showing in the lobby. People tap Ask to join, and you choose who comes in. Anyone with your link gets straight in.')
@@ -3524,24 +4319,42 @@ function menuHTML(s){
       <p class="small muted">${listed}</p>
     </section>
     <section><h3>Host controls</h3>
-      <div class="field"><label for="setAnte">Ante each hand</label>${sel('setAnte', [[50,'0.50'],[100,'1.00'],[150,'1.50'],[200,'2.00'],[500,'5.00']], cfg.ante)}</div>
-      <div class="field"><label for="setStart">Tokens for new players</label>${sel('setStart', [[1000,'10.00'],[2000,'20.00'],[5000,'50.00'],[10000,'100.00']], cfg.st)}</div>
+      ${isSP(s) ? `<div class="field"><label for="setTo">Play to</label>${sel('setTo', SP_TARGETS.map(v => [v, v + ' points']), +cfg.to || 500)}</div>
+      <div class="field"><label for="setTeams">Teams</label>${sel('setTeams', [['pick', 'Pick your seats'], ['random', 'Random teams']], cfg.teams === 'random' ? 'random' : 'pick')}</div>` : `<div class="field"><label for="setAnte">Ante each hand</label>${sel('setAnte', [[50,'0.50'],[100,'1.00'],[150,'1.50'],[200,'2.00'],[500,'5.00']], cfg.ante)}</div>
+      <div class="field"><label for="setStart">Tokens for new players</label>${sel('setStart', [[1000,'10.00'],[2000,'20.00'],[5000,'50.00'],[10000,'100.00']], cfg.st)}</div>`}
       <div class="field"><label for="setTimer">${isPP(s) ? 'Time for your turn' : 'Time to decide'}</label>${sel('setTimer', [[0,'No limit'],[20,'20 seconds'],[30,'30 seconds'],[60,'60 seconds']], cfg.tm)}</div>
       ${isPP(s) ? `<div class="field"><label for="setOw">Time to take a thrown card</label>${sel('setOw', [[5,'5 seconds'],[8,'8 seconds'],[12,'12 seconds']], +cfg.ow || 8)}</div>
       <div class="field"><label for="setSide">Side pots (Colors, Spades, Porter)</label>${sel('setSide', [[0,'Off'],[25,'0.25 each'],[50,'0.50 each'],[100,'1.00 each']], +cfg.side || 0)}</div>` : ''}
-      <div class="field"><label for="setPause">New hands</label>${sel('setPause', [[0,'Keep dealing'],[1,'Pause']], S.pause)}</div>
+      ${isSP(s) ? '' : `<div class="field"><label for="setPause">New hands</label>${sel('setPause', [[0,'Keep dealing'],[1,'Pause']], S.pause)}</div>`}
       <div class="field"><label for="setTheme">Table look</label>${sel('setTheme', Object.entries(THEMES), THEMES[cfg.theme] ? cfg.theme : 'green')}</div>
-      <p class="small muted">Your phone is running this table, so keep this page open with the screen on. Changes start with the next hand.</p>
+      <p class="small muted">Your phone is running this table, so keep this page open with the screen on. ${isSP(s) ? 'Play to and teams take effect when a new game starts.' : 'Changes start with the next hand.'}</p>
     </section>
-    <section><h3>Players and tokens</h3><ul class="plist">${players || '<li>No one has sat down yet.</li>'}</ul>
+    <section><h3>${isSP(s) ? 'Players' : 'Players and tokens'}</h3><ul class="plist">${players || '<li>No one has sat down yet.</li>'}</ul>
+      <p class="small muted">Mute turns off someone's chat at this table, for table talk or cheating.</p>
       <div class="btnrow"><button type="button" class="btn ghost" data-act="addbot">Add a bot</button><button type="button" class="btn ghost" data-act="rmbots">Remove bots</button></div></section>`);
   } else if (s) {
     const dealer = (s.seats.find(x => x && x.c === s.hid) || {}).n;
     parts.push(`<section><h3>Leave</h3><button type="button" class="btn ghost wide" data-act="tolobby">Back to the lobby</button></section>`);
-    parts.push(`<section><h3>Table settings</h3><p class="small">${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
+    parts.push(`<section><h3>Table settings</h3><p class="small">${isSP(s) ? `Spades · Play to ${+cfg.to || 500} · ${cfg.teams === 'random' ? 'Random teams' : 'Pick your seats'} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}` : `${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}`}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
   }
-  if (s) parts.push(`<section><h3>Tonight's leaderboard</h3>${leaderHTML(s)}</section>`);
+  if (s && !isSP(s)) parts.push(`<section><h3>Tonight's leaderboard</h3>${leaderHTML(s)}</section>`);
   parts.push(`<section><h3>Site visitors</h3><button type="button" class="btn ghost wide" data-act="visitors">👀 See who's been visiting</button></section>`);
+  if (isSP(s)) {
+    const to = +cfg.to || 500;
+    parts.push(`<section><h3>How to play Spades</h3><ol class="howto">
+    <li>4 players in 2 teams. Your partner sits across from you. ${cfg.teams === 'random' ? 'The host set random teams, so partners get picked when the game starts.' : 'Before the game, tap an open seat to move.'} No talking to your partner about your cards once the hand starts.</li>
+    <li>52 cards: the 2♥ and 2♣ are out, and the <b>Big Joker</b> and <b>Lil Joker</b> are in. Everyone gets 13.</li>
+    <li>Spades are trump. Highest first: Big Joker, Lil Joker, 2♦, 2♠, then A♠ down to 3♠. The 2♦ counts as a spade, not a diamond. In the other suits, Ace is high and 3 is low.</li>
+    <li><b>Bidding:</b> the team that isn't dealing bids first, starting left of the dealer. Each player bids how many books (tricks) they'll take, and partners' bids add up to the team bid. A team has to bid at least 3 (the board).</li>
+    <li><b>Nil:</b> bid nil if you think you won't take a single book. Make it: +100. Take even one: −100. A nil player's books don't count toward the partner's bid; they're bags.</li>
+    <li><b>Blind:</b> a team 100 or more behind can bid blind before looking at their cards: 6 or more, and it pays double (or costs double).</li>
+    <li><b>Playing:</b> left of the dealer leads. Follow the suit that was led if you can. If you can't, you can cut with a spade or throw anything. Nobody can lead a spade until someone cuts, unless spades are all they have. Highest spade wins the book; if there's no spade, the highest card of the suit led wins. The winner leads next.</li>
+    <li><b>Reneging:</b> the app lets you play any card, even when you could follow suit. Each team gets one <b>Renege!</b> call a hand. If the other team really reneged, they give your team 3 of their books. If you're wrong, your call is used up.</li>
+    <li><b>Scoring:</b> make your bid and you get 10 points a book; every extra book is a bag worth 1. Every 10 bags costs 100. Miss your bid and you're shot: you lose 10 a book. Shot twice in a row loses the game.</li>
+    <li>The deal moves left every hand. First team to ${to} wins. If both teams pass ${to} on the same hand, the higher score wins.</li>
+  </ol></section>`);
+    return parts.join('');
+  }
   if (isPP(s)) {
     parts.push(`<section><h3>How to play Pitty Pat</h3><ol class="howto">
     <li>2 to 6 players. Everyone antes ${fmtT(cfg.ante)} into the game pot each hand, and the winner takes it.</li>
@@ -3585,7 +4398,7 @@ function chatHTML(){
   const log = chatLog.slice(-25).reverse().map(m => `<li class="${m.c === myCid ? 'mine' : ''}"><b>${m.c === myCid ? 'You' : esc(m.n)}</b>${esc(m.x)}</li>`).join('');
   return `<div class="sheet-head"><h2>Table talk</h2><button type="button" class="iconbtn" data-act="menu-close" aria-label="Close chat"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
   <div class="emojis">${EMOJI.map(e => `<button type="button" class="emo-btn" data-act="say" data-say="${esc(e)}" aria-label="Send ${esc(e)}">${e}</button>`).join('')}</div>
-  <div class="quick">${(isPP(cur()) ? QUICK_PP : QUICK).map(q => `<button type="button" class="chipbtn" data-act="say" data-say="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+  <div class="quick">${(isPP(cur()) ? QUICK_PP : isSP(cur()) ? QUICK_SP : QUICK).map(q => `<button type="button" class="chipbtn" data-act="say" data-say="${esc(q)}">${esc(q)}</button>`).join('')}</div>
   <form id="chatForm" class="joinrow"><label class="sr" for="chatIn">Message</label><input id="chatIn" maxlength="80" placeholder="Say something…" autocomplete="off" enterkeyhint="send"><button class="btn gold" type="submit">Send</button></form>
   <ul class="chatlog">${log || '<li class="muted">No messages yet. What you send pops up over your seat for a few seconds.</li>'}</ul>`;
 }
@@ -3602,6 +4415,14 @@ function toast(msg){
 }
 let lastSideCfg = null;
 function notify(s){
+  if (isSP(s)) {
+    const i = mySeatIdx(s), sp = s.sp || {};
+    const myTurn = i >= 0 && s.ph === 'playing' && s.tn === i && (sp.step === 'bid' || sp.step === 'play');
+    if (myTurn) { const key = s.hand + ':' + s.q; if (notifiedTurn !== key) { notifiedTurn = key; if (spPending.split(':')[1] !== String(s.q)) { toast(sp.step === 'bid' ? 'Your bid' : (sp.tr || []).length ? 'Your turn' : 'Your lead'); sfx('ding'); try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {} } } }
+    const title = myTurn ? 'Your turn · Spades' : 'Spades';
+    if (document.title !== title) document.title = title;
+    return;
+  }
   if (isPP(s)) {
     const sc = s.code + ':' + (+s.cfg.side || 0);
     if (lastSideCfg && lastSideCfg !== sc && lastSideCfg.split(':')[0] === s.code) {
@@ -3642,7 +4463,7 @@ function render(){
   const th = lobby ? 'lobby' : s && s.cfg && THEMES[s.cfg.theme] ? s.cfg.theme : 'green';
   if ($('#app').dataset.felt !== th) $('#app').dataset.felt = th;
   if (sceneTheme !== th) paintScene(th);
-  const gm = isPP(s) ? 'pitty' : 'knock';
+  const gm = isPP(s) ? 'pitty' : isSP(s) ? 'spades' : 'knock';
   if (G.game !== gm) { G.game = gm; layout(); }
   detectFx(s);
   renderHeader(s);
@@ -3705,7 +4526,21 @@ function bindUI(){
       case 'fold': act('fold'); break;
       case 'ask': askTokens(); break;
       case 'give': giveTokens(+b.dataset.i, +b.dataset.a); break;
-      case 'setcfg': if (b.dataset.f === 'side') setCfg('side', b.dataset.v); break;
+      case 'setcfg': if (['side', 'to', 'teams'].includes(b.dataset.f)) setCfg(b.dataset.f, b.dataset.v); break;
+      case 'fillbots': fillBots(); break;
+      case 'spsel': if (spValid(b.dataset.c) && !b.classList.contains('nopick')) spPick(b.dataset.c); break;
+      case 'spplay': if (spValid(b.dataset.c)) spMove('play', { c:b.dataset.c }); break;
+      case 'spbid': spMove('bid', { n:b.dataset.n === 'N' ? 'N' : +b.dataset.n }); sfx('pop'); break;
+      case 'spblind': spMove('blind', { n:+b.dataset.n }); sfx('pop'); break;
+      case 'splook': spMove('look'); break;
+      case 'sprenege': {
+        if (spRenArm > Date.now()) { spRenArm = 0; spMove('renege'); }
+        else { spRenArm = Date.now() + 3000; setTimeout(scheduleRender, 3100); scheduleRender(); }
+        break;
+      }
+      case 'spseat': spSeat(+b.dataset.i); break;
+      case 'spnewgame': if (role === 'host' && S && isSP(S) && S.ph === 'over') { spNewGame(); S.seats.forEach(x => { if (x && !x.bot) x.rdy = 0; }); hostTick(); } break;
+      case 'mute': if (role === 'host' && S && b.dataset.cid) { const c = b.dataset.cid, m = S.muted || []; S.muted = m.includes(c) ? m.filter(v => v !== c) : m.concat(c).slice(-30); const x = S.seats.find(y => y && y.c === c); toast(`${x ? x.n : 'Their'}${m.includes(c) ? '\'s chat is back on' : '\'s chat is off'}`); hostTick(); renderSheet(cur()); } break;
       case 'giveopen': { const x = S && S.seats[+b.dataset.i]; giveOpen = x && giveOpen !== x.c ? x.c : ''; renderSheet(cur()); break; }
       case 'addbot': addBot(); break;
       case 'rmbots': removeBots(); break;
@@ -3763,10 +4598,11 @@ function bindUI(){
     }
     const inp = f.querySelector('input'); const nm = cleanName(inp && inp.value);
     if (!nm) { toast('Type your name first'); if (inp) inp.focus(); return; }
-    if (f.id === 'startForm') { myName = nm; store.set('knock_name', nm); startTable(e.submitter && e.submitter.value === 'pitty' ? 'pitty' : 'knock'); }
+    const gpick = e.submitter && ['pitty', 'spades'].includes(e.submitter.value) ? e.submitter.value : 'knock';
+    if (f.id === 'startForm') { myName = nm; store.set('knock_name', nm); startTable(gpick); }
     else if (f.id === 'goneForm') {
       myName = nm; store.set('knock_name', nm); store.set('knock_sit_' + code, '0');
-      try { sessionStorage.setItem('knock_autostart', e.submitter && e.submitter.value === 'pitty' ? 'pitty' : 'knock'); } catch (err) {}
+      try { sessionStorage.setItem('knock_autostart', gpick); } catch (err) {}
       location.hash = ''; if (!location.hash) location.reload(); return;
     }
     else if (f.id === 'nameForm') { setName(nm); if (e.submitter && e.submitter.value === 'watch') watchOnly(); else sitDown(); }
@@ -3775,7 +4611,7 @@ function bindUI(){
   });
   document.addEventListener('change', e => {
     const t = e.target;
-    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow', setSide:'side' };
+    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow', setSide:'side', setTo:'to', setTeams:'teams' };
     if (map[t.id]) setCfg(map[t.id], t.value);
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetMode) closeMenu(); });
@@ -3801,7 +4637,7 @@ function boot(){
     else { role = 'player'; me.sit = !!myName && store.get('knock_sit_' + code) === '1'; connectClient(); }
   } else {
     let auto = ''; try { auto = sessionStorage.getItem('knock_autostart') || ''; sessionStorage.removeItem('knock_autostart'); } catch (e) {}
-    if (auto && myName) startTable(auto === 'pitty' ? 'pitty' : 'knock');
+    if (auto && myName) startTable(['pitty', 'spades'].includes(auto) ? auto : 'knock');
   }
   render();
   pinTop(); setTimeout(pinTop, 300); setTimeout(pinTop, 1200);
