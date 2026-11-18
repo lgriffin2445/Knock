@@ -54,6 +54,10 @@ button{cursor:pointer}
 
 header.top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top) + 10px) max(16px, env(safe-area-inset-right)) 4px max(16px, env(safe-area-inset-left))}
 .brand{display:flex;flex-direction:column;line-height:1;min-width:0}
+.hleft{display:flex;align-items:center;gap:10px;min-width:0}
+@media (max-width:420px){ .brand small{letter-spacing:.05em} .hleft{gap:8px} }
+.iconbtn.backbtn{flex:none;width:40px;height:40px}
+.iconbtn.backbtn.armed{border-color:#ff8a8a;color:#ffb3b3;box-shadow:0 0 0 3px rgba(255,110,110,.25)}
 .brand b{font-family:var(--font-display);font-weight:400;font-size:26px;color:var(--brass);letter-spacing:.04em}
 .brand small{font-size:10.5px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hright{flex:none}
@@ -264,10 +268,6 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 #app.lobby .pill.vis{background:linear-gradient(180deg,rgba(255,224,138,.22),rgba(201,138,30,.2));border-color:rgba(240,195,90,.7);color:#fff0c8}
 #app.lobby .dock{border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.45);background:linear-gradient(180deg,var(--dock-a),var(--dock-b)),#150c07}
 #app.lobby .dock::after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;pointer-events:none;opacity:.5;-webkit-mask:linear-gradient(0deg,#000,transparent);mask:linear-gradient(0deg,#000,transparent);background:repeating-linear-gradient(90deg,rgba(200,30,40,.6) 0 10px,transparent 10px 20px),repeating-linear-gradient(0deg,rgba(200,30,40,.6) 0 10px,rgba(241,230,214,.25) 10px 20px)}
-.lintro{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.28);border:1px solid rgba(230,178,80,.28);margin-bottom:12px}
-.lintro .lgrill{width:40px;flex:none;color:#e6b250;padding-right:10px;border-right:1px solid rgba(230,178,80,.35);box-sizing:content-box}
-.lintro p{margin:0;font-style:italic;font-size:14px;line-height:1.4;color:var(--ivory)}
-.lintro em{display:block;font-weight:800;color:#f0c35a;margin-top:4px}
 .ifield{position:relative;display:flex;align-items:center}
 .ifield .ficon{position:absolute;left:14px;width:22px;height:22px;color:#e6b250;pointer-events:none}
 .ifield input{width:100%;padding-left:46px !important}
@@ -659,7 +659,7 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 <div id="app">
   <div id="scene" aria-hidden="true"><canvas id="sceneCv"></canvas><div id="sceneFx"></div></div>
   <header class="top">
-    <div class="brand"><b id="brandName">Knock</b><small id="sub">Two cards · pairs win</small></div>
+    <div class="hleft"><button class="iconbtn backbtn" type="button" data-act="back" id="backBtn" aria-label="Back to the main lobby" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button><div class="brand"><b id="brandName">Knock</b><small id="sub">Two cards · pairs win</small></div></div>
     <div class="hright">
       <button class="pill vis" type="button" id="visBtn" data-act="visitors" aria-label="Site visitors" hidden><span aria-hidden="true">👀</span><span id="visTxt">Visitors</span></button>
       <span class="pill online" id="onlinePill" hidden><span class="dot"></span><span id="onlineTxt"></span></span>
@@ -2567,6 +2567,13 @@ function sitDown(){
   if (role === 'host') hostTick(); else send({ t:'sit', sit:true, name:myName });
   scheduleRender();
 }
+/* back to the main lobby: tell the table you got up first, so your seat frees up (or a bot finishes your hand) */
+function goLobby(){
+  closeMenu(); store.set('knock_sit_' + code, '0');
+  const go = () => { location.hash = ''; if (!location.hash) location.reload(); };
+  if (role === 'player' && conn && conn.open && me.sit) { me.sit = false; try { send({ t:'sit', sit:false }); } catch (e) {} setTimeout(go, 350); }
+  else go();
+}
 function standUp(){
   me.sit = false; rememberSit(false);
   if (role === 'host') hostTick(); else send({ t:'sit', sit:false });
@@ -3860,7 +3867,6 @@ function dockHTML(s){
   const nn = netNotice(); if (nn) out.push(nn);
   if (role === 'none') {
     const saved = loadSaved();
-    out.push(`<div class="lintro">${GRILL_SVG}<p>It's card night, family! Play <b>Knock</b> (two cards, pairs win), <b>Pitty Pat</b> (match every card, don't sleep) or <b>Spades</b> (bid your books, no table talk).<em>Start a table, invite your people, or join one that's playing now!</em></p></div>`);
     out.push(`<form id="startForm" class="joinform"><label class="sr" for="nameIn">Your name</label><div class="ifield">${PERSON_SVG}<input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname" value="${esc(myName)}"></div><div class="startrow"><button class="btn gold big" type="submit" value="knock">${CARDS_SVG('♠')}Start Knock</button><button class="btn gold big" type="submit" value="pitty">${CARDS_SVG('♥')}Start Pitty Pat</button><button class="btn gold big spstart" type="submit" value="spades">${CARDS_SVG('♣')}Start Spades</button></div></form>`);
     out.push(lobbyHTML());
     out.push(installHTML());
@@ -4335,6 +4341,8 @@ function nameForm(){
   return `<form id="nameForm" class="joinform"><label class="sr" for="nameIn">Your name</label><input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="nickname"><div class="actions" style="--n:2"><button class="btn gold" type="submit" value="sit">Take a seat</button><button class="btn ghost" type="submit" value="watch">Just watch</button></div></form>`;
 }
 function renderHeader(s){
+  const back = $('#backBtn');
+  if (back) { back.hidden = role === 'none'; back.classList.toggle('armed', backArm > Date.now()); }
   setText($('#brandName'), role === 'none' || (!s && hostGone()) ? 'Quit Playin\'!' : s && isPP(s) ? 'Pitty Pat' : s && isSP(s) ? 'Spades' : 'Knock');
   setText($('#sub'), code ? `Table ${code}${s ? (isSP(s) ? ' · To ' + (+s.cfg.to || 500) : ' · Ante ' + fmtT(s.cfg.ante)) : ''}` : 'Card night with family');
   const op = $('#onlinePill'), showOn = role === 'none' && lobbyOnline > 0;
@@ -4475,7 +4483,7 @@ function toast(msg){
   const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2700);
 }
-let lastSideCfg = null;
+let lastSideCfg = null, backArm = 0;
 function notify(s){
   if (isSP(s)) {
     const i = mySeatIdx(s), sp = s.sp || {};
@@ -4631,7 +4639,20 @@ function bindUI(){
       case 'askyes': answerAsk(b.dataset.cid, true); break;
       case 'askno': answerAsk(b.dataset.cid, false); break;
       case 'kick': kickPlayer(+b.dataset.i); break;
-      case 'tolobby': closeMenu(); store.set('knock_sit_' + code, '0'); location.hash = ''; if (!location.hash) location.reload(); break;
+      case 'tolobby': goLobby(); break;
+      case 'back': {
+        /* back to the main lobby: one tap, or two if you're the host (it closes the table) or in a hand */
+        const s = cur(), i = s ? mySeatIdx(s) : -1;
+        const inHand = !!s && i >= 0 && s.seats[i] && s.seats[i].st === 'in' && (s.ph === 'playing' || s.ph === 'deciding');
+        const midGame = !!s && i >= 0 && isSP(s) && (s.ph === 'playing' || s.ph === 'done');
+        if ((role === 'host' || inHand || midGame) && backArm <= Date.now()) {
+          backArm = Date.now() + 3500;
+          toast(role === 'host' ? 'Tap the back arrow again to close this table and go to the main lobby. Everyone here gets sent out.'
+            : isSP(s) || isPP(s) ? 'Tap the back arrow again to leave. A bot finishes your hand.' : 'Tap the back arrow again to leave. You\'ll fold this hand.');
+          setTimeout(scheduleRender, 3600); scheduleRender(); break;
+        }
+        backArm = 0; goLobby(); break;
+      }
       case 'nextdeck': if (role === 'host' && S && S.ph === 'recap') { nextHandAt = 0; hostTick(); } break;
       case 'retry': if (role === 'player') { tryingSince = Date.now(); clearTimeout(retryTimer); dropConn(); if (peer && !peer.open) { try { peer.destroy(); } catch (e) {} peer = null; } netState = 'connecting'; connectClient(); scheduleRender(); } break;
       case 'copy': copyLink(); break;
