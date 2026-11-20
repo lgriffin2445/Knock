@@ -1828,7 +1828,7 @@ function startTable(game){
   role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true; rememberSit(true);
   S.cfg.room = 'private'; S.cfg.name = cleanRoom(`${myName}'s table`);
   if (game === 'pitty') { S.game = 'pitty'; S.cfg.st = PP_START; S.cfg.ow = PP_OFFER; S.pp = { step:'pull', pile:0, top:null, from:-1, oid:0, eid:0, ev:[], ow:PP_OFFER }; }
-  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 500; S.cfg.teams = 'pick'; S.cfg.rn = 'on'; S.cfg.sh = 'on'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
+  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 250; S.cfg.teams = 'pick'; S.cfg.rn = 'off'; S.cfg.sh = 'off'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
   else S.game = 'knock';
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
 }
