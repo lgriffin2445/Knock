@@ -168,6 +168,15 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .sptrick.duo{grid-template-columns:var(--cw);grid-template-rows:calc(var(--cw)*1.05) calc(var(--cw)*1.05);gap:6px}
 .sptrick.duo .sl.t{grid-area:1/1}.sptrick.duo .sl.b{grid-area:2/1}
 .spdraw{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 6px}
+.sphand .spcard.new{transform:translateY(-10px);z-index:2}
+.sphand .spcard.new .card{box-shadow:0 0 0 2px var(--brass),0 0 14px rgba(240,195,90,.7)}
+.sphand .spcard.new::after{content:'NEW';position:absolute;top:-15px;left:50%;transform:translateX(-50%);font:900 9px var(--font-body);letter-spacing:.06em;color:var(--ink);background:var(--brass);border-radius:6px;padding:1px 4px}
+.spgot{--cw:30px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:var(--ivory);margin:2px 0 4px}
+.spgot .card{flex:none}
+.spgot .mini{font-weight:800;opacity:.75;text-decoration:line-through}
+.sptot{display:block;font-size:12px;font-weight:800;color:var(--ivory);opacity:.9;margin-top:2px}
+.sptot.over{color:#ffcf5a;opacity:1;animation:spTotPulse 1.2s ease-in-out 3}
+@keyframes spTotPulse{50%{transform:scale(1.12)}}
 .spdraw .spdrawn{--cw:58px;flex:none;animation:spDrawIn .3s ease-out both}
 .spdraw .spdrawn .card{box-shadow:0 4px 12px rgba(0,0,0,.5),0 0 0 2px var(--brass)}
 .spdraw .actions{flex:1;max-width:280px;margin:0}
@@ -1898,7 +1907,7 @@ function spHostTick(now){
   if (spBotPlays(x)) {
     if (spBotKey !== key) {
       spBotKey = key; clearTimeout(spBotTimer);
-      spBotTimer = setTimeout(() => { const y = S && S.seats[i]; if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i && y && spBotPlays(y)) { spBotMove(i); hostTick(); } }, (sp.step === 'draw' ? 450 : sp.step === 'bid' || sp.step === 'blind' ? 900 : 650) + randInt(sp.step === 'draw' ? 500 : 900));
+      spBotTimer = setTimeout(() => { const y = S && S.seats[i]; if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i && y && spBotPlays(y)) { spBotMove(i); hostTick(); } }, (sp.step === 'draw' ? 750 : sp.step === 'bid' || sp.step === 'blind' ? 900 : 650) + randInt(sp.step === 'draw' ? 500 : 900));
     }
     return;
   }
@@ -2560,6 +2569,8 @@ function onHostMsg(d){
 
 /* ---------- Spades: your moves ---------- */
 let spSel = '', spPending = '';
+/* two players, Draw: your last keep/toss, so the screen can show which card you ended up with */
+let spDrawMemo = null;
 const SP_SUIT_WORD = { s:'spades', h:'hearts', c:'clubs', d:'diamonds' };
 function spMine(){
   const s = cur(); if (!isSP(s) || s.ph !== 'playing') return [];
@@ -2571,6 +2582,17 @@ function spDrawnMine(){
   const s = cur(); if (!isSP(s) || s.ph !== 'playing' || !s.sp || s.sp.step !== 'draw') return null;
   const i = mySeatIdx(s); if (i < 0 || s.tn !== i) return null;
   return role === 'host' ? spDrawn : view.pend;
+}
+/* the card your last keep/toss gave you (once it's in your hand) */
+function spDrawGot(s, h){
+  const m = spDrawMemo;
+  if (!m || m.code !== s.code || m.hand !== s.hand) return null;
+  if (!m.got && h.length > m.before.length) m.got = h.find(c => !m.before.includes(c)) || null;
+  return m.got ? m : null;
+}
+/* everybody's bids added up (blind counts, nil counts 0) */
+function spTotalBid(s, sp){
+  return [0, 1].reduce((a, t) => a + (sp.bl && sp.bl[t] ? +sp.bl[t] : spMemOf(s, t).reduce((b, j) => b + (sp.b[j] === 'N' || sp.b[j] == null ? 0 : +sp.b[j] || 0), 0)), 0);
 }
 function spLegalFor(s, h){
   const sp = s.sp; if (!sp.tr.length) { const ns = h.filter(c => spSuit(c) !== 's'); return sp.br || !ns.length ? h : ns; }
@@ -2587,6 +2609,7 @@ function spMove(k, o){
   const s = cur(); if (!isSP(s) || s.ph !== 'playing') return;
   const i = mySeatIdx(s); if (i < 0) return;
   o = o || {};
+  if (k === 'keep' || k === 'toss') spDrawMemo = { a:k, seen:spDrawnMine(), before:spMine(), hand:s.hand, code:s.code, got:null };
   spPending = k + ':' + s.q;
   if (role === 'host') { const r = spAct(i, Object.assign({ k }, o)); if (r) { spPending = ''; spNope(r); } hostTick(); }
   else if (!send(Object.assign({ t:'sp', k }, o))) { spPending = ''; toast('Not connected to the table right now'); }
@@ -3070,6 +3093,13 @@ function spFx(s, e){
     case 'deal': textFx('NEW HAND', { x:G.cx, y:G.cy - 60 }, 'big', 1400); sfx('shuffle'); spSel = ''; break;
     case 'draw': if (e.i !== me) sfx('flick'); break;
     case 'drawn': textFx('TIME TO BID', { x:G.cx, y:G.cy - 60 }, 'big', 1300); sfx('pop'); break;
+    case 'go': {
+      const sp = s.sp || {}; if (!Array.isArray(sp.b)) break;
+      const tot = spTotalBid(s, sp);
+      if (tot > 13) { textFx(`${tot} BOOKS BID! 😬`, { x:G.cx, y:G.cy - 70 }, 'potfx lvl2', 2600); sfx('drum'); toast(`${tot} books bid. That's more than 13, so somebody is getting upset this hand!`); }
+      else textFx(`${tot} BOOKS BID`, { x:G.cx, y:G.cy - 70 }, 'big', 1800);
+      break;
+    }
     case 'teams': if (e.r && spNs(s) === 4 && spIn(s, me)) { const m = s.seats[spMate(me, s)]; toast(`Teams are set! Your partner is ${m ? m.n : 'across from you'}.`); } break;
     case 'bid': { const p = P(e.i); textFx(e.blind ? `BLIND ${+e.n}` : e.n === 'N' ? 'NIL' : `BID ${+e.n}`, { x:p.x, y:p.y - 46 }, e.blind || e.n === 'N' ? 'big' : '', 1400); sfx('pop'); break; }
     case 'play': sfx('flick'); break;
@@ -3906,8 +3936,11 @@ function renderCenter(s){
 function spScoreHTML(s){
   const sp = s.sp || {}, sc = sp.sc || [0, 0], bg = sp.bg || [0, 0];
   const one = t => `<span class="spsc t${t}"><span class="tdot"></span>${esc(spTeamLabel(s, t))} <b>${+sc[t]}</b><i>${+bg[t]} ${+bg[t] === 1 ? 'bag' : 'bags'}</i></span>`;
-  const bids = s.ph === 'playing' && !['bid', 'draw', 'blind'].includes(sp.step) ? [0, 1].map(t => `${esc(spTeamLabel(s, t))} ${spTeamBidOf(s, sp, t)}`).join(' · ') : '';
-  return `<span class="spscore">${one(0)}${one(1)}</span><span class="spto">to ${+s.cfg.to || 500}${bids ? ' · bids: ' + bids : ''}</span>`;
+  const bidding = s.ph === 'playing' && !['bid', 'draw', 'blind'].includes(sp.step);
+  const bids = bidding ? [0, 1].map(t => `${esc(spTeamLabel(s, t))} ${spTeamBidOf(s, sp, t)}`).join(' · ') : '';
+  const tot = bidding ? spTotalBid(s, sp) : 0;
+  const totH = bidding ? `<span class="sptot${tot > 13 ? ' over' : ''}">${tot} books bid${tot > 13 ? ' · over 13! 😬' : tot === 13 ? ' · all 13' : ` · ${13 - tot} to spare`}</span>` : '';
+  return `<span class="spscore">${one(0)}${one(1)}</span><span class="spto">to ${+s.cfg.to || 500}${bids ? ' · bids: ' + bids : ''}</span>${totH}`;
 }
 function spTeamBidOf(s, sp, t){
   if (sp.bl && sp.bl[t]) return `blind ${sp.bl[t]}`;
@@ -4416,7 +4449,8 @@ function spDockHTML(s, i, x, out){
       const playing = myTurn && sp.step === 'play', legal = playing ? spLegalFor(s, h) : h;
       if (spSel && !(playing && h.includes(spSel))) spSel = '';
       const strict = s.cfg.rn === 'off';
-      cards = h.map(c => `<button type="button" class="spcard${spSel === c ? ' sel' : ''}${playing && !legal.includes(c) ? ' dim' + (strict ? ' nopick' : '') : ''}${playing ? '' : ' nopick'}" data-act="spsel" data-c="${c}" aria-label="${spCardName(c)}${spSel === c ? ', picked. Tap again to play' : ''}">${cardHTML(c)}</button>`).join('');
+      const gm = sp.step === 'draw' ? spDrawGot(s, h) : null, newC = gm ? gm.got : '';
+      cards = h.map(c => `<button type="button" class="spcard${spSel === c ? ' sel' : ''}${c === newC ? ' new' : ''}${playing && !legal.includes(c) ? ' dim' + (strict ? ' nopick' : '') : ''}${playing ? '' : ' nopick'}" data-act="spsel" data-c="${c}" aria-label="${spCardName(c)}${spSel === c ? ', picked. Tap again to play' : ''}">${cardHTML(c)}</button>`).join('');
     }
     const n = hidden ? Math.max(1, Math.min(13, +x.hc || 13)) : Math.max(1, h.length);
     const cols = n > 1 ? `repeat(${n - 1}, minmax(0, calc(var(--cw) + 3px))) var(--cw)` : 'var(--cw)';
@@ -4453,6 +4487,8 @@ function spDockHTML(s, i, x, out){
     } else status = `${nm(b)} is ${gap} behind and gets to decide on bidding blind…`;
   } else if (sp.step === 'draw') {
     const dn = sp.dw ? Math.min(13, +sp.dw.n[i] || 0) : h.length;
+    const gm = spDrawGot(s, h);
+    if (gm) out.push(`<div class="spgot">${gm.a === 'toss' ? `You tossed <span class="mini">${spShort(gm.seen)}</span> and got` : 'You kept'} ${cardHTML(gm.got)}<b>${spCardName(gm.got)}</b></div>`);
     if (myTurn) {
       const c = spDrawnMine();
       if (c) {
