@@ -154,11 +154,24 @@ button.pill{color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:poi
 .seat.sp.open{opacity:.85}
 .seat.sp.open .plate{border-style:dashed;background:rgba(0,0,0,.35)}
 .seat.sp.open .nm{color:var(--muted)}
-.seat.sp.open .btn.sm{margin-top:5px;min-height:30px;padding:0 10px;font-size:12px}
+.seat.sp.open .btn.sm{margin-top:3px;min-height:24px;padding:0 9px;font-size:11px;white-space:nowrap}
+.spsetup{display:grid;gap:6px}
+.spsetup .sidepick .segb{min-height:33px;font-size:13px}
+.spsetup .sidepick>span{font-size:13px}
+.spsetup .sprow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.spsetup .sprow2 .sidepick{grid-template-columns:minmax(0,58px) 1fr 1fr}
+.spsetup .sprow2 .sidepick>span{min-width:0;font-size:12px;line-height:1.1;white-space:normal;padding-right:0}
 .minis.spn{min-height:0}
 .spcount{display:inline-block;min-width:20px;padding:1px 6px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid rgba(243,234,216,.25);font-size:11px;font-weight:800;color:var(--ivory)}
 .sptrick{--cw:38px;display:grid;grid-template-columns:repeat(3,var(--cw));grid-template-rows:calc(var(--cw)*1.05) calc(var(--cw)*1.05) calc(var(--cw)*1.05);gap:2px 6px;margin:2px 0 calc(var(--cw)*.35)}
 .sptrick .sl{display:flex;justify-content:center}
+.sptrick.duo{grid-template-columns:var(--cw);grid-template-rows:calc(var(--cw)*1.05) calc(var(--cw)*1.05);gap:6px}
+.sptrick.duo .sl.t{grid-area:1/1}.sptrick.duo .sl.b{grid-area:2/1}
+.spdraw{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 6px}
+.spdraw .spdrawn{--cw:58px;flex:none;animation:spDrawIn .3s ease-out both}
+.spdraw .spdrawn .card{box-shadow:0 4px 12px rgba(0,0,0,.5),0 0 0 2px var(--brass)}
+.spdraw .actions{flex:1;max-width:280px;margin:0}
+@keyframes spDrawIn{from{transform:translateY(-14px) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
 .sptrick .sl.t{grid-area:1/2}.sptrick .sl.l{grid-area:2/1}.sptrick .sl.r{grid-area:2/3}.sptrick .sl.b{grid-area:3/2}
 .sptrick .card{box-shadow:0 3px 8px rgba(0,0,0,.45)}
 .sptrick .card.slot{opacity:.35;box-shadow:none}
@@ -455,6 +468,9 @@ body:not(.lobby){position:fixed;inset:0;width:100%}
 .dock{position:relative;z-index:6;background:linear-gradient(180deg,var(--dock-a),var(--dock-b));border-top:1px solid var(--dock-line);padding:12px max(16px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 12px) max(16px,env(safe-area-inset-left));min-height:calc(env(safe-area-inset-bottom) + 128px)}
 .dock-inner{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-width:0}
 .dock{overflow-x:hidden}
+/* small phones: the table keeps a fair share of the screen and a tall dock scrolls instead of squeezing it away */
+#app:not(.lobby){grid-template-rows:auto minmax(min(270px,40vh),1fr) minmax(0,auto)}
+#app:not(.lobby) .dock{overflow-y:auto;overscroll-behavior:contain}
 .dock-inner>*{min-width:0;max-width:100%}
 .me-row{display:flex;align-items:center;gap:14px}
 .mycards{--cw:48px;display:flex;gap:6px;flex:none}
@@ -1331,18 +1347,30 @@ function ppVoidHand(){
    other team. The host can turn reneging off, and then everyone has to follow suit.
    Make your bid: 10 points a book, and every extra book is a bag worth 1. Every 10 bags costs 100.
    Miss your bid (shot): lose 10 a book. Shot twice in a row loses the game (the host can turn that off).
-   First team to the target wins. */
-const SP_SEATS = 4, SP_BOARD = 3, SP_BLIND_MIN = 6, SP_BLIND_GAP = 100, SP_TARGETS = [250, 350, 400, 450, 500];
+   First team to the target wins.
+   Two players (head to head): same deck and order, no partners, 13 cards each and the other 26 sit out.
+   The host picks how you get them: Draw (take turns seeing a card and keeping it, which tosses the next one
+   unseen, or tossing it, which means you keep the next one) or Deal 13. Bid at least 1 book, or nil.
+   A player 100 or more behind may bid blind (6 or more, double) before drawing or looking. The non-dealer
+   leads, and the deal switches every hand. */
+const SP_SEATS = 4, SP_BOARD = 3, SP_BOARD2 = 1, SP_BLIND_MIN = 6, SP_BLIND_GAP = 100, SP_TARGETS = [250, 350, 400, 450, 500];
 const SP_TRICK_MS = 1500, SP_LAST_MS = 3500, SP_DONE_MS = 10000;
 /* host only (never sent to phones): reneges each team hasn't been caught for this hand, and whether
    one has shown (someone played a suit they'd already shown they were out of) */
 let spRen = [0, 0], spShown = [0, 0], spWait = 0;
+/* two players, Draw: the card the drawer is looking at right now (only their phone gets it) */
+let spDrawn = null;
 const spIsJ = c => c === 'BJ' || c === 'LJ';
 const spValid = c => validCard(c) || spIsJ(c);
 const spSuit = c => (spIsJ(c) || c === '2d' || c[1] === 's' ? 's' : c[1]);
 const spPow = c => (c === 'BJ' ? 100 : c === 'LJ' ? 99 : c === '2d' ? 98 : c === '2s' ? 97 : rv(c));
 const spTeam = i => i % 2;
-const spMate = i => (i + 2) % 4;
+/* how many play: 4 (two teams of partners) or 2 (head to head; each player is their own "team") */
+const spNs = s => (s && s.cfg && +s.cfg.np === 2 ? 2 : 4);
+const spN = () => spNs(S);
+const spMemOf = (s, t) => (spNs(s) === 2 ? [t] : [t, t + 2]);
+const spMem = t => spMemOf(S, t);
+const spMate = (i, s) => (spNs(s || S) === 2 ? -1 : (i + 2) % 4);
 const SP_ALL = (() => { const d = []; for (const r of RANKS) for (const s of SUITS) d.push(r + s); return d.filter(c => c !== '2h' && c !== '2c').concat(['BJ', 'LJ']); })();
 const SP_ORDER = { s:0, h:1, c:2, d:3 };
 function spSortHand(h){ return h.slice().sort((a, b) => (SP_ORDER[spSuit(a)] - SP_ORDER[spSuit(b)]) || (spPow(b) - spPow(a))); }
@@ -1351,37 +1379,63 @@ function spShuffle(){
   for (let i = d.length - 1; i > 0; i--) { const j = randInt(i + 1); const t = d[i]; d[i] = d[j]; d[j] = t; }
   return d;
 }
-function spFresh(){ return { step:'wait', b:[null, null, null, null], bl:[0, 0], bd:[1, 1], tk:[0, 0, 0, 0], tr:[], lead:-1, br:0, last:null, sc:[0, 0], bg:[0, 0], shot:[0, 0], rc:[0, 0], pn:[0, 0], vd:['', '', '', ''], gone:[], ord:[], ev:[], eid:0, hist:[] }; }
+function spFresh(){ return { step:'wait', b:[null, null, null, null], bl:[0, 0], bd:[1, 1], tk:[0, 0, 0, 0], tr:[], lead:-1, br:0, last:null, sc:[0, 0], bg:[0, 0], shot:[0, 0], rc:[0, 0], pn:[0, 0], vd:['', '', '', ''], gone:[], ord:[], dw:null, ev:[], eid:0, hist:[] }; }
 function spEv(e){ const sp = S.sp; sp.eid = (sp.eid || 0) + 1; e.id = sp.eid; sp.ev.push(e); if (sp.ev.length > 24) sp.ev.splice(0, sp.ev.length - 24); }
 function spNewGame(){
   const ev = S.sp ? S.sp.ev : [], eid = S.sp ? S.sp.eid : 0;
   S.sp = spFresh(); S.sp.ev = ev; S.sp.eid = eid;
   S.hand = 0; S.bt = -1; S.round = 0; S.res = null; S.tn = -1; S.ph = 'waiting';
-  spRen = [0, 0]; spShown = [0, 0]; spWait = 0;
+  spRen = [0, 0]; spShown = [0, 0]; spWait = 0; spDrawn = null;
 }
 function spStartHand(){
-  const sp = S.sp;
-  if (S.seats.slice(0, SP_SEATS).some(x => !x)) { S.ph = 'waiting'; return; }
+  const sp = S.sp, n = spN();
+  if (S.seats.slice(0, n).some(x => !x)) { S.ph = 'waiting'; return; }
   S.hand++; S.q++; S.round = 1;
-  S.bt = S.bt >= 0 && S.bt < SP_SEATS ? (S.bt + 1) % SP_SEATS : randInt(SP_SEATS);
+  S.bt = S.bt >= 0 && S.bt < n ? (S.bt + 1) % n : randInt(n);
   const d = spShuffle();
-  for (let i = 0; i < SP_SEATS; i++) {
+  const draw = n === 2 && S.cfg.deal !== 'deal';
+  for (let i = 0; i < n; i++) {
     const x = S.seats[i];
-    holes[x.c] = spSortHand(d.slice(i * 13, i * 13 + 13));
-    x.hc = 13; x.st = 'in'; x.a = ''; x.t = 0;
+    holes[x.c] = draw ? [] : spSortHand(d.slice(i * 13, i * 13 + 13));
+    x.hc = draw ? 0 : 13; x.st = 'in'; x.a = ''; x.t = 0;
   }
-  deck = [];
-  Object.assign(sp, { step:'bid', b:[null, null, null, null], bl:[0, 0], tk:[0, 0, 0, 0], tr:[], lead:-1, br:0, last:null, rc:[0, 0], pn:[0, 0], vd:['', '', '', ''], gone:[] });
+  /* Draw: the whole deck is the stack you draw from; otherwise the cards nobody got sit out unseen */
+  deck = draw ? d : [];
+  spDrawn = null;
+  Object.assign(sp, { step:'bid', b:[null, null, null, null], bl:[0, 0], tk:[0, 0, 0, 0], tr:[], lead:-1, br:0, last:null, rc:[0, 0], pn:[0, 0], vd:['', '', '', ''], gone:[], dw:null });
   spRen = [0, 0]; spShown = [0, 0]; spWait = 0;
-  /* a team 100 or more behind decides on blind before anyone on it sees their cards */
+  /* a team (or player) 100 or more behind decides on blind before seeing its cards */
   sp.bd = [0, 1].map(t => (sp.sc[1 - t] - sp.sc[t] >= SP_BLIND_GAP ? 0 : 1));
-  /* the team that isn't dealing bids first: left of the dealer, their partner, then the dealer's partner, then the dealer */
-  sp.ord = [1, 3, 2, 0].map(k => (S.bt + k) % SP_SEATS);
-  S.tn = sp.ord[0]; S.ph = 'playing'; S.res = null;
-  spEv({ k:'deal', d:S.bt });
+  /* the side that isn't dealing bids first. Four players: left of the dealer, their partner, then the
+     dealer's partner, then the dealer. Two players: the non-dealer, then the dealer. */
+  sp.ord = n === 2 ? [(S.bt + 1) % 2, S.bt] : [1, 3, 2, 0].map(k => (S.bt + k) % SP_SEATS);
+  S.ph = 'playing'; S.res = null;
+  if (n === 2) {
+    sp.dw = draw ? { n:[0, 0], tossed:0 } : null;
+    const behind = [0, 1].find(t => !sp.bd[t]);
+    if (behind !== undefined) { sp.step = 'blind'; S.tn = behind; }
+    else spAfterBlind();
+  } else S.tn = sp.ord[0];
+  spEv({ k:'deal', d:S.bt, draw:draw ? 1 : 0 });
+}
+/* two players: once blind is settled, either the draw starts (non-dealer first) or the bidding does */
+function spAfterBlind(){
+  const sp = S.sp; S.q++;
+  if (sp.dw) { sp.step = 'draw'; S.tn = (S.bt + 1) % 2; spDrawTurn(); }
+  else { sp.step = 'bid'; spNextBid(); }
+}
+/* Draw: turn the top card of the stack for the player whose turn it is (only they see it) */
+function spDrawTurn(){ spDrawn = deck.length ? deck.pop() : null; }
+function spDrawDone(){
+  const sp = S.sp;
+  S.seats.slice(0, 2).forEach(x => { holes[x.c] = spSortHand(holes[x.c]); x.hc = holes[x.c].length; });
+  spDrawn = null; deck = []; sp.step = 'bid'; S.tn = -1;
+  spEv({ k:'drawn' });
+  spNextBid();
 }
 /* what you may bid: the team has to reach the board, and the second partner can't take it past 13 */
 function spBidLimits(i){
+  if (spN() === 2) return { min:SP_BOARD2, max:13, nil:true };
   const mb = S.sp.b[spMate(i)];
   if (mb === null || mb === undefined) return { min:0, max:13, nil:true };
   const m = mb === 'N' ? 0 : mb;
@@ -1389,19 +1443,47 @@ function spBidLimits(i){
 }
 const spBidOf = b => (b === 'N' ? 0 : +b || 0);
 /* a team's bid in books (a nil doesn't add anything; a blind team bid is the whole thing) */
-function spTeamBid(t){ const sp = S.sp; return sp.bl[t] || spBidOf(sp.b[t]) + spBidOf(sp.b[t + 2]); }
+function spTeamBid(t){ const sp = S.sp; return sp.bl[t] || spMem(t).reduce((a, j) => a + spBidOf(sp.b[j]), 0); }
 function spNextBid(){
   const sp = S.sp; S.q++;
   const nx = sp.ord.find(j => sp.b[j] === null);
-  if (nx === undefined) { sp.step = 'play'; S.tn = (S.bt + 1) % SP_SEATS; sp.lead = S.tn; spEv({ k:'go', i:S.tn }); }
+  if (nx === undefined) { sp.step = 'play'; S.tn = (S.bt + 1) % spN(); sp.lead = S.tn; spEv({ k:'go', i:S.tn }); }
   else S.tn = nx;
 }
 function spAct(i, a){
   if (!S || S.ph !== 'playing' || !S.sp || !a) return 'not now';
-  const sp = S.sp, x = S.seats[i]; if (!x || i >= SP_SEATS) return 'no seat';
+  const sp = S.sp, x = S.seats[i]; if (!x || i >= spN()) return 'no seat';
   if (a.k === 'renege') return spCall(i);
   if (S.tn !== i) return 'not your turn';
   const h = holes[x.c] || [];
+  /* two players: blind is settled first, before you draw or look */
+  if (sp.step === 'blind') {
+    const t = spTeam(i);
+    if (sp.bd[t]) return 'wait';
+    if (a.k === 'look') { sp.bd[t] = 1; spEv({ k:'look', i }); spAfterBlind(); return ''; }
+    if (a.k !== 'blind') return 'blind first';
+    const n = Math.round(+a.n);
+    if (!(n >= SP_BLIND_MIN && n <= 13)) return 'bad bid';
+    sp.bd[t] = 1; sp.bl[t] = n; sp.b[i] = n;
+    spEv({ k:'bid', i, n, blind:1 }); spAfterBlind(); return '';
+  }
+  /* two players, Draw: keep the card you're looking at (the next one is tossed unseen),
+     or toss it and keep the next one */
+  if (a.k === 'keep' || a.k === 'toss') {
+    if (sp.step !== 'draw' || !sp.dw || !spDrawn) return 'wait';
+    const c = spDrawn;
+    let got;
+    if (a.k === 'keep') { got = c; if (deck.length) deck.pop(); }
+    else { got = deck.length ? deck.pop() : c; }
+    h.push(got); holes[x.c] = spSortHand(h); x.hc = holes[x.c].length;
+    sp.dw.n[i] = x.hc; sp.dw.tossed++;
+    spEv({ k:'draw', i, a:a.k });
+    const o = 1 - i;
+    if (sp.dw.n[0] >= 13 && sp.dw.n[1] >= 13) { spDrawDone(); return ''; }
+    S.tn = sp.dw.n[o] < 13 ? o : i; S.q++;
+    spDrawTurn();
+    return '';
+  }
   if (a.k === 'look' || a.k === 'blind' || a.k === 'bid') {
     if (sp.step !== 'bid') return 'not bidding';
     const t = spTeam(i);
@@ -1410,7 +1492,7 @@ function spAct(i, a){
       if (a.k !== 'blind') return 'blind first';
       const n = Math.round(+a.n);
       if (!(n >= SP_BLIND_MIN && n <= 13)) return 'bad bid';
-      sp.bd[t] = 1; sp.bl[t] = n; sp.b[i] = n; sp.b[spMate(i)] = 0;
+      sp.bd[t] = 1; sp.bl[t] = n; sp.b[i] = n; if (spMate(i) >= 0) sp.b[spMate(i)] = 0;
       spEv({ k:'bid', i, n, blind:1 }); spNextBid(); return '';
     }
     if (a.k !== 'bid') return 'bad bid';
@@ -1442,7 +1524,7 @@ function spAct(i, a){
     sp.tr.push({ i, c });
     if (su === 's' && !sp.br) { sp.br = 1; spEv({ k:'broken', i, cut:sp.tr.length > 1 ? 1 : 0 }); }
     spEv({ k:'play', i, c });
-    if (sp.tr.length === SP_SEATS) spTrickDone(); else { S.tn = (i + 1) % SP_SEATS; S.q++; }
+    if (sp.tr.length === spN()) spTrickDone(); else { S.tn = (i + 1) % spN(); S.q++; }
     return '';
   }
   return 'bad move';
@@ -1464,7 +1546,7 @@ function spTrickDone(){
 function spCollect(){
   const sp = S.sp; if (!sp || sp.step !== 'trick') return;
   sp.tr = []; S.q++;
-  if (S.seats.slice(0, SP_SEATS).every(x => !(holes[x.c] || []).length)) { sp.step = 'last'; return; }
+  if (S.seats.slice(0, spN()).every(x => !(holes[x.c] || []).length)) { sp.step = 'last'; return; }
   sp.step = 'play'; sp.lead = S.tn;
 }
 /* Renege! Each team gets one call a hand, any time after the bidding until the hand is counted */
@@ -1481,7 +1563,7 @@ function spCall(i){
 }
 function spScoreHand(){
   const sp = S.sp; if (!sp || S.ph !== 'playing') return;
-  const nonNil = t => [t, t + 2].filter(j => sp.b[j] !== 'N');
+  const nonNil = t => spMem(t).filter(j => sp.b[j] !== 'N');
   const bn = [0, 1].map(t => nonNil(t).reduce((a, j) => a + sp.tk[j], 0));
   /* caught reneging: up to 3 of your books go to the other team */
   const mv = [0, 0];
@@ -1491,7 +1573,7 @@ function spScoreHand(){
     const blind = sp.bl[t] || 0, K = blind || spTeamBid(t), B = books[t], made = B >= K;
     let pts = made ? (blind ? 20 : 10) * K + (B - K) : -(blind ? 20 : 10) * K;
     let bags = made ? B - K : 0;
-    const nil = [t, t + 2].filter(j => sp.b[j] === 'N').map(j => { const ok = sp.tk[j] === 0; pts += ok ? 100 : -100; pts += sp.tk[j]; bags += sp.tk[j]; return { i:j, ok:ok ? 1 : 0, tk:sp.tk[j] }; });
+    const nil = spMem(t).filter(j => sp.b[j] === 'N').map(j => { const ok = sp.tk[j] === 0; pts += ok ? 100 : -100; pts += sp.tk[j]; bags += sp.tk[j]; return { i:j, ok:ok ? 1 : 0, tk:sp.tk[j] }; });
     sp.bg[t] += bags;
     let bagHit = 0;
     while (sp.bg[t] >= 10) { sp.bg[t] -= 10; pts -= 100; bagHit++; }
@@ -1509,7 +1591,7 @@ function spScoreHand(){
   sp.hist.push([res[0].pts, res[1].pts]); if (sp.hist.length > 40) sp.hist.shift();
   S.res = { k:'spades', t:res, over, why, hand:S.hand };
   sp.step = 'done'; S.tn = -1; S.q++;
-  S.seats.slice(0, SP_SEATS).forEach(x => { if (x) x.st = 'wait'; });
+  S.seats.slice(0, spN()).forEach(x => { if (x) x.st = 'wait'; });
   S.ph = over >= 0 ? 'over' : 'done';
   spEv({ k:over >= 0 ? 'game' : 'hand', over });
   nextHandAt = Date.now() + SP_DONE_MS;
@@ -1536,10 +1618,28 @@ function spEstimate(h){
   }
   return e;
 }
+/* two players: one opponent, so big cards win more often (fitted from a few thousand bot hands) */
+function spEstimate2(h){
+  const has = c => h.includes(c), n = h.filter(c => spSuit(c) === 's').length;
+  const top = ['BJ', 'LJ', '2d', '2s', 'As'].filter(has).length, ks = (has('Ks') ? 1 : 0) + (has('Qs') ? 1 : 0);
+  let e = 3.9 + 0.21 * n + 0.6 * top + 0.18 * ks;
+  for (const su of ['h', 'c', 'd']) {
+    const cs = h.filter(c => spSuit(c) === su), r = new Set(cs.map(c => c[0]));
+    if (r.has('A')) e += 0.37; if (r.has('K') && cs.length >= 2) e += 0.14; if (cs.length <= 1) e += 0.07;
+  }
+  return e;
+}
+/* Draw: keep spades, jokers and big cards; toss the rest (the next card is a gamble) */
+function spBotDraw(i){
+  const c = spDrawn; if (!c) return { k:'keep' };
+  const h = holes[S.seats[i].c] || [];
+  const keep = spSuit(c) === 's' || rv(c) >= 13 || (rv(c) === 12 && h.filter(d => spSuit(d) === spSuit(c)).length <= 2);
+  return { k:keep || randInt(100) < 8 ? 'keep' : 'toss' };
+}
 function spBotBid(i){
   const sp = S.sp, t = spTeam(i), h = holes[S.seats[i].c] || [];
   if (!sp.bd[t]) return sp.sc[1 - t] - sp.sc[t] >= 200 ? { k:'blind', n:SP_BLIND_MIN } : { k:'look' };
-  const lim = spBidLimits(i), e = spEstimate(h);
+  const lim = spBidLimits(i), e = spN() === 2 ? spEstimate2(h) - 0.4 : spEstimate(h);
   const weak = !h.some(c => ['BJ', 'LJ', '2d', '2s', 'As', 'Ks'].includes(c)) && h.filter(c => spSuit(c) === 's').length <= 2 && !h.some(c => c[0] === 'A');
   if (lim.nil && e < 0.6 && weak && randInt(100) < 45) return { k:'bid', n:'N' };
   const n = Math.max(lim.min, Math.min(lim.max, Math.round(e)));
@@ -1558,8 +1658,8 @@ function spBotPlay(i){
   const low = cs => cs.slice().sort((a, b) => ((spSuit(a) === 's') - (spSuit(b) === 's')) || (spPow(a) - spPow(b)))[0];
   const high = cs => cs.slice().sort((a, b) => spPow(b) - spPow(a))[0];
   const m = spMate(i), t = spTeam(i);
-  const myNil = sp.b[i] === 'N' && sp.tk[i] === 0, mateNil = sp.b[m] === 'N' && sp.tk[m] === 0;
-  const need = spTeamBid(t) - [t, t + 2].filter(j => sp.b[j] !== 'N').reduce((a, j) => a + sp.tk[j], 0);
+  const myNil = sp.b[i] === 'N' && sp.tk[i] === 0, mateNil = m >= 0 && sp.b[m] === 'N' && sp.tk[m] === 0;
+  const need = spTeamBid(t) - spMem(t).filter(j => sp.b[j] !== 'N').reduce((a, j) => a + sp.tk[j], 0);
   if (!sp.tr.length) {
     if (myNil) return low(L);
     const ns = L.filter(c => spSuit(c) !== 's'), spd = L.filter(c => spSuit(c) === 's');
@@ -1578,7 +1678,7 @@ function spBotPlay(i){
   const wi = spTrickWinner(sp.tr), wc = sp.tr.find(p => p.i === wi).c;
   const beats = c => (spSuit(c) === spSuit(wc) ? spPow(c) > spPow(wc) : spSuit(c) === 's');
   const winners = L.filter(beats), losers = L.filter(c => !beats(c));
-  const last = sp.tr.length === SP_SEATS - 1;
+  const last = sp.tr.length === spN() - 1;
   if (myNil) return losers.length ? high(losers) : low(L);
   if (wi === m) {
     if (mateNil && winners.length) return low(winners);
@@ -1599,6 +1699,8 @@ function spBotPlay(i){
 }
 function spBotMove(i){
   const sp = S.sp; if (!sp || S.ph !== 'playing' || S.tn !== i) return '';
+  if (sp.step === 'blind') return spAct(i, spBotBid(i));
+  if (sp.step === 'draw') return spAct(i, spBotDraw(i));
   if (sp.step === 'bid') { const a = spBotBid(i); const r = spAct(i, a); return r || (a.k === 'look' ? spAct(i, spBotBid(i)) : ''); }
   if (sp.step === 'play') return spAct(i, { k:'play', c:spBotPlay(i) });
   return '';
@@ -1661,11 +1763,11 @@ function loadSaved(){
   try { const o = JSON.parse(store.get('knock_host') || 'null'); if (o && o.cid === myCid && typeof o.code === 'string' && validState(o.S) && Date.now() - (o.at || 0) < 3 * 86400000) return o; } catch (e) {}
   return null;
 }
-function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, deck, at:Date.now(), sp:isSP(S) ? { holes, ren:spRen, shown:spShown } : undefined })); }
+function save(){ if (role === 'host' && S) store.set('knock_host', JSON.stringify({ code:S.code, cid:myCid, S, bank, deck, at:Date.now(), sp:isSP(S) ? { holes, ren:spRen, shown:spShown, drawn:spDrawn } : undefined })); }
 /* ---------- Pitty Pat: host side ---------- */
 const isPP = s => !!s && s.game === 'pitty';
 const isSP = s => !!s && s.game === 'spades';
-const seatCap = s => (isPP(s) ? PP_SEATS : isSP(s) ? SP_SEATS : MAX_SEATS);
+const seatCap = s => (isPP(s) ? PP_SEATS : isSP(s) ? spNs(s) : MAX_SEATS);
 const isFull = s => !!s && s.seats.filter(Boolean).length >= seatCap(s);
 const gameName = s => (isPP(s) ? 'Pitty Pat' : isSP(s) ? 'Spades' : 'Knock');
 function beginHand(){ return isPP(S) ? ppStartHand() : isSP(S) ? spBegin() : startHand(); }
@@ -1745,7 +1847,7 @@ function spSeatPlayers(){
   const waiting = spPeopleWaiting();
   const used = () => new Set(S.seats.filter(Boolean).map(x => x.n));
   const take = k => { const p = waiting.shift(); const was = S.seats[k]; S.seats[k] = newSeat(p.cid, p.n, false); S.seats[k].st = 'wait'; void was; };
-  for (let k = 0; k < SP_SEATS; k++) {
+  for (let k = 0; k < spN(); k++) {
     const x = S.seats[k];
     if (!x || (x.g && !x.bot)) {
       const back = waiting.findIndex(p => x && x.c === p.cid);
@@ -1758,15 +1860,15 @@ function spSeatPlayers(){
   }
   while (waiting.length) {
     const p = waiting[0];
-    let k = S.seats.findIndex((x, j) => j < SP_SEATS && x && x.bot && x.was === p.cid);
-    if (k < 0) k = S.seats.findIndex((x, j) => j < SP_SEATS && x && x.bot);
+    let k = S.seats.findIndex((x, j) => j < spN() && x && x.bot && x.was === p.cid);
+    if (k < 0) k = S.seats.findIndex((x, j) => j < spN() && x && x.bot);
     if (k < 0) break;
     take(k);
   }
 }
 function spBegin(){ spSeatPlayers(); spStartHand(); }
 function spStartGame(){
-  if (S.cfg.teams === 'random') {
+  if (S.cfg.teams === 'random' && spN() === 4) {
     const xs = S.seats.slice(0, SP_SEATS);
     for (let k = xs.length - 1; k > 0; k--) { const j = randInt(k + 1); const t = xs[k]; xs[k] = xs[j]; xs[j] = t; }
     xs.forEach((x, k) => { S.seats[k] = x; });
@@ -1783,11 +1885,11 @@ function spHostTick(now){
   /* bots notice a renege once it shows (someone plays a suit they already showed they were out of) */
   [0, 1].forEach(t => {
     const o = 1 - t;
-    if (!spShown[o] || sp.rc[t] || sp.step === 'bid') return;
-    if (![t, t + 2].some(j => S.seats[j] && S.seats[j].bot)) return;
+    if (!spShown[o] || sp.rc[t] || sp.step === 'bid' || sp.step === 'draw' || sp.step === 'blind') return;
+    if (!spMem(t).some(j => S.seats[j] && S.seats[j].bot)) return;
     const key = S.hand + ':' + t;
     if (!spBotCall.has(key)) spBotCall.set(key, now + 2000 + randInt(3500) + (randInt(100) < 15 ? 600000 : 0));
-    else if (now >= spBotCall.get(key)) { spBotCall.set(key, Infinity); const j = [t, t + 2].find(q => S.seats[q] && S.seats[q].bot); spAct(j, { k:'renege' }); }
+    else if (now >= spBotCall.get(key)) { spBotCall.set(key, Infinity); const j = spMem(t).find(q => S.seats[q] && S.seats[q].bot); spAct(j, { k:'renege' }); }
   });
   if (spBotCall.size > 40) spBotCall.clear();
   const i = S.tn, x = S.seats[i]; if (!x || i < 0) return;
@@ -1796,15 +1898,15 @@ function spHostTick(now){
   if (spBotPlays(x)) {
     if (spBotKey !== key) {
       spBotKey = key; clearTimeout(spBotTimer);
-      spBotTimer = setTimeout(() => { const y = S && S.seats[i]; if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i && y && spBotPlays(y)) { spBotMove(i); hostTick(); } }, (sp.step === 'bid' ? 900 : 650) + randInt(900));
+      spBotTimer = setTimeout(() => { const y = S && S.seats[i]; if (role === 'host' && S && S.ph === 'playing' && S.hand + ':' + S.q === key && S.tn === i && y && spBotPlays(y)) { spBotMove(i); hostTick(); } }, (sp.step === 'draw' ? 450 : sp.step === 'bid' || sp.step === 'blind' ? 900 : 650) + randInt(sp.step === 'draw' ? 500 : 900));
     }
     return;
   }
   if (S.cfg.tm > 0 && now - turnClock > S.cfg.tm * 1000) spBotMove(i);
 }
-/* waiting for the first deal: 4 in their seats and everyone ready (or the host says go) */
+/* waiting for the first deal: every seat filled (4, or 2 head to head) and everyone ready (or the host says go) */
 function spWaitTick(now){
-  const xs = S.seats.slice(0, SP_SEATS), full = xs.every(x => x && !x.g);
+  const xs = S.seats.slice(0, spN()), full = xs.every(x => x && !x.g);
   const go = full && !S.pause && (S.go || xs.every(x => x.bot || (x.rdy && !x.away)));
   if (go) {
     if (!waitStartAt) waitStartAt = now + 3000;
@@ -1814,7 +1916,7 @@ function spWaitTick(now){
 }
 /* pick seats: before the game starts you can move to an open seat, or swap with a bot */
 function spMoveSeat(cid, k){
-  if (!isSP(S) || S.ph !== 'waiting' || S.cfg.teams === 'random' || !(k >= 0 && k < SP_SEATS)) return;
+  if (!isSP(S) || S.ph !== 'waiting' || (S.cfg.teams === 'random' && spN() === 4) || !(k >= 0 && k < spN())) return;
   const j = S.seats.findIndex(x => x && x.c === cid); if (j < 0 || j === k) return;
   const y = S.seats[k]; if (y && !y.bot) return;
   S.seats[k] = S.seats[j]; S.seats[j] = y || null;
@@ -1828,21 +1930,22 @@ function startTable(game){
   role = 'host'; S = freshState(code, myCid); bank = {}; me.sit = true; rememberSit(true);
   S.cfg.room = 'private'; S.cfg.name = cleanRoom(`${myName}'s table`);
   if (game === 'pitty') { S.game = 'pitty'; S.cfg.st = PP_START; S.cfg.ow = PP_OFFER; S.pp = { step:'pull', pile:0, top:null, from:-1, oid:0, eid:0, ev:[], ow:PP_OFFER }; }
-  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 250; S.cfg.teams = 'pick'; S.cfg.rn = 'off'; S.cfg.sh = 'off'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
+  else if (game === 'spades') { S.game = 'spades'; S.cfg.to = 250; S.cfg.teams = 'pick'; S.cfg.rn = 'off'; S.cfg.sh = 'off'; S.cfg.np = 4; S.cfg.deal = 'draw'; S.cfg.tm = 60; S.cfg.ante = 0; S.cfg.st = 0; S.sp = spFresh(); }
   else S.game = 'knock';
   startHosting(); startLobbyListing(); keepAwake(); hostTick();
 }
 function resumeHost(saved){
   role = 'host'; S = saved.S; bank = saved.bank || {}; code = saved.code;
-  deck = Array.isArray(saved.deck) && saved.deck.every(validCard) ? saved.deck : []; deckId++;
+  deck = Array.isArray(saved.deck) && saved.deck.every(isSP(S) ? spValid : validCard) ? saved.deck : []; deckId++;
   if (S.due === undefined) S.due = 1;
   delete S.cfg.cap;
   if (isPP(S)) ppVoidHand();
   else if (isSP(S)) {
     /* Spades picks up where it left off: the cards in everyone's hands were saved too */
     const sv = saved.sp || {};
-    const ok = sv.holes && typeof sv.holes === 'object' && S.seats.slice(0, SP_SEATS).every(x => !x || (Array.isArray(sv.holes[x.c]) && sv.holes[x.c].every(spValid)));
-    if (ok) { holes = sv.holes; spRen = Array.isArray(sv.ren) ? sv.ren.map(n => +n || 0) : [0, 0]; spShown = Array.isArray(sv.shown) ? sv.shown.map(n => +n || 0) : [0, 0]; spWait = 0; }
+    const ok = sv.holes && typeof sv.holes === 'object' && S.seats.slice(0, spN()).every(x => !x || (Array.isArray(sv.holes[x.c]) && sv.holes[x.c].every(spValid)))
+      && !(S.ph === 'playing' && S.sp && S.sp.step === 'draw' && !(spValid(sv.drawn) && deck.length));
+    if (ok) { holes = sv.holes; spRen = Array.isArray(sv.ren) ? sv.ren.map(n => +n || 0) : [0, 0]; spShown = Array.isArray(sv.shown) ? sv.shown.map(n => +n || 0) : [0, 0]; spDrawn = spValid(sv.drawn) ? sv.drawn : null; spWait = 0; }
     else if (S.ph === 'playing') { S.ph = 'done'; nextHandAt = Date.now() + 2000; S.res = null; }
   }
   else voidHand();
@@ -1924,7 +2027,7 @@ function onClientMsg(c, d){
     }
     case 'sp': {
       const i = S.seats.findIndex(y => y && y.c === p.cid);
-      if (i >= 0 && isSP(S) && ['bid', 'look', 'blind', 'play', 'renege'].includes(d.k)) {
+      if (i >= 0 && isSP(S) && ['bid', 'look', 'blind', 'play', 'renege', 'keep', 'toss'].includes(d.k)) {
         const n = d.n === 'N' ? 'N' : +d.n;
         const r = spAct(i, { k:d.k, n, c:spValid(d.c) ? d.c : null });
         if (r) { try { c.send({ t:'spno', r, k:d.k }); } catch (e) {} }
@@ -2003,7 +2106,9 @@ function sendState(p){
     cl = { col:ppSideCl.col.has(p.cid) ? 1 : 0, spd:ppSideCl.spd.has(p.cid) ? 1 : 0 };
   } else if (isSP(S)) {
     const i = S.seats.findIndex(x => x && x.c === p.cid);
-    hole = i >= 0 && i < SP_SEATS && S.ph === 'playing' && S.sp && S.sp.bd[spTeam(i)] && holes[p.cid] ? holes[p.cid] : null;
+    hole = i >= 0 && i < spN() && S.ph === 'playing' && S.sp && S.sp.bd[spTeam(i)] && holes[p.cid] ? holes[p.cid] : null;
+    /* two players, Draw: only the drawer sees the card they turned */
+    if (i >= 0 && S.ph === 'playing' && S.sp && S.sp.step === 'draw' && S.tn === i && spDrawn) pend = spDrawn;
   } else hole = (S.ph === 'deciding' || S.ph === 'done') && holes[p.cid] ? holes[p.cid] : null;
   try { p.conn.send({ t:'state', s:S, hole, pend, cl }); } catch (e) {}
 }
@@ -2125,6 +2230,17 @@ function setCfg(field, val){
   else if (field === 'teams' && ['pick', 'random'].includes(val)) S.cfg.teams = val;
   else if (field === 'rn' && ['on', 'off'].includes(val)) S.cfg.rn = val;
   else if (field === 'sh' && ['on', 'off'].includes(val)) S.cfg.sh = val;
+  else if (field === 'np' && isSP(S) && (v === 2 || v === 4) && (S.ph === 'waiting' || S.ph === 'over') && spN() !== v) {
+    /* switching to head to head: people keep the two seats (people first, then bots); the rest go to the audience */
+    if (v === 2) {
+      const xs = S.seats.slice(0, SP_SEATS).filter(Boolean);
+      const keep = xs.filter(x => !x.bot).concat(xs.filter(x => x.bot)).slice(0, 2);
+      for (let k = 0; k < SP_SEATS; k++) S.seats[k] = keep[k] || null;
+      xs.filter(x => !keep.includes(x) && !x.bot).forEach(x => { const p = pres.get(x.c); if (p) p.sit = true; });
+    }
+    S.cfg.np = v; S.go = 0; spNewGame();
+  }
+  else if (field === 'deal' && ['draw', 'deal'].includes(val)) S.cfg.deal = val;
   else if (field === 'room' && ['open', 'private', 'hidden'].includes(val)) {
     S.cfg.room = val; startLobbyListing();
     if (val === 'open') [...asks.keys()].forEach(cid => answerAsk(cid, true));
@@ -2166,7 +2282,7 @@ function claimSlot(n){
   });
 }
 function roomInfo(){
-  return { t:'info', v:1, game:isPP(S) ? 'pitty' : isSP(S) ? 'spades' : 'knock', to:isSP(S) ? +S.cfg.to || 500 : undefined, name:tableName(), room:roomType(), code:roomType() === 'open' ? S.code : null,
+  return { t:'info', v:1, game:isPP(S) ? 'pitty' : isSP(S) ? 'spades' : 'knock', to:isSP(S) ? +S.cfg.to || 500 : undefined, np:isSP(S) ? spN() : undefined, name:tableName(), room:roomType(), code:roomType() === 'open' ? S.code : null,
     players:S.seats.filter(Boolean).length, aud:Array.isArray(S.aud) ? S.aud.length : 0, ante:S.cfg.ante, host:myName || '' };
 }
 function onLobbyMsg(c, d){
@@ -2357,8 +2473,8 @@ function lobbyHTML(){
       : asking ? '<button type="button" class="btn ghost sm" data-act="lobbycancel">Cancel</button>'
       : `<button type="button" class="btn ghost sm" data-act="lobbyjoin" data-slot="${slot}">Ask to join</button>`;
     const badge = r.room === 'open' ? '<span class="rbadge open">Open</span>' : '<span class="rbadge">🔒 Private</span>';
-    const cap = r.game === 'pitty' ? 6 : r.game === 'spades' ? 4 : 10;
-    const meta = asking ? `Waiting for ${esc(cleanName(r.host) || 'the host')} to let you in…` : `<span class="rgame">${r.game === 'pitty' ? 'Pitty Pat' : r.game === 'spades' ? 'Spades' : 'Knock'}</span>${Math.min(cap, +r.players || 0)}/${cap} playing${+r.aud ? ` · ${+r.aud} watching` : ''} · ${r.game === 'spades' ? `to ${+r.to || 500}` : `ante ${fmtT(r.ante)}`}`;
+    const cap = r.game === 'pitty' ? 6 : r.game === 'spades' ? (+r.np === 2 ? 2 : 4) : 10;
+    const meta = asking ? `Waiting for ${esc(cleanName(r.host) || 'the host')} to let you in…` : `<span class="rgame">${r.game === 'pitty' ? 'Pitty Pat' : r.game === 'spades' ? 'Spades' : 'Knock'}</span>${Math.min(cap, +r.players || 0)}/${cap} playing${+r.aud ? ` · ${+r.aud} watching` : ''} · ${r.game === 'spades' ? `${+r.np === 2 ? '1 on 1 · ' : ''}to ${+r.to || 500}` : `ante ${fmtT(r.ante)}`}`;
     return `<li class="room"><div class="rinfo"><b>${esc(cleanRoom(r.name) || 'A table')}</b><span>${badge}${meta}</span></div>${btn}</li>`;
   }).join('');
   const head = '<div class="divider">Tables playing now</div>';
@@ -2429,7 +2545,7 @@ function onHostMsg(d){
       view.pend = validCard(d.pend) ? d.pend : null;
       view.cl = d.cl && typeof d.cl === 'object' ? { col:d.cl.col ? 1 : 0, spd:d.cl.spd ? 1 : 0 } : { col:0, spd:0 };
     } else if (d.s.game === 'spades') {
-      view.hole = Array.isArray(d.hole) && d.hole.length <= 13 && d.hole.every(spValid) ? d.hole.slice() : null; view.pend = null;
+      view.hole = Array.isArray(d.hole) && d.hole.length <= 13 && d.hole.every(spValid) ? d.hole.slice() : null; view.pend = spValid(d.pend) ? d.pend : null;
     } else { view.hole = Array.isArray(d.hole) && d.hole.length === 2 && d.hole.every(validCard) ? d.hole.slice() : null; view.pend = null; }
     if (mySeatIdx(view.s) >= 0) me.sit = true;
     scheduleRender();
@@ -2449,6 +2565,12 @@ function spMine(){
   const s = cur(); if (!isSP(s) || s.ph !== 'playing') return [];
   const i = mySeatIdx(s); if (i < 0 || !s.sp || !s.sp.bd[spTeam(i)]) return [];
   return ((role === 'host' ? holes[myCid] : view.hole) || []).slice();
+}
+/* two players, Draw: the card you turned (only while it's your turn to draw) */
+function spDrawnMine(){
+  const s = cur(); if (!isSP(s) || s.ph !== 'playing' || !s.sp || s.sp.step !== 'draw') return null;
+  const i = mySeatIdx(s); if (i < 0 || s.tn !== i) return null;
+  return role === 'host' ? spDrawn : view.pend;
 }
 function spLegalFor(s, h){
   const sp = s.sp; if (!sp.tr.length) { const ns = h.filter(c => spSuit(c) !== 's'); return sp.br || !ns.length ? h : ns; }
@@ -2910,14 +3032,19 @@ function spDetectFx(s){
 function spUpset(s, r, me){
   const miss = [0, 1].filter(t => r.t[t] && !r.t[t].made);
   if (!miss.length) return false;
-  const mine = me >= 0 && me < SP_SEATS ? spTeam(me) : -1;
-  let who, big, sub, emo;
-  if (miss.length === 2) { who = 'Both teams'; big = 'UPSET!'; sub = 'Nobody made their bid'; emo = '🙃'; }
+  const mine = spIn(s, me) ? spTeam(me) : -1, duo = sp1v1(s);
+  let who, big = 'UPSET!', sub, emo;
+  if (miss.length === 2) { who = duo ? 'Both of you' : 'Both teams'; sub = 'Nobody made their bid'; emo = '🙃'; }
   else {
     const t = miss[0];
-    if (mine === t) { who = 'We got'; big = 'UPSET!'; sub = 'They took our books'; emo = '😩'; }
-    else if (mine >= 0) { who = 'They got'; big = 'UPSET!'; sub = 'We took their books'; emo = '😂'; }
-    else { who = SP_TEAM_NAME[t] + ' team got'; big = 'UPSET!'; sub = SP_TEAM_NAME[1 - t] + ' team took their books'; emo = '😂'; }
+    if (duo) {
+      if (mine === t) { who = 'You got'; sub = `${spSeatName(s, 1 - t)} took your books`; emo = '😩'; }
+      else if (mine >= 0) { who = `${spSeatName(s, t)} got`; sub = 'You took their books'; emo = '😂'; }
+      else { who = `${spSeatName(s, t)} got`; sub = `${spSeatName(s, 1 - t)} took their books`; emo = '😂'; }
+    }
+    else if (mine === t) { who = 'We got'; sub = 'They took our books'; emo = '😩'; }
+    else if (mine >= 0) { who = 'They got'; sub = 'We took their books'; emo = '😂'; }
+    else { who = SP_TEAM_NAME[t] + ' team got'; sub = SP_TEAM_NAME[1 - t] + ' team took their books'; emo = '😂'; }
   }
   const el = document.createElement('div'); el.className = 'spupset';
   el.innerHTML = `<i class="chain l"></i><i class="chain r"></i><div class="sign"><small>${esc(who)}</small><b>${emo} ${big} ${emo}</b><span>${esc(sub)}</span></div>`;
@@ -2941,18 +3068,20 @@ function spFx(s, e){
   const who = i => (i === me ? 'You' : esc(s.seats[i] ? s.seats[i].n : 'Someone'));
   switch (e.k) {
     case 'deal': textFx('NEW HAND', { x:G.cx, y:G.cy - 60 }, 'big', 1400); sfx('shuffle'); spSel = ''; break;
-    case 'teams': if (e.r && me >= 0 && me < SP_SEATS) { const m = s.seats[spMate(me)]; toast(`Teams are set! Your partner is ${m ? m.n : 'across from you'}.`); } break;
+    case 'draw': if (e.i !== me) sfx('flick'); break;
+    case 'drawn': textFx('TIME TO BID', { x:G.cx, y:G.cy - 60 }, 'big', 1300); sfx('pop'); break;
+    case 'teams': if (e.r && spNs(s) === 4 && spIn(s, me)) { const m = s.seats[spMate(me, s)]; toast(`Teams are set! Your partner is ${m ? m.n : 'across from you'}.`); } break;
     case 'bid': { const p = P(e.i); textFx(e.blind ? `BLIND ${+e.n}` : e.n === 'N' ? 'NIL' : `BID ${+e.n}`, { x:p.x, y:p.y - 46 }, e.blind || e.n === 'N' ? 'big' : '', 1400); sfx('pop'); break; }
     case 'play': sfx('flick'); break;
     case 'broken': spBrokeBanner(e.cut ? `${who(e.i)} cut with a spade` : `${who(e.i)} led a spade`); sfx('whoosh'); break;
     case 'trick': { const p = P(e.w); textFx('+1', { x:p.x, y:p.y - 40 }, '', 1100); sfx(spTeam(e.w) === spTeam(me) && me >= 0 ? 'ding' : 'clink'); break; }
     case 'renege': {
-      if (e.ok) { textFx('RENEGE! 🚨', { x:G.cx, y:G.cy - 70 }, 'potfx lvl2', 2200); sfx('drum'); const caught = me >= 0 && me < SP_SEATS ? (spTeam(me) === e.o ? 'your team' : 'them') : SP_TEAM_NAME[e.o] + ' team'; toast(`🚨 ${who(e.i)} called renege and caught ${caught}! 3 books change hands.`); }
+      if (e.ok) { textFx('RENEGE! 🚨', { x:G.cx, y:G.cy - 70 }, 'potfx lvl2', 2200); sfx('drum'); const caught = spIn(s, me) ? (spTeam(me) === e.o ? (sp1v1(s) ? 'you' : 'your team') : 'them') : spSideName(s, e.o); toast(`🚨 ${who(e.i)} called renege and caught ${caught}! 3 books change hands.`); }
       else { textFx('NO RENEGE', { x:G.cx, y:G.cy - 70 }, 'big', 1600); sfx('fold'); toast(`${who(e.i)} called renege, but nobody reneged. That call is used up.`); }
       break;
     }
-    case 'hand': { const r = s.res; if (r && Array.isArray(r.t)) { const t = me >= 0 && me < SP_SEATS ? spTeam(me) : -1; if (!spUpset(s, r, me)) sfx('cash'); if (t >= 0 && r.t[t].bagHit) toast('10 bags: your team loses 100'); } break; }
-    case 'game': { const r = s.res || {}; if (Array.isArray(r.t)) spUpset(s, r, me); const us = me >= 0 && me < SP_SEATS && spTeam(me) === r.over; textFx(us ? 'WE WON! 🏆' : 'GAME', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2600); sfx(us ? 'fanfare' : 'drum'); if (us) ['🎉', '🏆', '🎉'].forEach((em, k) => setTimeout(() => burst(em, { x:G.cx + (k - 1) * 60, y:G.cy - 30 }, 1400), k * 180)); break; }
+    case 'hand': { const r = s.res; if (r && Array.isArray(r.t)) { const t = spIn(s, me) ? spTeam(me) : -1; if (!spUpset(s, r, me)) sfx('cash'); if (t >= 0 && r.t[t].bagHit) toast(sp1v1(s) ? '10 bags: you lose 100' : '10 bags: your team loses 100'); } break; }
+    case 'game': { const r = s.res || {}; if (Array.isArray(r.t)) spUpset(s, r, me); const us = spIn(s, me) && spTeam(me) === r.over; textFx(us ? (sp1v1(s) ? 'YOU WON! 🏆' : 'WE WON! 🏆') : 'GAME', { x:G.cx, y:G.cy - 84 }, 'potfx lvl2', 2600); sfx(us ? 'fanfare' : 'drum'); if (us) ['🎉', '🏆', '🎉'].forEach((em, k) => setTimeout(() => burst(em, { x:G.cx + (k - 1) * 60, y:G.cy - 30 }, 1400), k * 180)); break; }
   }
 }
 function ppDetectFx(s){
@@ -3500,8 +3629,18 @@ function ppSeatView(s, i, x, isMine){
   return { cls, html:`${won}<div class="minis">${cards}</div><div class="plate">${(x.ws || 0) >= 3 ? '<span class="flames" aria-hidden="true">🔥</span>' : ''}${dchip}<div class="nm">${av}${esc(x.n || 'Player')}${tag}</div>${por}${botb}<div class="stk${x.s < 0 ? ' neg' : ''}"><span class="coin"></span>${fmtT(x.s)}</div>${timer}</div>${pill}${(prs || dds) && !isMine ? `<div class="ppx">${prs}${dds}</div>` : ''}` };
 }
 const SP_TEAM_NAME = ['Red', 'Blue'];
-/* "Us" and "Them" when you're playing, Red and Blue when you're watching */
-function spTeamLabel(s, t){ const i = mySeatIdx(s); return i >= 0 && i < SP_SEATS ? (spTeam(i) === t ? 'Us' : 'Them') : SP_TEAM_NAME[t]; }
+/* is seat i playing (4 seats, or 2 head to head) */
+const spIn = (s, i) => i >= 0 && i < spNs(s);
+const sp1v1 = s => spNs(s) === 2;
+const spSeatName = (s, j) => (s.seats[j] ? s.seats[j].n : 'Player ' + (j + 1));
+/* "Us" and "Them" when you're playing, Red and Blue when you're watching. Head to head: "You" and their name */
+function spTeamLabel(s, t){
+  const i = mySeatIdx(s);
+  if (sp1v1(s)) return spIn(s, i) && i === t ? 'You' : spSeatName(s, t);
+  return spIn(s, i) ? (spTeam(i) === t ? 'Us' : 'Them') : SP_TEAM_NAME[t];
+}
+/* a side in a sentence: "Red team", or the player's name head to head */
+const spSideName = (s, t) => (sp1v1(s) ? spSeatName(s, t) : SP_TEAM_NAME[t] + ' team');
 function spBidText(sp, i){
   const b = sp.b ? sp.b[i] : null, t = spTeam(i);
   if (b === null || b === undefined) return '';
@@ -3509,14 +3648,14 @@ function spBidText(sp, i){
   return b === 'N' ? 'Nil' : `Bid ${b}`;
 }
 function spOpenSeatView(s, i, mine){
-  const t = spTeam(i), canMove = s.ph === 'waiting' && s.cfg.teams !== 'random' && mine >= 0;
+  const t = spTeam(i), canMove = s.ph === 'waiting' && s.cfg.teams !== 'random' && !sp1v1(s) && mine >= 0;
   const btn = canMove ? `<button type="button" class="btn ghost sm" data-act="spseat" data-i="${i}">Move here</button>` : (mine < 0 && myName && !me.sit ? '<button type="button" class="btn ghost sm" data-act="sit">Take a seat</button>' : '');
-  return { cls:`seat sp open t${t}`, html:`<div class="minis"></div><div class="plate"><div class="nm">Open seat</div><div class="stk sp"><span class="tdot"></span>${esc(spTeamLabel(s, t))} team</div>${btn}</div><div class="tagpill empty" aria-hidden="true"></div>` };
+  return { cls:`seat sp open t${t}`, html:`<div class="minis"></div><div class="plate"><div class="nm">Open seat</div><div class="stk sp"><span class="tdot"></span>${sp1v1(s) ? 'Head to head' : esc(spTeamLabel(s, t)) + ' team'}</div>${btn}</div><div class="tagpill empty" aria-hidden="true"></div>` };
 }
 function spSeatView(s, i, x, isMine){
   const sp = s.sp || {}, t = spTeam(i);
   const live = s.ph === 'playing';
-  const turn = live && s.tn === i && (sp.step === 'bid' || sp.step === 'play');
+  const turn = live && s.tn === i && ['bid', 'play', 'draw', 'blind'].includes(sp.step);
   const took = live && sp.step === 'trick' && sp.last && sp.last.w === i;
   const winT = s.ph === 'over' && s.res && s.res.over === t;
   const cls = ['seat', 'sp', 't' + t, turn && 'turn', isMine && 'mine', winT && 'win', x.away && !isMine && 'away'].filter(Boolean).join(' ');
@@ -3524,7 +3663,7 @@ function spSeatView(s, i, x, isMine){
   if (turn && +s.cfg.tm > 0) timer = `<i class="tbar" style="animation-duration:${+s.cfg.tm}s"></i>`;
   let label = '', pc = 'tagpill';
   if (took) { label = 'Took the book'; pc += ' knock'; }
-  else if (turn) label = sp.step === 'bid' ? (isMine ? 'Your bid' : 'Bidding…') : (isMine ? 'Your turn' : 'Thinking…');
+  else if (turn) label = sp.step === 'bid' ? (isMine ? 'Your bid' : 'Bidding…') : sp.step === 'draw' ? (isMine ? 'Your draw' : 'Drawing…') : sp.step === 'blind' ? 'Blind?' : (isMine ? 'Your turn' : 'Thinking…');
   else if (s.ph === 'waiting' && !x.away) { label = x.rdy || x.bot ? 'Ready' : 'Not ready'; if (x.rdy || x.bot) pc += ' knock'; }
   else if (x.away && !live) label = 'Away';
   const pill = label && !(isMine && live) ? `<div class="${pc}">${esc(label)}</div>` : '<div class="tagpill empty" aria-hidden="true"></div>';
@@ -3533,14 +3672,14 @@ function spSeatView(s, i, x, isMine){
   const tag = x.bot ? ' <span class="tag">bot</span>' : isMine ? ' <span class="tag">you</span>' : (x.c === s.hid ? ' <span class="tag">host</span>' : '');
   /* while bidding: "Bid 3"; once the cards are flying: books taken out of the bid, like "2/3 books" */
   const bt = sp.b ? sp.b[i] : null, tk = +(sp.tk || [])[i] || 0, blindT = sp.bl && sp.bl[t];
-  const counting = (live && sp.step !== 'bid') || s.ph === 'done' || s.ph === 'over';
+  const counting = (live && !['bid', 'draw', 'blind'].includes(sp.step)) || s.ph === 'done' || s.ph === 'over';
   let line;
   if ((live || s.ph === 'done' || s.ph === 'over') && bt !== null && bt !== undefined) {
     if (!counting) line = `<span class="bid">${esc(spBidText(sp, i))}</span>`;
     else if (blindT) line = `<b>${tk}</b> · <span class="bid">blind ${blindT}</span>`;
     else if (bt === 'N') line = `<b>${tk}</b> · <span class="bid">nil</span>`;
     else line = `<b>${tk}</b>/<span class="bid">${+bt}</span> books`;
-  } else line = `${esc(spTeamLabel(s, t))} team`;
+  } else line = sp1v1(s) ? `${+((sp.sc || [])[t] || 0)} pts` : `${esc(spTeamLabel(s, t))} team`;
   const muted = (s.muted || []).includes(x.c) ? ' <span title="Chat off" aria-label="Chat off">🔇</span>' : '';
   const botb = live && !x.bot && (x.g || x.away) ? `<div class="porbadge botfill">🤖 BOT PLAYING</div>` : '';
   const n = live && sp.bd && sp.bd[t] ? Math.max(0, Math.min(13, +x.hc || 0)) : 0;
@@ -3589,7 +3728,7 @@ function renderSeats(s){
   if (s && G.W) {
     const occ = []; s.seats.forEach((x, i) => { if (x) occ.push(i); });
     const mine = mySeatIdx(s); let order = occ;
-    if (isSP(s)) { const base = mine >= 0 && mine < SP_SEATS ? mine : 0; order = [0, 1, 2, 3].map(k => (base + k) % SP_SEATS); }
+    if (isSP(s)) { const n = spNs(s), base = spIn(s, mine) ? mine : 0; order = Array.from({ length:n }, (_, k) => (base + k) % n); }
     else if (mine >= 0) { const k = occ.indexOf(mine); order = occ.slice(k).concat(occ.slice(0, k)); }
     const n = order.length;
     seatsEl.classList.toggle('compact', G.W < 720 && n >= 8);
@@ -3671,11 +3810,11 @@ function renderCenter(s){
     if (role === 'player') { ph = 'Table ' + code; bl = kicked ? 'You were removed from this table.' : hostGone() ? 'Everyone\'s gone. The host left this table.' : 'Connecting…'; }
     else bl = 'Knock, Pitty Pat or Spades. Pick a game below.';
   } else if (s.ph === 'waiting' && isSP(s)) {
-    const seated = s.seats.slice(0, SP_SEATS).filter(Boolean).length;
-    const nReady = s.seats.slice(0, SP_SEATS).filter(y => y && (y.bot || y.rdy)).length;
+    const n = spNs(s), seated = s.seats.slice(0, n).filter(Boolean).length;
+    const nReady = s.seats.slice(0, n).filter(y => y && (y.bot || y.rdy)).length;
     if (s.cd) { ph = 'Get ready'; bl = `First deal in <em>${+s.cd}</em>…`; }
-    else if (seated === SP_SEATS) { ph = 'Ready check'; bl = `<b>${nReady}</b> of 4 ready`; }
-    else { ph = 'Waiting for players'; bl = `${seated} of 4 seats taken · partners sit across`; }
+    else if (seated === n) { ph = 'Ready check'; bl = `<b>${nReady}</b> of ${n} ready`; }
+    else { ph = 'Waiting for players'; bl = `${seated} of ${n} seats taken · ${n === 2 ? 'head to head' : 'partners sit across'}`; }
   } else if (s.ph === 'over' && isSP(s)) { ph = ''; bl = spResultsHTML(s, myIdx);
   } else if (s.ph === 'waiting') {
     const seated = s.seats.filter(Boolean).length;
@@ -3688,8 +3827,10 @@ function renderCenter(s){
     const sp = s.sp || {}, t = s.seats[s.tn];
     const nm = j => (j === myIdx ? 'You' : `<b>${esc(s.seats[j] ? s.seats[j].n : 'Someone')}</b>`);
     if (s.ph === 'playing') {
-      ph = `Hand ${s.hand}${sp.step === 'bid' ? ' · Bidding' : sp.br ? ' · ♠ broken' : ''}`;
-      if (sp.step === 'bid') bl = t ? `${nm(s.tn)} ${s.tn === myIdx ? 'bid' : 'bids'} next` : '';
+      ph = `Hand ${s.hand}${sp.step === 'bid' ? ' · Bidding' : sp.step === 'draw' ? ' · Drawing' : sp.step === 'blind' ? ' · Blind?' : sp.br ? ' · ♠ broken' : ''}`;
+      if (sp.step === 'draw') bl = t ? `${nm(s.tn)} ${s.tn === myIdx ? 'are' : 'is'} drawing · ${Math.min(13, (+((sp.dw || {}).n || [])[s.tn] || 0) + 1)} of 13` : '';
+      else if (sp.step === 'blind') bl = t ? `${nm(s.tn)} ${s.tn === myIdx ? 'get' : 'gets'} to decide on blind` : '';
+      else if (sp.step === 'bid') bl = t ? `${nm(s.tn)} ${s.tn === myIdx ? 'bid' : 'bids'} next` : '';
       else if (sp.step === 'trick' && sp.last) bl = `${nm(sp.last.w)} ${sp.last.w === myIdx ? 'take' : 'takes'} the book`;
       else if (sp.step === 'last') bl = 'Last book. Counting in a few seconds…';
       else if (sp.step === 'play' && t) bl = !(sp.tr || []).length ? `${nm(s.tn)} ${s.tn === myIdx ? 'lead' : 'leads'}${sp.br ? '' : ' · no spades yet'}` : `${nm(s.tn)}${s.tn === myIdx ? ', your turn' : '\'s turn'}`;
@@ -3765,45 +3906,49 @@ function renderCenter(s){
 function spScoreHTML(s){
   const sp = s.sp || {}, sc = sp.sc || [0, 0], bg = sp.bg || [0, 0];
   const one = t => `<span class="spsc t${t}"><span class="tdot"></span>${esc(spTeamLabel(s, t))} <b>${+sc[t]}</b><i>${+bg[t]} ${+bg[t] === 1 ? 'bag' : 'bags'}</i></span>`;
-  const bids = s.ph === 'playing' && sp.step !== 'bid' ? [0, 1].map(t => `${esc(spTeamLabel(s, t))} ${spTeamBidOf(sp, t)}`).join(' · ') : '';
+  const bids = s.ph === 'playing' && !['bid', 'draw', 'blind'].includes(sp.step) ? [0, 1].map(t => `${esc(spTeamLabel(s, t))} ${spTeamBidOf(s, sp, t)}`).join(' · ') : '';
   return `<span class="spscore">${one(0)}${one(1)}</span><span class="spto">to ${+s.cfg.to || 500}${bids ? ' · bids: ' + bids : ''}</span>`;
 }
-function spTeamBidOf(sp, t){
+function spTeamBidOf(s, sp, t){
   if (sp.bl && sp.bl[t]) return `blind ${sp.bl[t]}`;
-  const b = [t, t + 2].map(j => sp.b[j]), n = b.reduce((a, v) => a + (v === 'N' || v == null ? 0 : +v), 0);
+  const b = spMemOf(s, t).map(j => sp.b[j]), n = b.reduce((a, v) => a + (v === 'N' || v == null ? 0 : +v), 0);
+  if (sp1v1(s) && b[0] === 'N') return 'nil';
   return n + (b.includes('N') ? ' + nil' : '');
 }
 function spTrickHTML(s, myIdx){
-  const sp = s.sp || {}, base = myIdx >= 0 && myIdx < SP_SEATS ? myIdx : 0;
+  const sp = s.sp || {}, n = spNs(s), base = spIn(s, myIdx) ? myIdx : 0;
   const showing = sp.step === 'trick' && sp.last ? sp.last.tr : (sp.tr || []);
-  const pos = ['b', 'l', 't', 'r'];
+  const pos = n === 2 ? ['b', 't'] : ['b', 'l', 't', 'r'];
   const slots = pos.map(() => '<div class="card slot"></div>');
   showing.forEach((p, k) => {
-    const rel = (p.i - base + SP_SEATS) % SP_SEATS;
+    const rel = (p.i - base + n) % n;
     const cls = [sp.step === 'trick' && sp.last && sp.last.w === p.i ? 'win' : '', k === showing.length - 1 && sp.step === 'play' ? 'in' + pos[rel] : ''].filter(Boolean).join(' ');
     slots[rel] = cardHTML(p.c, { cls });
   });
-  return `<div class="sptrick">${pos.map((c, k) => `<div class="sl ${c}">${slots[k]}</div>`).join('')}</div>`;
+  return `<div class="sptrick${n === 2 ? ' duo' : ''}">${pos.map((c, k) => `<div class="sl ${c}">${slots[k]}</div>`).join('')}</div>`;
 }
 function spResultsHTML(s, myIdx){
   const r = s.res || {}, rows = [];
   if (!Array.isArray(r.t)) return '';
-  const names = t => [t, t + 2].map(j => (j === myIdx ? 'You' : esc(s.seats[j] ? s.seats[j].n : '?'))).join(' & ');
+  const duo = sp1v1(s), playing = spIn(s, myIdx);
+  const names = t => spMemOf(s, t).map(j => (j === myIdx ? 'You' : esc(s.seats[j] ? s.seats[j].n : '?'))).join(' & ');
   if (r.over >= 0) {
-    const us = myIdx >= 0 && myIdx < SP_SEATS && spTeam(myIdx) === r.over;
-    const lead = myIdx >= 0 && myIdx < SP_SEATS ? (us ? 'You win the game!' : 'They win the game.') : SP_TEAM_NAME[r.over] + ' team wins!';
-    rows.push(`<div class="rrow main"><i>🏆</i><span><b>${lead}</b> ${names(r.over)}${r.why === 'shot' ? ` · ${esc(spTeamLabel(s, 1 - r.over))} got shot last hand and again this hand, so ${spTeamLabel(s, 1 - r.over) === 'Us' ? 'we lose' : 'they lose'}` : r.why === 'bothshot' ? ' · both teams got shot two hands in a row, so the higher score wins' : ''}</span></div>`);
+    const us = playing && spTeam(myIdx) === r.over;
+    const lead = playing ? (us ? 'You win the game!' : duo ? `${esc(spSeatName(s, r.over))} wins the game.` : 'They win the game.') : esc(spSideName(s, r.over)) + ' wins!';
+    const loser = spTeamLabel(s, 1 - r.over), loses = loser === 'Us' ? 'we lose' : loser === 'You' ? 'you lose' : 'they lose';
+    rows.push(`<div class="rrow main"><i>🏆</i><span><b>${lead}</b>${duo ? '' : ' ' + names(r.over)}${r.why === 'shot' ? ` · ${esc(loser)} got shot last hand and again this hand, so ${loses}` : r.why === 'bothshot' ? ` · both ${duo ? 'players' : 'teams'} got shot two hands in a row, so the higher score wins` : ''}</span></div>`);
   }
   [0, 1].forEach(t => {
     const x = r.t[t];
-    const what = `${x.blind ? 'Blind ' + x.bid : 'Bid ' + x.bid}, took ${x.books}${x.made ? '' : ': <b>shot</b>'}`;
+    const nilOnly = duo && x.nil.length && !x.bid && !x.blind;
+    const what = nilOnly ? `Nil, took ${x.nil.reduce((a, n) => a + n.tk, 0)}` : `${x.blind ? 'Blind ' + x.bid : 'Bid ' + x.bid}, took ${x.books}${x.made ? '' : ': <b>shot</b>'}`;
     const extra = [];
-    x.nil.forEach(n => extra.push(`${n.i === myIdx ? 'You' : esc(s.seats[n.i] ? s.seats[n.i].n : '?')} nil ${n.ok ? '✓ +100' : '✗ −100'}`));
-    if (x.gave) extra.push(`caught reneging, gave ${x.gave} ${x.gave === 1 ? 'book' : 'books'}`);
+    x.nil.forEach(n => extra.push(`${duo ? '' : (n.i === myIdx ? 'You' : esc(s.seats[n.i] ? s.seats[n.i].n : '?')) + ' '}nil ${n.ok ? '✓ +100' : '✗ −100'}`));
+    if (x.gave) extra.push(`caught reneging, gave up ${x.gave} ${x.gave === 1 ? 'book' : 'books'}`);
     if (x.got) extra.push(`got ${x.got} ${x.got === 1 ? 'book' : 'books'} for a renege`);
     if (x.bags) extra.push(`${x.bags} ${x.bags === 1 ? 'bag' : 'bags'}`);
     if (x.bagHit) extra.push('<b>10 bags: −100</b>');
-    rows.push(`<div class="rrow sprow${x.made ? '' : ' shot'}"><i class="tdot t${t}"></i><span><b>${esc(spTeamLabel(s, t))}</b> ${what} <em>${x.pts >= 0 ? '+' : '−'}${Math.abs(x.pts)}</em>${extra.length ? `<small>${extra.join(' · ')}</small>` : ''}</span><b class="tot">${+x.score}</b></div>`);
+    rows.push(`<div class="rrow sprow${x.made || nilOnly ? '' : ' shot'}"><i class="tdot t${t}"></i><span><b>${esc(spTeamLabel(s, t))}</b> ${what} <em>${x.pts >= 0 ? '+' : '−'}${Math.abs(x.pts)}</em>${extra.length ? `<small>${extra.join(' · ')}</small>` : ''}</span><b class="tot">${+x.score}</b></div>`);
   });
   return `<div class="ppres spres"><h4>${r.over >= 0 ? 'Game over' : `Hand ${+r.hand || ''} results`} · to ${+s.cfg.to || 500}</h4>${rows.join('')}</div>`;
 }
@@ -3891,8 +4036,8 @@ function dockHTML(s){
     if (!s) return out.join('');
     if (me.sit && !full) { out.push('<p class="lead">Finding you a seat…</p>'); return out.join(''); }
     if (full && isSP(s)) {
-      const bots = s.seats.slice(0, SP_SEATS).some(y => y && (y.bot || y.g));
-      out.push(`<p class="lead">All 4 seats are taken, so you're in the audience as <b>${esc(myName)}</b>.${me.sit ? (bots ? ' You\'ll take a bot\'s seat when the next hand is dealt.' : ' You\'ll get a seat if one opens up.') : ''}</p>`);
+      const bots = s.seats.slice(0, spNs(s)).some(y => y && (y.bot || y.g));
+      out.push(`<p class="lead">All ${spNs(s)} seats are taken, so you're in the audience as <b>${esc(myName)}</b>.${me.sit ? (bots ? ' You\'ll take a bot\'s seat when the next hand is dealt.' : ' You\'ll get a seat if one opens up.') : ''}</p>`);
       if (!me.sit && bots) out.push('<div class="actions" style="--n:1"><button type="button" class="btn gold" data-act="sit">Take a bot\'s seat next hand</button></div>');
     }
     else if (full) out.push(`<p class="lead">All ${seatCap(s)} seats are taken, so you're in the audience as <b>${esc(myName)}</b>. ${me.sit ? 'You\'ll get the next open seat.' : ''}</p>`);
@@ -4251,10 +4396,12 @@ function ppDockHTML(s, i, x, out){
 let spRenArm = 0;
 function spSetupHTML(s){
   const to = +s.cfg.to || 500, tm = s.cfg.teams === 'random' ? 'random' : 'pick', rn = s.cfg.rn === 'off' ? 'off' : 'on', sh = s.cfg.sh === 'off' ? 'off' : 'on';
-  return `<div class="sidepick spto" role="group" aria-label="Play to"><span>Play to</span>${SP_TARGETS.map(v => `<button type="button" class="segb${to === v ? ' on' : ''}" data-act="setcfg" data-f="to" data-v="${v}" aria-pressed="${to === v}">${v}</button>`).join('')}</div>
-    <div class="sidepick spteams" role="group" aria-label="Teams"><span>Teams</span>${[['pick', 'Pick seats'], ['random', 'Random']].map(([v, l]) => `<button type="button" class="segb${tm === v ? ' on' : ''}" data-act="setcfg" data-f="teams" data-v="${v}" aria-pressed="${tm === v}">${l}</button>`).join('')}</div>
-    <div class="sidepick spteams" role="group" aria-label="Reneging"><span>Renege</span>${[['on', 'Allowed'], ['off', 'Off']].map(([v, l]) => `<button type="button" class="segb${rn === v ? ' on' : ''}" data-act="setcfg" data-f="rn" data-v="${v}" aria-pressed="${rn === v}">${l}</button>`).join('')}</div>
-    <div class="sidepick spteams" role="group" aria-label="Shot twice loses"><span>Shot twice loses</span>${[['on', 'On'], ['off', 'Off']].map(([v, l]) => `<button type="button" class="segb${sh === v ? ' on' : ''}" data-act="setcfg" data-f="sh" data-v="${v}" aria-pressed="${sh === v}">${l}</button>`).join('')}</div>`;
+  const np = spNs(s), dl = s.cfg.deal === 'deal' ? 'deal' : 'draw';
+  const row = (f, label, opts, val, cls) => `<div class="sidepick ${cls || 'spteams'}" role="group" aria-label="${label}"><span>${label}</span>${opts.map(([v, l]) => `<button type="button" class="segb${String(val) === String(v) ? ' on' : ''}" data-act="setcfg" data-f="${f}" data-v="${v}" aria-pressed="${String(val) === String(v)}">${l}</button>`).join('')}</div>`;
+  return `<div class="spsetup">` + row('np', 'Players', [[4, '4 · partners'], [2, '2 · head to head']], np) + `
+    <div class="sidepick spto" role="group" aria-label="Play to"><span>Play to</span>${SP_TARGETS.map(v => `<button type="button" class="segb${to === v ? ' on' : ''}" data-act="setcfg" data-f="to" data-v="${v}" aria-pressed="${to === v}">${v}</button>`).join('')}</div>
+    ${np === 2 ? row('deal', 'Cards', [['draw', 'Draw (keep or toss)'], ['deal', 'Deal 13']], dl) : row('teams', 'Teams', [['pick', 'Pick seats'], ['random', 'Random']], tm)}
+    <div class="sprow2">${row('rn', 'Renege', [['on', 'Allowed'], ['off', 'Off']], rn)}${row('sh', 'Shot twice loses', [['on', 'On'], ['off', 'Off']], sh)}</div></div>`;
 }
 function spDockHTML(s, i, x, out){
   const sp = s.sp || {}, t = spTeam(i), live = s.ph === 'playing';
@@ -4264,7 +4411,7 @@ function spDockHTML(s, i, x, out){
   const nm = j => (j === i ? 'You' : esc(s.seats[j] ? s.seats[j].n : 'Someone'));
   if (live) {
     let cards = '';
-    if (hidden) cards = '<span class="spcard"><div class="card back"></div></span>'.repeat(Math.max(0, Math.min(13, +x.hc || 13)));
+    if (hidden) cards = sp.dw ? '' : '<span class="spcard"><div class="card back"></div></span>'.repeat(Math.max(0, Math.min(13, +x.hc || 13)));
     else {
       const playing = myTurn && sp.step === 'play', legal = playing ? spLegalFor(s, h) : h;
       if (spSel && !(playing && h.includes(spSel))) spSel = '';
@@ -4273,32 +4420,58 @@ function spDockHTML(s, i, x, out){
     }
     const n = hidden ? Math.max(1, Math.min(13, +x.hc || 13)) : Math.max(1, h.length);
     const cols = n > 1 ? `repeat(${n - 1}, minmax(0, calc(var(--cw) + 3px))) var(--cw)` : 'var(--cw)';
-    out.push(`<div class="sphand" style="grid-template-columns:${cols}">${cards || '<span class="small muted">No cards left.</span>'}</div>`);
+    const none = sp.step === 'draw' || sp.step === 'blind' ? 'No cards yet.' : 'No cards left.';
+    out.push(`<div class="sphand" style="grid-template-columns:${cols}">${cards || `<span class="small muted">${none}</span>`}</div>`);
   }
   let status = '', buttons = '';
   if (s.ph === 'waiting') {
-    const xs = s.seats.slice(0, SP_SEATS), seated = xs.filter(Boolean).length;
+    const np = spNs(s), xs = s.seats.slice(0, np), seated = xs.filter(Boolean).length;
     const nReady = xs.filter(y => y && (y.bot || y.rdy)).length;
     const waitingOn = xs.filter(y => y && !y.bot && !y.rdy).map(y => (y.c === myCid ? 'you' : esc(y.n)));
     if (s.cd) status = `Everyone's ready. First deal in <em>${+s.cd}</em>…`;
-    else if (seated < SP_SEATS) status = `${SP_SEATS - seated} more ${SP_SEATS - seated === 1 ? 'player' : 'players'} needed. Invite your people${role === 'host' ? ', or fill the empty seats with bots' : ''}.`;
-    else status = `<em>${nReady}</em> of 4 ready. Waiting on ${joinNames(waitingOn)}.`;
+    else if (seated < np) status = np === 2 ? `Head to head: 1 more player needed. Invite someone${role === 'host' ? ', or play a bot' : ''}.` : `${np - seated} more ${np - seated === 1 ? 'player' : 'players'} needed. Invite your people${role === 'host' ? ', or fill the empty seats with bots' : ''}.`;
+    else status = `<em>${nReady}</em> of ${np} ready. Waiting on ${joinNames(waitingOn)}.`;
     const btns = [x.rdy ? '<button type="button" class="btn ghost" data-act="ready" data-v="0">I\'m not ready</button>' : '<button type="button" class="btn gold" data-act="ready" data-v="1">I\'m ready</button>'];
-    if (role === 'host' && seated === SP_SEATS && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
-    if (role === 'host' && seated < SP_SEATS) btns.push('<button type="button" class="btn ghost" data-act="fillbots">Fill with bots</button>');
+    if (role === 'host' && seated === np && !s.cd) btns.push('<button type="button" class="btn ghost" data-act="startnow">Start now</button>');
+    if (role === 'host' && seated < np) btns.push(`<button type="button" class="btn ghost" data-act="fillbots">${np === 2 ? 'Play a bot' : 'Fill with bots'}</button>`);
     buttons = `<div class="actions" style="--n:${btns.length}">${btns.join('')}</div>`;
     if (role === 'host') buttons += spSetupHTML(s);
+    else if (np === 2) buttons += `<p class="small muted">Head to head, playing to ${+s.cfg.to || 500}. ${s.cfg.deal === 'deal' ? 'You each get dealt 13 cards.' : 'You draw your 13 cards: keep a card and the next one gets tossed, or toss it and keep the next one.'} Bid at least 1, or nil. Reneging ${s.cfg.rn === 'off' ? 'is off: you have to follow suit' : 'is allowed, and you each get one Renege! call a hand'}. ${s.cfg.sh === 'off' ? 'Getting shot twice doesn\'t end the game.' : 'Shot twice in a row loses.'}</p>`;
     else buttons += `<p class="small muted">Playing to ${+s.cfg.to || 500}. Reneging ${s.cfg.rn === 'off' ? 'is off: you have to follow suit' : 'is allowed, and each team gets one Renege! call a hand'}. ${s.cfg.sh === 'off' ? 'Getting shot twice doesn\'t end the game.' : 'Shot twice in a row loses.'} ${s.cfg.teams === 'random' ? 'Teams get picked at random when the game starts.' : 'Partners sit across from each other: tap an open seat to move.'}</p>`;
-    if (role === 'host' && s.cfg.teams !== 'random' && seated < SP_SEATS) buttons += '<p class="small muted">Partners sit across from each other. Tap an open seat to move.</p>';
-    if (role === 'host' && seated < SP_SEATS) buttons += inviteHTML();
+    if (role === 'host' && seated < np) buttons += inviteHTML();
   } else if (s.ph === 'over') {
     const r = s.res || {};
-    status = r.over >= 0 ? (spTeam(i) === r.over ? '<b>You win the game!</b> 🏆' : '<b>They win the game.</b> Run it back?') : 'Game over.';
+    status = r.over >= 0 ? (spTeam(i) === r.over ? '<b>You win the game!</b> 🏆' : `<b>${sp1v1(s) ? esc(spSeatName(s, r.over)) + ' wins' : 'They win'} the game.</b> Run it back?`) : 'Game over.';
     buttons = role === 'host' ? '<button type="button" class="btn gold wide" data-act="spnewgame">New game</button>' : '<p class="small muted">Waiting for the host to start a new game.</p>';
   } else if (s.ph === 'done') {
     status = 'Next hand in a moment.';
+  } else if (sp.step === 'blind') {
+    const b = s.tn, gap = (sp.sc[1 - b] || 0) - (sp.sc[b] || 0);
+    if (myTurn) {
+      status = `<b>You're ${gap} behind.</b> Bid blind before you ${sp.dw ? 'draw' : 'look at'} your cards? It has to be 6 or more, and it pays double (or costs double).`;
+      buttons = `<div class="spbids blind">${[6, 7, 8, 9, 10, 11, 12, 13].map(n => `<button type="button" class="segb" data-act="spblind" data-n="${n}"${pending ? ' disabled' : ''}>Blind ${n}</button>`).join('')}</div><button type="button" class="btn gold wide" data-act="splook"${pending ? ' disabled' : ''}>${sp.dw ? 'No blind. Let me draw' : 'Look at my cards'}</button>`;
+    } else status = `${nm(b)} is ${gap} behind and gets to decide on bidding blind…`;
+  } else if (sp.step === 'draw') {
+    const dn = sp.dw ? Math.min(13, +sp.dw.n[i] || 0) : h.length;
+    if (myTurn) {
+      const c = spDrawnMine();
+      if (c) {
+        status = `<b>Card ${dn + 1} of 13.</b> Keep the ${spCardName(c)}? Keep it and the next card gets tossed without you seeing it. Toss it and you have to keep the next card.`;
+        buttons = `<div class="spdraw"><div class="spdrawn">${cardHTML(c)}</div><div class="actions" style="--n:2"><button type="button" class="btn gold" data-act="spkeep"${pending ? ' disabled' : ''}>Keep it</button><button type="button" class="btn ghost" data-act="sptoss"${pending ? ' disabled' : ''}>Toss it</button></div></div>`;
+      } else status = 'Turning your card…';
+    } else status = `${nm(s.tn)} is drawing… You have ${dn} of 13.`;
+  } else if (sp.step === 'bid' && sp1v1(s)) {
+    const ob = sp.b[1 - i];
+    if (myTurn) {
+      status = `<b>Your bid.</b> How many books will you take? At least 1, or nil.${ob !== null && ob !== undefined ? ` ${nm(1 - i)} bid ${ob === 'N' ? 'nil' : ob}.` : ''}`;
+      const opt = (v, l) => { const ok = v === 'N' || (v >= SP_BOARD2 && v <= 13); return `<button type="button" class="segb${v === 'N' ? ' nil' : ''}" data-act="spbid" data-n="${v}"${ok && !pending ? '' : ' disabled'}>${l}</button>`; };
+      buttons = `<div class="spbids">${opt('N', 'Nil')}${Array.from({ length:14 }, (_, n) => opt(n, String(n))).join('')}</div>`;
+    } else {
+      const mine = spBidText(sp, i);
+      status = `${nm(s.tn)} is bidding…${mine ? ` You: ${mine.toLowerCase()}.` : ''}`;
+    }
   } else if (sp.step === 'bid') {
-    const mb = sp.b[spMate(i)];
+    const mb = sp.b[spMate(i, s)];
     if (hidden) {
       const gap = (sp.sc[1 - t] || 0) - (sp.sc[t] || 0);
       if (myTurn) {
@@ -4312,28 +4485,29 @@ function spDockHTML(s, i, x, out){
       buttons = `<div class="spbids">${opt('N', 'Nil')}${Array.from({ length:14 }, (_, n) => opt(n, String(n))).join('')}</div>`;
     } else {
       const mine = spBidText(sp, i);
-      status = `${nm(s.tn)} ${s.tn === spMate(i) ? '(your partner) ' : ''}is bidding…${mine ? ` You: ${mine.toLowerCase()}.` : ''}`;
+      status = `${nm(s.tn)} ${s.tn === spMate(i, s) ? '(your partner) ' : ''}is bidding…${mine ? ` You: ${mine.toLowerCase()}.` : ''}`;
     }
   } else if (sp.step === 'play') {
     if (myTurn) {
       const led = (sp.tr || []).length ? spSuit(sp.tr[0].c) : '';
       if (spSel) {
         const ren = !!led && spSuit(spSel) !== led && h.some(c => spSuit(c) === led);
-        status = ren ? `⚠️ You have ${SP_SUIT_WORD[led]}. Playing the ${spCardName(spSel)} is a renege, and the other team can call it.` : `Play the ${spCardName(spSel)}? Tap it again or tap the button.`;
+        status = ren ? `⚠️ You have ${SP_SUIT_WORD[led]}. Playing the ${spCardName(spSel)} is a renege, and ${sp1v1(s) ? 'they' : 'the other team'} can call it.` : `Play the ${spCardName(spSel)}? Tap it again or tap the button.`;
         buttons = `<button type="button" class="btn ${ren ? 'warnbtn' : 'gold'} wide" data-act="spplay" data-c="${spSel}"${pending ? ' disabled' : ''}>${ren ? 'Renege with the ' : 'Play the '}${spShort(spSel)}</button>`;
       } else status = led ? `<b>Your turn.</b> Follow ${SP_SUIT_WORD[led]} if you can. Tap a card, then tap it again to play it.` : `<b>Your lead.</b> Tap a card, then tap it again to play it.${sp.br ? '' : ' No spades until someone cuts.'}`;
-    } else status = `${nm(s.tn)}${s.tn === spMate(i) ? ' (your partner)' : ''} is playing…`;
+    } else status = `${nm(s.tn)}${s.tn === spMate(i, s) ? ' (your partner)' : ''} is playing…`;
   } else if (sp.step === 'trick' && sp.last) status = `${nm(sp.last.w)} ${sp.last.w === i ? 'take' : 'takes'} the book.`;
   else if (sp.step === 'last') status = 'That was the last book. Counting in a few seconds…';
   if (live && (sp.step === 'play' || sp.step === 'trick' || sp.step === 'last')) {
-    const myBooks = +(sp.tk || [])[i] || 0, mateBooks = +(sp.tk || [])[spMate(i)] || 0;
-    status += ` <span class="spbk">Books: you ${myBooks}, partner ${mateBooks}, team bid ${spTeamBidOf(sp, t)}.</span>`;
+    const myBooks = +(sp.tk || [])[i] || 0;
+    if (sp1v1(s)) { const o = 1 - i; status += ` <span class="spbk">Books: you ${myBooks} (bid ${spTeamBidOf(s, sp, i)}), ${nm(o)} ${+(sp.tk || [])[o] || 0} (bid ${spTeamBidOf(s, sp, o)}).</span>`; }
+    else { const mateBooks = +(sp.tk || [])[spMate(i, s)] || 0; status += ` <span class="spbk">Books: you ${myBooks}, partner ${mateBooks}, team bid ${spTeamBidOf(s, sp, t)}.</span>`; }
   }
   if (status) out.push(`<p class="status">${status}</p>`);
   if (buttons) out.push(buttons);
-  if (live && sp.step !== 'bid' && s.cfg.rn !== 'off') {
-    if (sp.rc && sp.rc[t]) out.push('<p class="small muted">Your team used its renege call this hand.</p>');
-    else out.push(`<div class="renrow"><button type="button" class="btn ghost sm warnbtn" data-act="sprenege">${spRenArm > Date.now() ? 'Tap again to call it' : '🚨 Renege!'}</button><span class="small muted">Think they didn't follow suit? One call a hand. If you're right, they give your team 3 books.</span></div>`);
+  if (live && !['bid', 'draw', 'blind'].includes(sp.step) && s.cfg.rn !== 'off') {
+    if (sp.rc && sp.rc[t]) out.push(`<p class="small muted">${sp1v1(s) ? 'You used your' : 'Your team used its'} renege call this hand.</p>`);
+    else out.push(`<div class="renrow"><button type="button" class="btn ghost sm warnbtn" data-act="sprenege">${spRenArm > Date.now() ? 'Tap again to call it' : '🚨 Renege!'}</button><span class="small muted">Think they didn't follow suit? One call a hand. If you're right, they give ${sp1v1(s) ? 'you' : 'your team'} 3 books.</span></div>`);
   }
   return out.join('');
 }
@@ -4344,7 +4518,7 @@ function renderHeader(s){
   const back = $('#backBtn');
   if (back) { back.hidden = role === 'none'; back.classList.toggle('armed', backArm > Date.now()); }
   setText($('#brandName'), role === 'none' || (!s && hostGone()) ? 'Quit Playin\'!' : s && isPP(s) ? 'Pitty Pat' : s && isSP(s) ? 'Spades' : 'Knock');
-  setText($('#sub'), code ? `Table ${code}${s ? (isSP(s) ? ' · To ' + (+s.cfg.to || 500) : ' · Ante ' + fmtT(s.cfg.ante)) : ''}` : 'Card night with family');
+  setText($('#sub'), code ? `Table ${code}${s ? (isSP(s) ? (spNs(s) === 2 ? ' · 1 on 1' : '') + ' · To ' + (+s.cfg.to || 500) : ' · Ante ' + fmtT(s.cfg.ante)) : ''}` : 'Card night with family');
   const op = $('#onlinePill'), showOn = role === 'none' && lobbyOnline > 0;
   if (op.hidden === showOn) op.hidden = !showOn;
   if (showOn) setText($('#onlineTxt'), `${lobbyOnline} at the tables`);
@@ -4387,8 +4561,9 @@ function menuHTML(s){
       <p class="small muted">${listed}</p>
     </section>
     <section><h3>Host controls</h3>
-      ${isSP(s) ? `<div class="field"><label for="setTo">Play to</label>${sel('setTo', SP_TARGETS.map(v => [v, v + ' points']), +cfg.to || 500)}</div>
-      <div class="field"><label for="setTeams">Teams</label>${sel('setTeams', [['pick', 'Pick your seats'], ['random', 'Random teams']], cfg.teams === 'random' ? 'random' : 'pick')}</div>
+      ${isSP(s) ? `<div class="field"><label for="setNp">Players</label>${sel('setNp', [[4, '4 (partners)'], [2, '2 (head to head)']], spNs(s))}</div>
+      <div class="field"><label for="setTo">Play to</label>${sel('setTo', SP_TARGETS.map(v => [v, v + ' points']), +cfg.to || 500)}</div>
+      ${spNs(s) === 2 ? `<div class="field"><label for="setDeal">Cards</label>${sel('setDeal', [['draw', 'Draw (keep or toss)'], ['deal', 'Deal 13 each']], cfg.deal === 'deal' ? 'deal' : 'draw')}</div>` : `<div class="field"><label for="setTeams">Teams</label>${sel('setTeams', [['pick', 'Pick your seats'], ['random', 'Random teams']], cfg.teams === 'random' ? 'random' : 'pick')}</div>`}
       <div class="field"><label for="setSh">Shot twice loses</label>${sel('setSh', [['on', 'On (shot twice in a row loses)'], ['off', 'Off (play to the target)']], cfg.sh === 'off' ? 'off' : 'on')}</div>
       <div class="field"><label for="setRn">Reneging</label>${sel('setRn', [['on', 'Allowed (Renege! calls)'], ['off', 'Off (must follow suit)']], cfg.rn === 'off' ? 'off' : 'on')}</div>` : `<div class="field"><label for="setAnte">Ante each hand</label>${sel('setAnte', [[50,'0.50'],[100,'1.00'],[150,'1.50'],[200,'2.00'],[500,'5.00']], cfg.ante)}</div>
       <div class="field"><label for="setStart">Tokens for new players</label>${sel('setStart', [[1000,'10.00'],[2000,'20.00'],[5000,'50.00'],[10000,'100.00']], cfg.st)}</div>`}
@@ -4405,12 +4580,18 @@ function menuHTML(s){
   } else if (s) {
     const dealer = (s.seats.find(x => x && x.c === s.hid) || {}).n;
     parts.push(`<section><h3>Leave</h3><button type="button" class="btn ghost wide" data-act="tolobby">Back to the lobby</button></section>`);
-    parts.push(`<section><h3>Table settings</h3><p class="small">${isSP(s) ? `Spades · Play to ${+cfg.to || 500} · ${cfg.teams === 'random' ? 'Random teams' : 'Pick your seats'} · Reneging ${cfg.rn === 'off' ? 'off' : 'allowed'} · Shot twice loses: ${cfg.sh === 'off' ? 'off' : 'on'} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}` : `${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}`}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
+    parts.push(`<section><h3>Table settings</h3><p class="small">${isSP(s) ? `Spades · ${spNs(s) === 2 ? `Head to head · ${cfg.deal === 'deal' ? 'Deal 13' : 'Draw'}` : '4 players'} · Play to ${+cfg.to || 500} · ${spNs(s) === 2 ? '' : (cfg.teams === 'random' ? 'Random teams · ' : 'Pick your seats · ')}Reneging ${cfg.rn === 'off' ? 'off' : 'allowed'} · Shot twice loses: ${cfg.sh === 'off' ? 'off' : 'on'} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}` : `${gameName(s)} · Ante ${fmtT(cfg.ante)} · New players get ${fmtT(cfg.st)} · ${+cfg.tm ? cfg.tm + ' seconds a turn' : 'No time limit'}${isPP(s) ? ` · ${+cfg.ow || 8} seconds to take a card` : ''}`}.</p><p class="small muted">${dealer ? esc(dealer) + ' is the host and' : 'The host'} can change these and hand out tokens.</p></section>`);
   }
   if (s && !isSP(s)) parts.push(`<section><h3>Tonight's leaderboard</h3>${leaderHTML(s)}</section>`);
   parts.push(`<section><h3>Site visitors</h3><button type="button" class="btn ghost wide" data-act="visitors">👀 See who's been visiting</button></section>`);
   if (isSP(s)) {
     const to = +cfg.to || 500;
+    if (spNs(s) === 2) parts.push(`<section><h3>Head to head (2 players)</h3><ol class="howto">
+    <li>Same deck and same order as below (jokers and deuces high, 2♥ and 2♣ out), but no partners: it's you against them.</li>
+    <li>${cfg.deal === 'deal' ? 'The host picked <b>Deal 13</b>: you each get 13 cards and the other 26 sit out unseen.' : '<b>Drawing:</b> the non-dealer goes first. You see the top card. <b>Keep it</b> and the next card gets tossed without you seeing it, or <b>toss it</b> and you have to keep the next card. Take turns until you each have 13. The other 26 cards are out of the hand.'}</li>
+    <li><b>Bidding:</b> the non-dealer bids first. Bid at least 1 book, or nil (+100 / −100). If you're 100 or more behind, you can bid blind (6 or more, double) before you ${cfg.deal === 'deal' ? 'look' : 'draw'}.</li>
+    <li>The non-dealer leads. Two cards a book. The deal switches every hand. Scoring, bags, renege and "shot" work the same as below. First to ${to} wins.</li>
+  </ol></section>`);
     parts.push(`<section><h3>How to play Spades</h3><ol class="howto">
     <li>4 players in 2 teams. Your partner sits across from you. ${cfg.teams === 'random' ? 'The host set random teams, so partners get picked when the game starts.' : 'Before the game, tap an open seat to move.'} No talking to your partner about your cards once the hand starts.</li>
     <li>52 cards: the 2♥ and 2♣ are out, and the <b>Big Joker</b> and <b>Lil Joker</b> are in. Everyone gets 13.</li>
@@ -4596,13 +4777,15 @@ function bindUI(){
       case 'fold': act('fold'); break;
       case 'ask': askTokens(); break;
       case 'give': giveTokens(+b.dataset.i, +b.dataset.a); break;
-      case 'setcfg': if (['side', 'to', 'teams', 'rn', 'sh'].includes(b.dataset.f)) setCfg(b.dataset.f, b.dataset.v); break;
+      case 'setcfg': if (['side', 'to', 'teams', 'rn', 'sh', 'np', 'deal'].includes(b.dataset.f)) setCfg(b.dataset.f, b.dataset.v); break;
       case 'fillbots': fillBots(); break;
       case 'spsel': if (spValid(b.dataset.c) && (!b.classList.contains('nopick') || b.classList.contains('dim'))) spPick(b.dataset.c); break;
       case 'spplay': if (spValid(b.dataset.c)) spMove('play', { c:b.dataset.c }); break;
       case 'spbid': spMove('bid', { n:b.dataset.n === 'N' ? 'N' : +b.dataset.n }); sfx('pop'); break;
       case 'spblind': spMove('blind', { n:+b.dataset.n }); sfx('pop'); break;
       case 'splook': spMove('look'); break;
+      case 'spkeep': spMove('keep'); sfx('flick'); break;
+      case 'sptoss': spMove('toss'); sfx('fold'); break;
       case 'sprenege': {
         if (spRenArm > Date.now()) { spRenArm = 0; spMove('renege'); }
         else { spRenArm = Date.now() + 3000; setTimeout(scheduleRender, 3100); scheduleRender(); }
@@ -4694,7 +4877,7 @@ function bindUI(){
   });
   document.addEventListener('change', e => {
     const t = e.target;
-    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow', setSide:'side', setTo:'to', setTeams:'teams', setRn:'rn', setSh:'sh' };
+    const map = { setAnte:'ante', setStart:'start', setCap:'cap', setTimer:'timer', setPause:'pause', setTheme:'theme', setRoom:'room', setOw:'ow', setSide:'side', setTo:'to', setTeams:'teams', setRn:'rn', setSh:'sh', setNp:'np', setDeal:'deal' };
     if (map[t.id]) setCfg(map[t.id], t.value);
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetMode) closeMenu(); });
